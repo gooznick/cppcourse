@@ -18,5 +18,14 @@ Cpp and some more presentations and demonstrations
   * one line
   * name clashes (windows...)
   * token pasting (## and stringify)
-  
-  
+
+## TODO 
+
+* integers casting and overflow
+* exceptions
+* floating point accuracy and exceptions
+* multithreading
+* shared objects
+* compiler
+* linker
+* pdb / strip
