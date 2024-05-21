@@ -5,6 +5,12 @@ Cpp and some more presentations and demonstrations
 
 * About c/cpp components
   * Compiler/IDE/Build system/OS
+ 
+* Git and gitlab
+   * git usage
+   * gitlab flow
+   * branches
+ 
 * Preprocessor
   * Simple directives (#ifdef, header guard)
   * Some more directives (#pack, #warn)
@@ -27,6 +33,7 @@ Cpp and some more presentations and demonstrations
   * Warnings and errors
   * Enhanced tools (sanitizers, coverage)
   * libclang
+  * Compilation time (headers locations, enhanced preprocess)
 
 * Linker
   * static and shared
@@ -34,18 +41,44 @@ Cpp and some more presentations and demonstrations
     * binary API
     * exceptions
     * memory model
+    * version scripts
   * windows:
     * lib files
   * linux:
     * single pass multipass
-  
+      
+ * CMake
+   * versions
+   * Cache and variables concept
+   * Generation, build and install
+   * Do and don't
+   * target_* commands
+
+ * Debugging :
+    * Stack and symbols
+    * debugging memory issues
+    * visual studio / gdb
+    
+ * Testing :
+    * boost test (google test)
+    * unit test / regression test
+    * Writing testable code 
+    * Refactoring code 
+    * Debugging memory issues
+
+ * Multithreading :
+    * Primitives
+    * Building blocks
+
+ * CI :
+   *  CI machines
+   *  docker
+   
 ## TODO 
 
 * integers casting and overflow
 * exceptions
 * floating point accuracy and exceptions
-* multithreading
-* pdb / strip
 * boost libraries
 * simd, sse, neon, ipp
 
