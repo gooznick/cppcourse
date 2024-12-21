@@ -15,6 +15,25 @@ A C/C++ compiler is a grumpy wizard that grudgingly transforms your poetic code 
 
 <img src="images/dragons.webp" alt="Local Image" width="200" height="100" />
 
+Magics list:
+1. Code Reordering (Instruction Scheduling)
+
+2. Function Inlining
+
+3. Variable Elimination (Dead Code Elimination)
+
+4. Register Allocation
+
+5. Loop Unrolling
+
+7. Removal of Asserts or Debug Checks
+
+8. Constant Folding and Propagation
+
+9. Code Merging
+
+---
+
 ```cpp
 #include <stdint.h>
 
@@ -68,8 +87,22 @@ _Z3foov:
 
 ---
 
+# Notes :
+
+
+* One may use optimized code **with** debug symbols.
+* One may optimize _some_ of the code (usually whole file)
+
+
+---
+
 # Language
 
+![Image](images/compiler_support.png)
+
+---
+
+# Language
 
 * g++ --std=c++20
 
@@ -95,11 +128,12 @@ int main() {
   * Options Controlling C++ Dialect.
   * Options to Control Diagnostic Messages Formatting
   * Options to Request or Suppress Warnings.
-  * Options Controlling the Kind of Output
+  * Options Controlling the Kind of Output.
 * Class III
   * Options Controlling the Preprocessor.
   * Options for Directory Search.
   * Program Instrumentation Options.
+
 
 ---
 
@@ -302,3 +336,28 @@ enum BoolType
   TRUE = 1
 };
 ```
+---
+
+Slow compilation
+
+```cpp
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+template <typename T>
+T fibonacci(int n) {
+    if (n <= 1) return n;
+    return fibonacci<T>(n - 1) + fibonacci<T>(n - 2);
+}
+
+int main() {
+    using namespace boost::multiprecision;
+    cpp_dec_float_100 big_float = fibonacci<cpp_dec_float_100>(10); // Use float precision
+    return 0;
+}
+```
+
+```bash
+time g++ -std=c++17 -O2 slow.cpp -o slow_compile
+```
+
+

@@ -29,12 +29,29 @@ backgroundImage: linear-gradient(to right, #fff, #f0f0f0)
 2. Calling Conventions
 3. Data Types and Compatibility
 4. Endianness
-5. Interaction Tools: `ctypes`, `cffi`
-6. Reflection in C++: Using Boost
-7. Practical Examples of Data Transfer Between C/C++ and Python
-8. Additional Topics:
-   - Handling Complex Data Structures
-   - Error Handling Across Languages
+6. Reflection in C++
+
+
+---
+
+## Simple types
+
+
+| **Type**       | **Size (Linux, GCC)** | **Size (Windows, MSVC)** | **Notes**                                                                                     |
+|-----------------|-----------------------|--------------------------|------------------------------------------------------------------------------------------------|
+| `char`          | 1 byte               | 1 byte                  | Always 1 byte (8 bits) per the C++ standard.                                                 |
+| `bool`          | 1 byte               | 1 byte                  | Represents `true` or `false`.                                                                |
+| `short`         | 2 bytes              | 2 bytes                 | Both platforms use 16 bits for `short`.                                                      |
+| `int`           | 4 bytes              | 4 bytes                 | Always 32 bits on both platforms.                                                            |
+| `long`          | 8 bytes              | 4 bytes                 | **Linux**: 64 bits. **Windows**: 32 bits. This is the most significant difference.           |
+| `long long`     | 8 bytes              | 8 bytes                 | 64 bits on both platforms.                                                                   |
+| `float`         | 4 bytes              | 4 bytes                 | IEEE 754 single-precision (32 bits).                                                        |
+| `double`        | 8 bytes              | 8 bytes                 | IEEE 754 double-precision (64 bits).                                                        |
+| `long double`   | 16 bytes             | 8 bytes                 | **Linux**: Extended precision (80 or 128 bits). **Windows**: Matches `double` (64 bits).     |
+| `void*`         | 8 bytes              | 8 bytes                 | Pointer size depends on the architecture: 8 bytes on 64-bit systems.                        |
+| `size_t`        | 8 bytes              | 8 bytes                 | Equivalent to `unsigned long` on Linux, `unsigned long long` on Windows.                    |
+| `wchar_t`       | 4 bytes              | 2 bytes                 | **Linux**: 4 bytes (UTF-32). **Windows**: 2 bytes (UTF-16).                                   |
+
 
 ---
 
@@ -138,109 +155,250 @@ class MyStruct
 
 ---
 
-## Slide 5: **Calling Conventions**
+## No packing 
+
+
+```cpp
+
+#pragma pack(push, 1) 
+
+struct MyStruct {
+    char a;    // 1 byte
+    int b;     // 4 bytes
+    short c;   // 2 bytes
+};
+
+#pragma pack(pop) 
+
+```
+
+---
+
+## **Calling Conventions**
 - **Definition**: Rules for function arguments and return values.
 - **Examples**:
   - **Cdecl**: Default in C/C++, caller cleans up.
   - **Stdcall**: Used in Windows APIs, callee cleans up.
   - **Fastcall**: Arguments passed via registers for speed.
-- **Python Interoperability**:
-  - `ctypes` and `cffi` respect calling conventions when invoking shared libraries.
 
 ---
 
-## Slide 6: **Data Types and Compatibility**
-- **C/C++ vs Python**:
-  - Integer sizes (`int`, `long`, `size_t`) vs Python's dynamic `int`.
-  - Strings (`char*`, `std::string`) vs Python's `str`.
-- **Bridging the Gap**:
-  - Use `ctypes` or `cffi` to define equivalent data types in Python.
-  - Avoid pitfalls: Signed vs unsigned types, floating-point precision.
+## POD - Plain Old Data
+
+
+### Definition:
+A **POD** (Plain Old Data) type in C++ is a type that is compatible with C-style data structures.
+POD types allow direct memory manipulation and guarantee a predictable memory layout without added complexities like constructors, destructors, or virtual functions.
+
 
 ---
 
-## Slide 7: **Endianness**
-- **What is Endianness?**
-  - Big-endian: Most significant byte first.
-  - Little-endian: Least significant byte first.
-- **Challenges**:
-  - Mismatch can lead to incorrect data interpretation.
-- **Solutions**:
-  - C: Use functions like `htons`, `htonl`.
-  - Python: Use `struct` module's endianness specifiers (`>` for big-endian, `<` for little-endian).
+## Non POD (structure only !)
+
+- Virtual functions
+- Inheritance
+
+
+
 
 ---
 
-## Slide 8: **Tools for Interaction**
-1. **ctypes**:
-   - Dynamic loading of shared libraries.
-   - Define data types and call functions directly.
-   - Example: `ctypes.CDLL("library.so").function_name()`
-2. **cffi (C Foreign Function Interface)**:
-   - Define C declarations in Python.
-   - Provides both ABI and API-level interaction.
-3. **Boost.Python**:
-   - Bridges C++ and Python with minimal boilerplate.
-   - Example: Exposing C++ classes to Python.
+## Non POD example
+
+How will you implement `std::string` ?
+
 
 ---
 
-## Slide 9: **Reflection in C++**
-- **Boost.Reflection**:
-  - Simplifies runtime introspection in C++.
-  - Example: Accessing class methods and properties dynamically.
-- **Practical Use Case**:
-  - Pass dynamic objects from Python to C++ for processing.
+## `std::string` in MSVC
 
----
-
-## Slide 10: **Data Transfer Between C/C++ and Python**
-- **Examples**:
-  - Passing primitive types: `int`, `float`, `char`.
-  - Sharing complex types: Arrays, structs, and objects.
-- **Memory Management**:
-  - Ensure proper ownership (malloc/free in C, Python's GC).
-  - Use `PyCapsule` for opaque data sharing.
-
----
-
-## Slide 11: **Additional Topics**
-1. Handling Unicode Strings:
-   - Conversion between `wchar_t` and Python strings.
-2. Error Handling:
-   - Propagate errors from C++ exceptions to Python.
-3. Performance Considerations:
-   - Reduce overhead with `cffi` ABI mode.
-   - Use efficient data structures for bulk transfer.
-
----
-
-## Slide 12: **Practical Example**
-**Title**: Transferring a Struct Between C++ and Python  
-- **C++ Struct**:
 ```cpp
-struct Data {
-    int id;
-    float value;
+struct std::string {
+    char* _Ptr;         // Pointer to the string's data (heap or SSO buffer).
+    size_t _Size;       // Length of the string (excluding null terminator).
+    size_t _Capacity;   // Capacity of the buffer.
+    char _SSO[16];      // Small string optimization buffer.
 };
 ```
-- **Python Interaction**:
-```python
-from ctypes import *
-class Data(Structure):
-    _fields_ = [("id", c_int), ("value", c_float)]
+
+
+---
+
+## `std::string` in GCC (<5.0)
+
+
+```cpp
+struct std::string {
+    struct _Rep {
+        size_t _Length;     // Length of the string.
+        size_t _Capacity;   // Allocated capacity.
+        size_t _RefCount;   // Reference count for COW.
+        char _Data[1];      // Flexible array member holding the string data.
+    };
+    _Rep* _M_dataplus;      // Pointer to the _Rep structure.
+};
+
+```
+
+
+---
+
+## `std::string` in GCC (>=5.0)
+
+
+```cpp
+struct std::string {
+    union {
+        struct {
+            char* _Ptr;     // Pointer to the dynamically allocated buffer.
+            size_t _Size;   // Length of the string.
+            size_t _Cap;    // Capacity of the buffer.
+        };
+        char _SSO[24];      // Inline buffer for small string optimization.
+    };
+};
+
+
+
 ```
 
 ---
 
-## Slide 13: **Conclusion**
-- **Key Takeaways**:
-  - ABI ensures smooth interoperation.
-  - Understanding alignment, calling conventions, and endianness is critical.
-  - Tools like `ctypes` and `Boost.Python` simplify the process.
-- **Final Thought**:
-  - A well-designed ABI bridges the gap between performance and compatibility.
+##  **Endianness**
+
+Endianness refers to the order in which bytes are stored in memory for multi-byte data types (e.g., int, float, etc.).
+
+* Little-Endian:
+The least significant byte (LSB) is stored at the lowest memory address.
+Used by CPUs like x86, x86-64, ARM (in little-endian mode).
+* Big-Endian:
+The most significant byte (MSB) is stored at the lowest memory address.
+Used by older mainframes (e.g., IBM), network protocols, and PowerPC.
 
 ---
 
-Would you like more details or code snippets for any section?
+## Code !
+
+```cpp
+void PrintEndianess() {
+    unsigned int x = 0x12345678;
+    unsigned char *byte = (unsigned char *)&x;
+
+    if (byte[0] == 0x78) {
+        printf("Little-Endian\n");
+    } else if (byte[0] == 0x12) {
+        printf("Big-Endian\n");
+    }
+}
+
+```
+---
+
+## Endianess
+
+
+Most modern CPUs are little-endian but often support configurable endianness (e.g., ARM, RISC-V).
+
+Check data sent over networks to ensure portability.
+
+---
+
+
+## Bitfields
+
+- **Definition**: Bitfields are a way to pack multiple variables into a smaller memory footprint, typically used in structures.
+
+- **Syntax**:
+```cpp
+  struct Flags {
+      unsigned int a : 1;  // 1-bit wide
+      unsigned int b : 3;  // 3-bit wide
+      unsigned int c : 4;  // 4-bit wide
+  };
+```
+
+---
+
+## **Name Mangling?**
+
+- **Definition**: 
+  - The process of encoding additional information (e.g., types, namespaces) into function and variable names to ensure unique symbols in object files.
+  
+- **Why It's Needed**:
+  - C++ supports **overloading**, namespaces, and templates, requiring unique names for these in the binary.
+  - Necessary for linker to resolve symbols.
+
+- **Demangled Name**: The original name in source code.
+- **Mangling Variations**:
+  - Mangled names differ across compilers: MSVC, GCC, Clang.
+
+---
+
+## **Example of Name Mangling**
+
+```cpp
+void func() {}
+void func(int a) {}
+void func(double b) {}
+```
+
+```bash
+nm a.out | c++filt
+
+func()              -> _Z4funcv
+func(int)           -> _Z4funci
+func(double)        -> _Z4funcd
+```
+
+```bash
+dumpbin /symbols your_binary.exe
+
+func()              -> ?func@@YAXXZ
+func(int)           -> ?func@@YAXH@Z
+func(double)        -> ?func@@YAXN@Z
+```
+
+---
+
+## **Reflection in C++**
+
+**Reflection** is the ability of a program to introspect and possibly modify its structure and behavior at runtime or compile time.
+
+While C++ lacks built-in reflection like some other languages (e.g., Python, Java), various techniques and libraries provide reflection capabilities in C++.
+
+* Some macro manipulation
+* Boost.PFR
+* Other libraries
+
+---
+
+## Boost.PFR
+
+```cpp
+#include <boost/pfr.hpp>
+#include <iostream>
+
+struct Person {
+    std::string name;
+    int age;
+};
+
+int main() {
+    Person p{"Alice", 25};
+    boost::pfr::for_each_field(p, [](const auto& field) {
+        std::cout << field << '\n';
+    });
+}
+
+```
+---
+
+##  **Conclusion**
+- **Key Takeaways**:
+  - Use packed PODs for sending data:
+    - Between processes.
+    - Between DLLs/SOs.
+  - Know the alignment, size and structure of the data classes you use.
+  - Know the tools to inspect structs.
+
+

@@ -22,7 +22,7 @@ Some advanced usage tips
   * `#include` order and independency
   * `#define` before `#include`
   * `#include <common_defs.h>`
-  * `#include "c:\Users\davido\project\mordor.h`
+  * `#include "c:\Users\davido\project\mordor.h"`
 
 ---
 
