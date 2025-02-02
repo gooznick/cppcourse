@@ -121,3 +121,79 @@ Each class can be tested, extended, exported easily.
   * msvc/gdb pretty print (natvis and gdb pretty printer)
 
 
+---
+
+# Forcing initialization order
+
+```cpp
+#include <iostream>
+
+// Forward declarations
+class Init2State;
+class FullyInitialized;
+
+// Step 1: Initial State (Only allows Init1)
+class Init1State {
+public:
+    explicit Init1State() { std::cout << "Object created, Init1 required.\n"; }
+
+    Init2State Init1();
+};
+
+// Step 2: Init2State (Only allows Init2)
+class Init2State {
+public:
+    explicit Init2State() { std::cout << "Init1 done, Init2 required.\n"; }
+
+    FullyInitialized Init2();
+};
+
+
+// Main class that starts with Init1State
+class MyClass {
+public:
+    static Init1State Create() { return Init1State(); }
+};
+
+int main() {
+    auto obj = MyClass::Create()
+                   .Init1() // Must be called first
+                   .Init2(); // Must be called second
+
+    return 0;
+}
+```
+
+
+---
+
+# Singleton
+
+```cpp
+#include <iostream>
+
+class Singleton {
+private:
+    static Singleton* instance;  // Static instance pointer
+
+    // Private constructor to prevent direct instantiation
+    Singleton() { std::cout << "Singleton Created\n"; }
+
+public:
+    // Delete copy constructor and assignment operator
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    // Static method to get the single instance
+    static Singleton* getInstance() {
+        if (!instance) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+
+    void showMessage() { std::cout << "Singleton Instance Accessed\n"; }
+};
+
+
+```
