@@ -3,6 +3,12 @@ Cpp and some more presentations and demonstrations
 
 ## Content
 
+| Lecture  | Subjects  |  Presentation | Comments | 
+|---|---|---|---|
+| 1  | Preface  |   |    |  
+|    | Git  |  [git.md](git/git.md) |   |  
+|  2 |   |   |  |  
+
 * About c/cpp components
   * Compiler
     * Is not an IDE

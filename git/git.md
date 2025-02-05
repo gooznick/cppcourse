@@ -3,7 +3,11 @@ title: git
 author: eranbu
 date: 6/2024
 marp: true
+theme: gaia
+no+backgroundColor: lightblue
+
 ---
+
 
 # git
 
@@ -22,17 +26,18 @@ git commit -m "Adding new file"
 
 ---
 
-# Basic actions - I
+# Basic actions 
 
 
-![Image](images/basic_commands.png)
+<img src="images/git_repo.png" width="1000"  style="display: flex;"/>
 
----
+* `git reset HEAD myfile.cpp`  # Unstage, keep changes
+--- 
 
-# Basic actions - II
+# Stash
 
 
-![Image](images/merge_rebase.png)
+<img src="images/stash.svg" alt="Local Image" width="500" height="400" />
 
 ---
 
@@ -41,12 +46,22 @@ git commit -m "Adding new file"
 
 <img src="images/branches.png" alt="Local Image" width="500" height="400" />
 
+
+---
+
+# Merge and Rebase
+
+
+<img src="images/merge_rebase.png" width="1000"  style="display: flex;"/>
+
+
 ---
 
 # Flow
 
 
-![Image](images/flow.png)
+<img src="images/flow.png" width="1000"  style="display: flex;"/>
+
 
 ---
 
@@ -61,12 +76,28 @@ git commit -m "Adding new file"
   * CI + Automatic deploy
   * Flow
 
---- 
 
-# Stash
+---
 
+# precommit
 
-<img src="images/stash.svg" alt="Local Image" width="500" height="400" />
+<img src="images/precommit.png" width="1000"  style="display: flex;"/>
+
+* refer `.pre-commit-config.yaml`
+
+---
+
+| Hook | Purpose |
+|------|---------|
+| **Clang-Format** | Ensures consistent C++ code style |
+| **Clang-Tidy** | Detects potential bugs in C++ |
+| **CMake-Format** | Enforces proper CMake syntax |
+| **Prettier** | Formats YAML, Markdown, JSON |
+| **End-of-File Fixer** | Ensures all files end with a newline |
+| **Trailing Whitespace Fix** | Removes unnecessary spaces |
+| **Detect Large Files** | Prevents committing huge files |
+| **ShellCheck** | Checks shell scripts for errors |
+
 
 ---
 
@@ -88,6 +119,7 @@ git commit -m "Adding new file"
 * Target version
 
 ![Image](images/submodules.png)
+
 
 ---
 
