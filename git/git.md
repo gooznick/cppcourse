@@ -1,148 +1,154 @@
 ---
-title: git
-author: eranbu
+title: Git Mastery 🚀
+author: Eranbu
 date: 6/2024
 marp: true
 theme: gaia
-no+backgroundColor: lightblue
+nobackgroundColor: lightblue
+---
+
+# 🛠️ Git – Advanced Usage
+
+Some **pro tips** to level up your Git skills! 🎯
 
 ---
 
+# 🔥 Git Basics
 
-# git
-
-Some advanced usage tips
-
----
-
-# Basics
-
-``` bash
+```bash
 git init
-echo hello > hello.txt
+echo "hello" > hello.txt
 git add hello.txt
 git commit -m "Adding new file"
+```
+✅ **Initialize, stage, and commit** a file!
+
+---
+
+# 📌 Basic Actions
+
+<img src="images/git_repo.png" width="1000" style="display: flex;" />
+
+```bash
+git reset HEAD myfile.cpp
 ```
 
 ---
 
-# Basic actions 
-
-
-<img src="images/git_repo.png" width="1000"  style="display: flex;"/>
-
-* `git reset HEAD myfile.cpp`  # Unstage, keep changes
---- 
-
-# Stash
-
+# 📦 Stash – Save Work in Progress
 
 <img src="images/stash.svg" alt="Local Image" width="500" height="400" />
 
+🔹 **Temporarily save uncommitted changes**  
+🔹 Useful before switching branches  
+
+
 ---
 
-# Branch
-
+# 🌱 Branching Strategies
 
 <img src="images/branches.png" alt="Local Image" width="500" height="400" />
 
+  ```bash
+  git checkout -b feature-xyz
+  ```
 
 ---
 
-# Merge and Rebase
+# 🔄 Merge vs. Rebase
 
-
-<img src="images/merge_rebase.png" width="1000"  style="display: flex;"/>
-
+<img src="images/merge_rebase.png" width="1000" style="display: flex;" />
 
 ---
 
-# Flow
+# 📜 Git Flow – Best Practices
 
-
-<img src="images/flow.png" width="1000"  style="display: flex;"/>
-
+<img src="images/flow.png" width="1000" style="display: flex;" />
 
 ---
 
-# Tips
+#  Pro Tips
 
-* Git 
-  * Small commits
-  * Compilation = commit
-  * Precommit hooks
-* Gitlab 
-  * Protected branches
-  * CI + Automatic deploy
-  * Flow
-
+- **Small commits** – Easier debugging  
+- **Pre-commit hooks** – Automate checks  
+- **GitLab best practices**:
+  - **Protected branches**
+  - **CI/CD Pipelines**
+  - **Efficient workflows**
 
 ---
 
-# precommit
+# ✅ Pre-Commit Hooks
 
-<img src="images/precommit.png" width="1000"  style="display: flex;"/>
+<img src="images/precommit.png" width="1000" style="display: flex;" />
 
-* refer `.pre-commit-config.yaml`
-
----
-
-| Hook | Purpose |
-|------|---------|
-| **Clang-Format** | Ensures consistent C++ code style |
-| **Clang-Tidy** | Detects potential bugs in C++ |
-| **CMake-Format** | Enforces proper CMake syntax |
-| **Prettier** | Formats YAML, Markdown, JSON |
-| **End-of-File Fixer** | Ensures all files end with a newline |
-| **Trailing Whitespace Fix** | Removes unnecessary spaces |
-| **Detect Large Files** | Prevents committing huge files |
-| **ShellCheck** | Checks shell scripts for errors |
-
+💡 `.pre-commit-config.yaml`
 
 ---
 
-# Danger !
+# 🛡️ Useful Pre-Commit Hooks
 
-* History change (Confidential, large files)
-* Force push
-* Adding commit after wrong merge
-* Reset --hard
-* Git clean
-* Delete a branch
+| 🛠️ Hook | 🔍 Purpose |
+|---------|-----------|
+| **Clang-Format** | Ensures consistent C++ style |
+| **Clang-Tidy** | Finds potential bugs |
+| **CMake-Format** | Enforces clean CMake syntax |
+| **EOF Fixer** | Adds missing newline at end of file |
+| **Trailing Space Fix** | Removes unnecessary spaces |
+| **Large File Detector** | Prevents committing large files |
+| **ShellCheck** | Validates shell scripts |
 
 ---
 
-# Submodules
+# ⚠️ Git Dangers! 🚨
 
-* Clone address type (ssh/https)
-* Access rights
-* Target version
+❌ **Avoid these risky actions unless you're sure!**  
+- **Force push (`git push --force`)** 🔥  
+- **Rewriting history (e.g., `git rebase -i`)** 🕰️  
+- **Accidentally deleting a branch** 🗑️  
+- **`git reset --hard` (Loses changes!)** 😱  
+- **Committing large files (Use Git LFS)** 📂  
 
-![Image](images/submodules.png)
+---
+
+# 🏗️ Working with Submodules
+
+🛠️ **Managing external repositories inside your repo**  
+- **Choose SSH or HTTPS**  
+- **Access rights matter!**  
+- **Always checkout the correct version**  
 
 
 ---
 
-# Large files
+# 📦 Large Files
 
-* Types :
-  * Data files
-  * 3rd party binaries
-  * Precompiled files (other library)
-* Solutions :
-  * Lfs
-  * Artifactory
-  * Shared directory
-  * commit
+❌ **Common large file types**:
+- 📊 Data files
+- 🏗 3rd-party binaries
+- 🔧 Precompiled libraries  
 
 ---
 
-# etc.
+# Solutions for Large Files
 
-* New project – add all, then force push
-* Gitlab packages
-* Cherry-pick
-* Format at precommit hooks
-* Git worktree
-* Partial clone
-* bisect
+- ✅ Use **Git LFS**
+- ✅ Store in **Artifactory**
+- ✅ Keep in a **shared directory**
+- ✅ Committing them directly  
+
+---
+
+# 🎯 More Git Tips & Tricks
+
+🚀 **Power moves** every developer should know:
+- **New project?** → `git add . && git commit -m "Initial commit"`
+- **Cherry-pick commits** from another branch  
+- **Git Worktree** – Work on multiple branches at once  
+- **Partial Clone** – Speed up large repo clones  
+- **`git bisect`** – Find the commit that introduced a bug  
+
+---
+
+# Questions? 🤔
+
