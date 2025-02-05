@@ -88,6 +88,8 @@ A compiler **translates C/C++ code into machine code**.
 ✔️ Supports toolchains
 ✔️ CMake is the industry standard for large projects!
 
+<!-- Easy way to install on linux `cmake-3.31.5-linux-x86_64.sh` -->
+
 ---
 
 # 🔌 C/C++ and the OS

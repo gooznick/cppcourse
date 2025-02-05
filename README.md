@@ -7,8 +7,32 @@ Cpp and some more presentations and demonstrations
 |---|---|---|---|
 | 1  | Preface  |   |    |  
 |    | Git  |  [git.md](git/git.md) |   |  
+|    | Components  |  [components.md](components/components.md) |   |  
 |  2 |   |   |  |  
 
+* Git and gitlab
+   * git usage:
+     * basics - .git directory, packing, garbage collection, non-centralized
+     * rebase, merge, stash, push, pull, amend
+     * history and confidential items
+     * stash everything
+     * submodules pros/cons
+   * precommit hooks 
+   * Gitlab as a whole (issues-jira, gitlab-ci vs jenkins)
+   * gitlab flow
+   * branches 
+     * lightweight - working in parallel
+     * dev branch - stash
+     * CI approved
+     * master branch
+   * Large files/3rd party(os)/3rd party (internal)
+
+* About c/cpp components
+  * IDE
+  * cross compiling
+  * toolchain
+  * compiler/linker
+  * cmake
 * About c/cpp components
   * Compiler
     * Is not an IDE
@@ -33,22 +57,7 @@ Cpp and some more presentations and demonstrations
     * cpp version implementation
     * Example : reflection
  
-* Git and gitlab
-   * git usage:
-     * basics - .git directory, packing, garbage collection, non-centralized
-     * rebase, merge, stash, push, pull, amend
-     * history and confidential items
-     * stash everything
-     * submodules pros/cons
-   * precommit hooks 
-   * Gitlab as a whole (issues-jira, gitlab-ci vs jenkins)
-   * gitlab flow
-   * branches 
-     * lightweight - working in parallel
-     * dev branch - stash
-     * CI approved
-     * master branch
-   * Large files/3rd party(os)/3rd party (internal)
+
  
 * Preprocessor
   * Simple directives (#ifdef, header guard)

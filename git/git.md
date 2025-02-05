@@ -150,5 +150,16 @@ git reset HEAD myfile.cpp
 
 ---
 
+
+# Some company's specific problems
+
+- Availabe space in the servers
+- Access rights 
+  - gitlab ssh
+  - Project user
+- Network drive access rights (mount linux/windows)
+
+---
+
 # Questions? 🤔
 
