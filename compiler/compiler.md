@@ -3,17 +3,21 @@ title: compiler
 author: eranbu
 date: 6/2024
 marp: true
+theme: gaia
+
 ---
 
 # C/CPP Compiler
 
-A C/C++ compiler is a grumpy wizard that grudgingly transforms your poetic code into machine gibberish, while delighting in pointing out every tiny mistake you make.
+A **C/C++ compiler** is a grumpy wizard that grudgingly transforms your poetic code into **machine gibberish**, while delighting in pointing out every tiny mistake you make.
 
 ---
 
 # Optimization
 
-<img src="images/dragons.webp" alt="Local Image" width="200" height="100" />
+<img src="images/dragons.webp" alt="Local Image" width="800"  />
+
+---
 
 Magics list:
 1. Code Reordering (Instruction Scheduling)
@@ -98,7 +102,7 @@ _Z3foov:
 
 # Language
 
-![Image](images/compiler_support.png)
+![Image](images/versions.png)
 
 ---
 
@@ -117,41 +121,64 @@ int main() {
     return 0;
 }
 ```
+
+<!---
+4 16 36 64 100
+-->
+
+
 ---
 
-# Flags
+# 🛠️ Optimization Flags  
 
-* Class I
-  * Options that Control Optimization.
-  * Options for Debugging Your Program.
-* Class II
-  * Options Controlling C++ Dialect.
-  * Options to Control Diagnostic Messages Formatting
-  * Options to Request or Suppress Warnings.
-  * Options Controlling the Kind of Output.
-* Class III
-  * Options Controlling the Preprocessor.
-  * Options for Directory Search.
-  * Program Instrumentation Options.
+| **Flag** | **MSVC** | **GCC** | **Effect** |
+|---------|-----------------|-----------------|------------|
+| **None (Debug Mode)** | `/Od` | `-O0` | No optimizations |
+| **Basic Optimizations** | `/O1` | `-O1` | Optimize for size & speed |
+| **Full Optimizations** | `/O2` | `-O2` | Optimize aggressively |
+| **Max Optimizations** | `/Ox` | `-O3` | Highest optimization level |
+| **Optimize for Size** | `/Os` | `-Os` | Optimize for small binaries |
 
+
+---
+
+
+# ⚠️ Warning & Debugging Flags  
+
+| **Flag** | **MSVC** | **GCC** | **Effect** |
+|---------|-----------------|-----------------|------------|
+| **Enable All** | `/W4` | `-Wall` | Show most warnings |
+| **Extra Warnings** | `/Wall` | `-Wextra` | More strict checking |
+| **Treat as Errors** | `/WX` | `-Werror` | Warnings become errors |
+| **Debug Info** | `/Zi` | `-g` | Enable debugging symbols |
+
+---
+
+# 🚀 More Flags?  
+
+✔ **Linking Flags** (`/MD`, `-static`)  
+✔ **Standard Selection** (`/std:c++17`, `-std=c++20`)  
+✔ **Multithreading Flags** (`/openmp`, `-fopenmp`)  
 
 ---
 
 # Godbolt
 
 
-![Image](images/godbolt.png)
+<img src="images/godbolt.png" alt="Local Image" width="1000"  />
 
 ---
 
-# Compilation error
-
+# Common Compilation Errors & Fixes
 
 * Compile a single file. (`make VERBOSE=1` / `cmake --build . -- VERBOSE=1`)
-* Check flags and preprocessor definitions.
 * Begin with first error / warning.
-* Check list of included files (flag!)
-* Check the preprocessed file (flag !)
+* Check flags and preprocessor definitions.
+* Check the preprocessed file
+
+* Check list of included files (`-H`/`/showIncludes`)<!--- slow compilation -->
+  * Too long ?
+  * Network ?
 
 ---
 
@@ -167,6 +194,8 @@ int main() {
     return 0;
 }
 ```
+
+🔹 **Error: `undefined reference`**
 
 <!---
 undefined reference 
@@ -187,22 +216,6 @@ int main() {
  error: initializer-string for char array is too long
  -->
 
-
----
-
-```cpp
-#include <windows.h>
-
-bool is_odd(int IN)
-{
-    return IN % 2 == 1;
-}
-```
-
-```
- error C3071: operator '%' can only be applied to an instance of a ref class or a value-type
-Compiler returned: 2
-```
 
 ---
 
@@ -233,17 +246,6 @@ A a;
 expected initializer before 'a'
 ```
 
----
-
-```cpp
-class A
-{
-    A(){};
-}
-
-A a;
-```
-
 <!---
 A::A()' is private within this context```
 -->
@@ -267,17 +269,16 @@ error C2662: 'int A::a(void)': cannot convert 'this' pointer from 'const A' to '
 note: Conversion loses qualifiers
 ```
 
+<!---
+A::a()' has single parameter - this. "this" in foo is const, it cannot change to non const.
+-->
 
 ---
 
 ```cpp
- struct A
-    {
-        int a() {return 1;}
-    };
-
-void foo(const A& a){
-    a.a();
+int main()
+{
+    return 1;
 }
 ```
 
@@ -360,4 +361,8 @@ int main() {
 time g++ -std=c++17 -O2 slow.cpp -o slow_compile
 ```
 
-
+<!---
+real    0m2.020s
+user    0m1.809s
+sys     0m0.166s
+-->

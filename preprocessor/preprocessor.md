@@ -3,6 +3,7 @@ title: preprocessor
 author: eranbu
 date: 6/2024
 marp: true
+theme: gaia
 ---
 
 # C/C++ Preprocessor
@@ -17,12 +18,14 @@ Some advanced usage tips
   * `#include <>` > `#include ""`
   * In most implementations `""` will look first in the local directory
 
-* Pitfalls :
-  * `#include <windows.h>`
-  * `#include` order and independency
-  * `#define` before `#include`
-  * `#include <common_defs.h>`
-  * `#include "c:\Users\davido\project\mordor.h"`
+--- 
+
+⚠ **Common pitfalls:**
+- Ensure headers are **self-contained**
+- **Avoid contamination** - Do not define macros or `using namespace` in header file.
+- **Beware of contamination** - `#include <windows.h>`
+- **Avoid using common names** - `#include <common_defs.h>`
+- Do not use **absolute paths** - `#include "c:\Users\davido\project\mordor.h"`
 
 ---
 
@@ -56,7 +59,7 @@ target_compile_definitions(my_program PRIVATE USE_EIGEN=1)
 ```
 
 * Debug definitions :
-  * "NDEBUG" - standard for <assert.h>
+  * "NDEBUG" - standard (for <assert.h>)
   * "_DEBUG" - used in MSVC (using debug runtime)
   * "DEBUG" - commonly used
 
@@ -68,8 +71,6 @@ Old :
 ```cpp
 #ifndef _MY_HEADER
 #define _MY_HEADER
-
-// bla bla
 #endif
 ```
 
@@ -79,6 +80,7 @@ New :
 ```
 
 * Don't use within a cpp file
+* If file can be #included more than once, use `.inc` extension
 
 ---
 
@@ -145,47 +147,19 @@ int main() {
 
 ---
 
-# Boost preprocess library
+# Predefined 
 
-```cpp
-#include <boost/preprocessor.hpp>
-#include <iostream>
-
-// Define the enum entries
-#define COLOR_ENUM_SEQ (RED)(GREEN)(BLUE)(YELLOW)
-
-// Generate the enum definition
-#define GENERATE_ENUM(r, data, elem) elem,
-
-enum Color {
-    BOOST_PP_SEQ_FOR_EACH(GENERATE_ENUM, _, COLOR_ENUM_SEQ)
-};
-
-// Generate the to_string function
-#define GENERATE_STRING_CASE(r, data, elem) case elem: return BOOST_PP_STRINGIZE(elem);
-
-const char* to_string(Color color) {
-    switch (color) {
-        BOOST_PP_SEQ_FOR_EACH(GENERATE_STRING_CASE, _, COLOR_ENUM_SEQ)
-        default: return "Unknown";
-    }
-}
-```
+* Standard :
+  * `__FILE__`  `__LINE__`  `__func__`
+  * `__DATE__`  `__TIME__`
+  * `__cplusplus` → **C++ standard version**
 
 ---
 
 # Predefined 
 
-* Standard :
-  * __FILE__
-  * __LINE__
-  * __DATE__
-  * __TIME__
-  * __func__
-  * __cplusplus__
-
 * Non-standard:
-  * _MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__
+  * `_MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__`
 
 * Show all definitions:
 ```bash
@@ -194,20 +168,173 @@ echo | g++ -dM -E -x c++ -
 
 --- 
 
-# Some more `#pragma`s 
+# ⚡ More `#pragma` Directives  
 
 * #pragma omp
+* #pragma warning(disable: 4996) 
 * #pragma warning
 * #pragma pack()
 
+* #pragma GCC optimize ("O3")  
+* #pragma GCC poison free   
+
 ---
 
-# Debug
+# 🛠️ Debugging Preprocessor Output  
 
-* Preprocess (no main!):
-  * `g++ -E myfile.cpp`
-  * `cl /P myfile.cpp`
+**Preprocess the code (without compiling)**:
+gcc:
+```bash
+g++ -E myfile.cpp
+```
 
-* Look carefully at the definitions in the commandline.
+msvc:
+```bash
+cl /P myfile.cpp
+```
 
-* Add `#ifdef` - `#error` - `#endif`
+---
+
+# 🛠️ Debugging Macros  
+
+
+**Check command-line definitions:**
+- Use `#ifdef` + `#error` to debug:
+```cpp
+#ifdef MY_MACRO
+#error "MY_MACRO is defined!"
+#endif
+```
+🔹 **Compilation will stop, and the error will be shown.**
+
+---
+
+# 🛠️ Debugging - 1
+
+```cpp
+#include <gdal.h>
+
+int main()
+{
+  return 1;
+}
+```
+
+`undefined reference to 'main'`
+
+<!---
+#define main Main
+-->
+
+---
+
+# 🛠️ Debugging - 2
+
+```cpp
+#include <Slike.h>
+
+int main()
+{
+  return 1;
+}
+```
+
+Fails only in linux :
+`fatal error: Slike.h: No such file or directory`
+
+<!---
+upper/lower case
+-->
+
+---
+
+# 🛠️ Debugging - 3
+
+```cpp
+#include <algorithm>
+#include <Windows.h>
+
+bool is_odd(int IN){return IN % 2 == 1;}
+
+int main()
+{
+
+    int k = std::min(3, 4);
+    return 0;
+}
+```
+
+```
+error C2589: '(' : illegal token on right side of '::'
+error C2059: syntax error : '::'
+```
+
+<!---
+#define NOMINMAX 
+windows defines min and max
+(it defines IN and OUT too)
+-->
+
+---
+
+# 🛠️ Debugging - 4
+
+Compiling :
+```cpp
+#include <a.h>
+#include <b.h>
+```
+
+Not compiling :
+```cpp
+#include <b.h>
+#include <a.h>
+```
+
+<!---
+Check contamination.
+Fwd declaration.
+-->
+
+---
+
+# 🛠️ Debugging - 5
+
+```cpp
+// A.h
+#pragma once
+#include "B.h"  
+struct A {
+    B* obj;  
+};
+```
+
+```cpp
+// B.h
+#pragma once
+#include "A.h"  
+struct B {
+    A* obj;  
+};
+```
+
+<!---
+error: ‘A’ does not name a type
+fwd declaration.
+-->
+
+---
+
+
+# 🎯 Summary  
+
+✔️ **Choose header names and directories wisely**  
+✔️ **Know how to preprocesses a file**  
+✔️ **Understand `#include` pitfalls**  
+✔️ **Use macros wisely**  
+✔️ **Use Boost Preprocessor**  
+
+
+---
+
+# 🎉 Questions?  
