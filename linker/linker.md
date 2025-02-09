@@ -110,6 +110,24 @@ g++ main.o -o app -lfoo
 * Delay load in windows
 * Versioning (`so.1.2.3`)
 
+--- 
+
+## **Boost::dll Example**
+
+```cpp
+// Load the shared library
+#ifdef _WIN32
+boost::dll::shared_library lib("mylib.dll");
+#else
+boost::dll::shared_library lib("libmylib.so");
+#endif
+// Import the function dynamically
+boost::function<void()> hello_func = lib.get<void()>("hello");
+// Call the function
+hello_func();
+
+```
+
 ---
 
 # Name Mangling 
@@ -158,6 +176,58 @@ extern "C" {
 - **Avoiding cross-compiler mangling issues**
 
 
+
+---
+
+# Function Visibility 
+
+✅ **Windows (DLLs)** → Uses `__declspec(dllexport)` & `__declspec(dllimport)`.  
+✅ **Linux (SOs)** → Uses `__attribute__((visibility("default")))`.  
+
+Notes :
+* `__declspec(dllimport)` is optional, for functions.
+* Linux - default is visible, Windows - default is invisible.
+* Which functions are exported: `nm -D` , `objdump` / `dependencies`
+---
+# 🔹 Function Visibility in Windows
+
+```cpp
+#ifdef BUILD_DLL
+#define API_EXPORT __declspec(dllexport)
+#else
+#define API_EXPORT __declspec(dllimport)
+#endif
+
+API_EXPORT void myFunction(); // Exported function
+```
+✅ **Importing (from EXE or another DLL)** → Use `__declspec(dllimport)`
+
+---
+
+# 🔹 Function Visibility in Linux
+
+✅ **Explicit export using `visibility("default")`**
+```cpp
+__attribute__((visibility("default"))) void myFunction();
+```
+
+
+---
+# Version Script (Linux)
+
+### `mylib.map`
+```plaintext
+MYLIB {
+    global:
+        my_*; // Exported
+    local:
+        *;  // Hide everything else
+};
+```
+
+```bash
+g++ -shared -o libmylib.so mylib.o -Wl,--version-script=mylib.map
+```
 ---
 
 # DLL Hell (Windows)
@@ -250,3 +320,86 @@ value '0' doesn't match value '2'
 ✅ **Check which DLL is loaded**  
 * Windows : Debug -> Windows -> Modules
 * Linux : gdb -> `info shared`
+
+---
+
+# ❓ Q: What happens if a function exported by a DLL is missing in the `.lib` file?
+
+- `①` The function cannot be used at all.  
+- `②` The function can still be loaded using `LoadLibrary()` and `GetProcAddress()`.  
+- `③` The application crashes at startup.  
+- `④` The linker automatically resolves the missing function at runtime.  
+<!---
+✅ **Answer:** **The function can still be loaded using `LoadLibrary()` and `GetProcAddress()`.**  
+🔍 **Explanation:** The `.lib` file is only needed for static linking. Dynamic loading (`LoadLibrary`) bypasses it.
+-->
+
+---
+
+# ❓ Q: Which command shows if a program is missing an `.so` file in Linux?
+
+- `①` `ls -l /usr/lib/ | grep mylib.so`  
+- `②` `nm -D mybinary`  
+- `③` `ldd mybinary`  
+- `④` `objdump -d mybinary | grep mylib.so`  
+
+<!---
+✅ **Answer:** **`ldd mybinary`**  
+🔍 **Explanation:** `ldd` prints all dynamically linked libraries and highlights missing `.so` files.
+-->
+---
+
+# ❓ Q: What happens if a Windows DLL is compiled with `/MDd` and linked to a `/MD` executable?
+
+- `①` The program runs fine with a performance hit.  
+- `②` The program crashes due to runtime mismatch.  
+- `③` The linker issues a warning but allows execution.  
+- `④` The DLL is ignored, and the executable uses static linkage instead.  
+
+<!---
+✅ **Answer:** **The program crashes due to runtime mismatch.**  
+🔍 **Explanation:** **Debug (`/MDd`) and Release (`/MD`) runtime libraries are incompatible** due to different heap implementations.
+-->
+---
+
+
+# ❓ Q: What does the `-Wl,-rpath=/custom/path` flag do in GCC linking?
+
+- `①` Sets the default path for `dlopen()`.  
+- `②` Hardcodes `/custom/path` as the runtime search path for `.so` files.  
+- `③` Makes the linker ignore all default system libraries.  
+- `④` Embeds the `.so` directly into the executable.  
+
+<!---
+✅ **Answer:** **Hardcodes `/custom/path` as the runtime search path for `.so` files.**  
+🔍 **Explanation:** This ensures that when the program runs, it **prefers** shared objects from `/custom/path` **without needing `LD_LIBRARY_PATH`**.
+-->
+---
+
+
+# ❓ Q: What does `ldconfig` do in Linux?
+
+- `①` Loads shared libraries into memory.  
+- `②` Updates the dynamic linker’s cache of `.so` locations.  
+- `③` Compiles `.so` files into `.o` files.  
+- `④` Forces all running programs to reload their `.so` dependencies.  
+
+<!---
+✅ **Answer:** **Updates the dynamic linker’s cache of `.so` locations.**  
+🔍 **Explanation:** Run `ldconfig -p | grep mylib.so` to see if a library is registered.
+-->
+---
+
+# ❓ Q: How can you check if a Windows DLL is loaded into a process?
+
+- `①` `tasklist /m mylib.dll`  
+- `②` `Get-Process | Where-Object { $_.Modules.ModuleName -match "mylib.dll" }`  
+- `③` Use the "Modules" window in Visual Studio Debugger.  
+- `④` All of the above.  
+
+<!---
+✅ **Answer:** **All of the above.**  
+🔍 **Explanation:** Each method works, but **Process Explorer (Sysinternals) is the best** visual tool for checking loaded DLLs.
+-->
+---
+

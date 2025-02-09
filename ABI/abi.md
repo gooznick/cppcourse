@@ -3,13 +3,15 @@ title: abi
 author: eranbu
 date: 12/2024
 marp: true
-backgroundColor: #fff
-backgroundImage: linear-gradient(to right, #fff, #f0f0f0)
+theme: gaia
 
 ---
 
 ## ABI
 - **Understanding ABI:** Bridging C/C++ and Python, Communication and More.
+
+<img src="images/abi.png" width="400" style="display: flex;" />
+
 
 ---
 
@@ -18,7 +20,7 @@ backgroundImage: linear-gradient(to right, #fff, #f0f0f0)
 
 - **Key Components**:
   - Data types and alignment
-  - Object layout in memory
+  - Object layout 
   - Function calling conventions
   - Name mangling in C++
 
@@ -29,20 +31,27 @@ backgroundImage: linear-gradient(to right, #fff, #f0f0f0)
 2. Calling Conventions
 3. Data Types and Compatibility
 4. Endianness
-6. Reflection in C++
-
+5. Reflection in C++
 
 ---
 
 ## Simple types
 
 
-| **Type**       | **Size (Linux, GCC)** | **Size (Windows, MSVC)** | **Notes**                                                                                     |
+| **Type**       | **Size (Linux)** | **Size (Windows)** | **Notes**                                                                                     |
 |-----------------|-----------------------|--------------------------|------------------------------------------------------------------------------------------------|
 | `char`          | 1 byte               | 1 byte                  | Always 1 byte (8 bits) per the C++ standard.                                                 |
 | `bool`          | 1 byte               | 1 byte                  | Represents `true` or `false`.                                                                |
 | `short`         | 2 bytes              | 2 bytes                 | Both platforms use 16 bits for `short`.                                                      |
 | `int`           | 4 bytes              | 4 bytes                 | Always 32 bits on both platforms.                                                            |
+
+---
+
+## Simple types
+
+
+| **Type**       | **Linux** | **Windows** | **Notes**                                                                                     |
+|-----------------|-----------------------|--------------------------|------------------------------------------------------------------------------------------------|
 | `long`          | 8 bytes              | 4 bytes                 | **Linux**: 64 bits. **Windows**: 32 bits. This is the most significant difference.           |
 | `long long`     | 8 bytes              | 8 bytes                 | 64 bits on both platforms.                                                                   |
 | `float`         | 4 bytes              | 4 bytes                 | IEEE 754 single-precision (32 bits).                                                        |
@@ -52,17 +61,27 @@ backgroundImage: linear-gradient(to right, #fff, #f0f0f0)
 | `size_t`        | 8 bytes              | 8 bytes                 | Equivalent to `unsigned long` on Linux, `unsigned long long` on Windows.                    |
 | `wchar_t`       | 4 bytes              | 2 bytes                 | **Linux**: 4 bytes (UTF-32). **Windows**: 2 bytes (UTF-16).                                   |
 
+---
+
+## Practical Usage
+
+```cpp
+#include <stdint.h>
+#include <climits>
+
+uint16_t t1;
+double d;
+
+static_assert(CHAR_BIT == 8, "Expected 8-bit bytes");
+```
 
 ---
 
 ## **Alignment and Padding**
-- **Definition**: Ensures memory alignment for efficient CPU access.
-- **Why Important**: Impacts performance and data transfer compatibility.
+- **Why Important**: Ensures memory alignment for efficient CPU access.
 - **C/C++ Specifics**:
   - Structures may include padding to align data.
-  - Use `#pragma pack` or `alignas` for custom control.
-- **Python Considerations**:
-  - Python's `struct` module respects alignment rules for binary data.
+  - Use `#pragma pack` for custom control.
 
 ---
 
@@ -83,8 +102,11 @@ struct MyStruct {
 ```cpp
 struct MyStruct {
     char a;    // 1 byte
+    char pad1[3];
     int b;     // 4 bytes
     short c;   // 2 bytes
+    char pad2[2];
+
 };
 ```
 
@@ -122,12 +144,9 @@ pahole a.out
 ```
 struct MyStruct {
         char                       a;                    /*     0     1 */
-
         /* XXX 3 bytes hole, try to pack */
-
         int                        b;                    /*     4     4 */
         short int                  c;                    /*     8     2 */
-
         /* size: 12, cachelines: 1, members: 3 */
         /* sum members: 7, holes: 1, sum holes: 3 */
         /* padding: 2 */
@@ -155,7 +174,7 @@ class MyStruct
 
 ---
 
-## No packing 
+## Disable padding
 
 
 ```cpp
@@ -197,9 +216,6 @@ POD types allow direct memory manipulation and guarantee a predictable memory la
 
 - Virtual functions
 - Inheritance
-
-
-
 
 ---
 
@@ -266,6 +282,11 @@ struct std::string {
 
 ##  **Endianness**
 
+<img src="images/endianness.webp" width="700" style="display: flex;" />
+
+---
+##  **Endianness**
+
 Endianness refers to the order in which bytes are stored in memory for multi-byte data types (e.g., int, float, etc.).
 
 * Little-Endian:
@@ -273,7 +294,7 @@ The least significant byte (LSB) is stored at the lowest memory address.
 Used by CPUs like x86, x86-64, ARM (in little-endian mode).
 * Big-Endian:
 The most significant byte (MSB) is stored at the lowest memory address.
-Used by older mainframes (e.g., IBM), network protocols, and PowerPC.
+Used by older mainframes, **network protocols**, and PowerPC.
 
 ---
 
@@ -293,6 +314,26 @@ void PrintEndianess() {
 
 ```
 ---
+
+## Code ! [c++20]
+
+```cpp
+#include <bit>
+#include <iostream>
+
+int main() {
+    if constexpr (std::endian::native == std::endian::little) {
+        std::cout << "Little Endian\n";
+    } else if constexpr (std::endian::native == std::endian::big) {
+        std::cout << "Big Endian\n";
+    } else {
+        std::cout << "Mixed Endian (Rare CPU!)\n";
+    }
+}
+```
+
+---
+
 
 ## Endianess
 
@@ -319,52 +360,9 @@ Check data sent over networks to ensure portability.
 
 ---
 
-## **Name Mangling?**
-
-- **Definition**: 
-  - The process of encoding additional information (e.g., types, namespaces) into function and variable names to ensure unique symbols in object files.
-  
-- **Why It's Needed**:
-  - C++ supports **overloading**, namespaces, and templates, requiring unique names for these in the binary.
-  - Necessary for linker to resolve symbols.
-
-- **Demangled Name**: The original name in source code.
-- **Mangling Variations**:
-  - Mangled names differ across compilers: MSVC, GCC, Clang.
-
----
-
-## **Example of Name Mangling**
-
-```cpp
-void func() {}
-void func(int a) {}
-void func(double b) {}
-```
-
-```bash
-nm a.out | c++filt
-
-func()              -> _Z4funcv
-func(int)           -> _Z4funci
-func(double)        -> _Z4funcd
-```
-
-```bash
-dumpbin /symbols your_binary.exe
-
-func()              -> ?func@@YAXXZ
-func(int)           -> ?func@@YAXH@Z
-func(double)        -> ?func@@YAXN@Z
-```
-
----
-
 ## **Reflection in C++**
 
 **Reflection** is the ability of a program to introspect and possibly modify its structure and behavior at runtime or compile time.
-
-While C++ lacks built-in reflection like some other languages (e.g., Python, Java), various techniques and libraries provide reflection capabilities in C++.
 
 * Some macro manipulation
 * Boost.PFR
@@ -393,12 +391,100 @@ int main() {
 ```
 ---
 
-##  **Conclusion**
-- **Key Takeaways**:
-  - Use packed PODs for sending data:
-    - Between processes.
-    - Between DLLs/SOs.
-  - Know the alignment, size and structure of the data classes you use.
-  - Know the tools to inspect structs.
+## **How to Ensure ABI Compatibility**
+✅ **Use Standard C Types** (`int32_t`, `size_t`).  
+✅ **Use single byte packing**.  
+✅ **Never remove or reorder struct fields**.  
+✅ **Add functions that returns structs sizes**.  
+✅ **When using extern c - Never change function API**.  
 
 
+---
+
+# ❓ Q: What happens if you change the order of fields in a struct that is used in a shared library?
+
+- `①` Nothing, the compiler automatically adjusts offsets.  
+- `②` It may break ABI compatibility because offsets change.  
+- `③` The linker will resolve the new field order dynamically.  
+- `④` Only affects Windows, not Linux.  
+
+<!---
+✅ **Answer:** **② It may break ABI compatibility because offsets change.**  
+🔍 **Explanation:** Changing the field order alters the memory layout, which breaks binary compatibility for programs compiled with the old layout.
+-->
+
+---
+
+# ❓ Q: Which of these C++ features does NOT affect ABI?
+
+- `①` Virtual functions  
+- `②` Inline functions  
+- `③` Name mangling  
+- `④` Static local variables  
+
+<!---
+✅ **Answer:** **④ Static local variables**  
+🔍 **Explanation:** Virtual functions change vtable layout, inline functions may affect linking, and name mangling affects symbol resolution.  
+Static local variables only impact runtime behavior but do not affect binary compatibility.
+-->
+
+---
+
+# ❓ Q: What is the most reliable way to maintain ABI compatibility in a shared library?
+
+- `①` Use `extern "C"` for exported symbols.  
+- `②` Never change struct layouts, vtables, or function signatures.  
+- `③` Use symbol versioning (`-Wl,--version-script`).  
+- `④` All of the above.  
+
+<!---
+✅ **Answer:** **④ All of the above.**  
+🔍 **Explanation:** ABI compatibility requires careful management of symbols, function signatures, and struct layouts, along with symbol versioning when necessary.
+-->
+
+---
+
+# ❓ Q: Which of the following changes in a shared library **DOES NOT** break ABI?
+
+- `①` Changing a function parameter from `int` to `long`  
+- `②` Adding a new function at the end of the `.so`  
+- `③` Removing an unused function  
+- `④` Changing the order of struct fields  
+
+<!---
+✅ **Answer:** **② Adding a new function at the end of the `.so`**  
+🔍 **Explanation:** Adding new functions does not break ABI as long as existing functions and their signatures remain unchanged.
+-->
+
+---
+
+# ❓ Q: Which tool helps check exported symbols in a shared object in Linux?
+
+- `①` `ldd`  
+- `②` `nm -D`  
+- `③` `objdump -t`  
+- `④` `readelf -h`  
+
+<!---
+✅ **Answer:** **② `nm -D`**  
+🔍 **Explanation:** `nm -D` lists all **dynamically exported symbols** in a shared library (`.so`).
+-->
+
+---
+
+# ❓ Q: Why do different compilers (GCC, Clang, MSVC) generate incompatible binaries?
+
+- `①` Different function calling conventions.  
+- `②` Different name mangling schemes.  
+- `③` Different vtable layouts.  
+- `④` All of the above.  
+
+<!---
+✅ **Answer:** **④ All of the above.**  
+🔍 **Explanation:** Each compiler has **different ABI rules** for function calling, name mangling, and class vtable layouts, making cross-compiler compatibility difficult.
+-->
+
+---
+
+
+ 
