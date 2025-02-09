@@ -126,6 +126,70 @@ int main() {
 4 16 36 64 100
 -->
 
+---
+
+# The C/C++ Spec
+
+<img src="images/bible.png" alt="Local Image" width="400"  />
+
+---
+
+
+# Undefined Behavior (UB)
+
+<img src="images/ub.jpeg" alt="Local Image" width="200"  />
+
+* **Behavior not specified by the C++ standard**  
+* The compiler is **free to do anything** (crash, optimize, etc.)
+* No guarantees! UB can cause:
+  * Crashes  
+  * Silent data corruption  
+
+💀 **Avoid UB at all costs!**
+
+---
+
+# Common Types of Undefined Behavior
+
+```cpp
+// ❌ 1. Division by zero (UB: Crash or unexpected result)
+int x = 42;
+int y = x / 0; 
+
+// ❌ 2. Out-of-bounds array access (UB: Overwriting random memory)
+int arr[5];
+arr[10] = 7; 
+
+// ❌ 3. Dereferencing null or invalid pointer (UB: Segmentation fault)
+int* p = nullptr;
+*p = 5; 
+
+// ❌ 4. Using an uninitialized variable (UB: Garbage value or crash)
+int a;
+int b = a + 1; 
+```
+
+---
+
+```cpp
+// ❌ 5. Use-after-free (UB: Accessing freed memory)
+int* ptr = new int(10);
+delete ptr;
+std::cout << *ptr; 
+
+// ❌ 6. Signed integer overflow (UB: Compilers assume it NEVER happens!)
+int max = INT_MAX;
+int result = max + 1; // UB: Wraparound not guaranteed in signed integers
+
+// ❌ 7. Non-void function missing a return statement (UB: Can cause random behavior)
+int brokenFunction() {
+    // No return statement! UB if this function is called.
+}
+
+// ❌ 8. Type punning (UB: Violates strict aliasing rules)
+float f = 1.5f;
+int* ip = (int*)&f; 
+```
 
 ---
 

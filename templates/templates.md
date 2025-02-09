@@ -114,6 +114,29 @@ public:
 
 --- 
 
+# `if constexpr` instead of specialization and enable_if
+
+```cpp
+#include <iostream>
+#include <type_traits>
+
+template <typename T>
+void processPixel(T& pixel) {
+    if constexpr (std::is_integral_v<T>) {
+        // Process integer pixels (e.g., normalize to [0, 255])
+        pixel = (pixel > 255) ? 255 : pixel;
+    } else if constexpr (std::is_floating_point_v<T>) {
+        // Process floating-point pixels (e.g., clamp to [0.0, 1.0])
+        pixel = (pixel > 1.0) ? 1.0 : pixel;
+    } else {
+        std::cout << "Unsupported pixel type!\n";
+    }
+}
+```
+
+
+---
+
 # Examples
 
 - Computations for different types of images
