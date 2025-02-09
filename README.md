@@ -3,13 +3,14 @@ Cpp and some more presentations and demonstrations
 
 ## Content
 
-| Lecture  | Subjects|  Presentation                                    | Comments | 
-|----|---------------|--------------------------------------------------|----------|
-|  1 | Preface       |                                                  |          |  
-|    | Git           |  [git.md](git/git.md)                            |          |  
-|    | Components    |  [components.md](components/components.md)       |          |  
-|  2 | Preprocessor  |  [preprocessor.md](preprocessor/preprocessor.md) |          |  
-|    | Compiler      |  [compiler.md](compiler/compiler.md)             |          |  
+| Lecture  | Subjects|  Presentation                                    | Comments   | 
+|----|---------------|--------------------------------------------------|------------|
+|  1 | Preface       |                                                  |            |  
+|    | Git           |  [git.md](git/git.md)                            |            |  
+|    | Components    |  [components.md](components/components.md)       |            |  
+|  2 | Preprocessor  |  [preprocessor.md](preprocessor/preprocessor.md) |            |  
+|    | Compiler      |  [compiler.md](compiler/compiler.md)             |            |  
+|  3 | Linker        |  [linker.md](linker/linker.md)                   |  +dll/so   |  
 
 ## Urgent Todos :
 
