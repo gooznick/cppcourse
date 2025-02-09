@@ -11,6 +11,22 @@ Cpp and some more presentations and demonstrations
 |  2 | Preprocessor  |  [preprocessor.md](preprocessor/preprocessor.md) |          |  
 |    | Compiler      |  [compiler.md](compiler/compiler.md)             |          |  
 
+## Urgent Todos :
+
+* Add to compiler two slides:
+   * The bible (standard)
+   * Undefined behavior : types, how to avoid, memcopy, alignment
+* Add to preprocessor/compiler/components :
+   * Additions :
+      * Standard c library : <stdlib.h> <malloc.h>
+      * Standard cpp library : stl 
+      * OS specific : <windows.h> <winsock2.h> / <unistd.h> <pthread.h>
+      * Compiler specific : intrinsics(x86intrin.h> / <intrin.h> 
+      * Windows specifiv : mfc
+* Add about cuda
+
+## Agenda
+
 * Git and gitlab
    * git usage:
      * basics - .git directory, packing, garbage collection, non-centralized
