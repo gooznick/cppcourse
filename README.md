@@ -24,6 +24,7 @@ Cpp and some more presentations and demonstrations
       * Compiler specific : intrinsics(x86intrin.h> / <intrin.h> 
       * Windows specifiv : mfc
 * Add about cuda
+* In memory : Add the linux command to allocate page immediately.
 
 ## Agenda
 
