@@ -1,0 +1,6 @@
+TPL {
+    global:
+        tpl_*;
+    local:
+        *;
+};
