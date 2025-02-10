@@ -360,6 +360,27 @@ Check data sent over networks to ensure portability.
 
 ---
 
+## **ABI and DLL**
+
+* Never use non POD
+* Never throw an exception (== Always catch all exceptions)
+* Memory:
+  * One may pass pointer
+  * Same dll should allocate and deallocate
+
+---
+
+## **Memory in DLL**
+
+* Returning error message:
+   * `const char* GetErrorMessage()`
+   * `void GetErrorMessage(size_t size, char* message)`
+
+* Who allocates? 
+* Who deallocates? When ?
+
+---
+
 ## **Reflection in C++**
 
 **Reflection** is the ability of a program to introspect and possibly modify its structure and behavior at runtime or compile time.
