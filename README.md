@@ -20,6 +20,75 @@ Cpp and some more presentations and demonstrations
    * Undefined behavior : types, how to avoid, memcopy, alignment
 * In memory : Add the linux command to allocate page immediately.
 
+
+### **C++ Lecture Schedule **  
+
+1. **Version Control with Git and GitLab**  
+   - Best practices for using Git 
+   - Submodules and large files
+   - Understanding "GitLab Flow" and recommended workflows  
+
+2. **C++ Build System and Toolchain**  
+   - Overview of the C++ toolchain (compiler, linker, debugger)  
+
+3. **The C++ Preprocessor**  
+   - Role and importance in C++ development  
+   - Debugging preprocessor issues and common pitfalls  
+
+4. **The C++ Compiler**  
+   - Compilation stages and optimizations  
+   - Tools for analyzing compilation behavior  
+   - Debugging compilation errors  
+
+5. **The Linker in C++**  
+   - How linking works in C++  
+   - Static vs. dynamic linking  
+   - Common linking issues and debugging strategies  
+
+6. **Application Binary Interface (ABI) in C++**  
+   - ABI stability and compatibility  
+   - Best practices for designing shared libraries and exporting APIs  
+
+7. **Debugging C++ Applications**  
+   - Understanding debugging information
+   - Advanced debugging tools and methodologies
+
+8. **Memory Management in C++**  
+   - Stack vs. heap memory allocation  
+   - Runtime memory allocation strategies
+   - Identifying and resolving memory-related issues
+
+9. **Software Testing in C++**  
+   - Unit testing, integration testing, and system testing
+   - Automating tests with Continuous Integration (CI)  
+
+10. **Multithreading in C++**  
+   - C++ threading model and best practices  
+   - Understanding threads and task-based concurrency
+   - Debugging multithreaded applications  
+
+11. **Numerical Computation in C++**  
+   - Fixed-point and floating-point representation in C++  
+   - Precision considerations and floating-point standards  
+
+12. **Error Handling in Modern C++**  
+   - Exception handling and best practices  
+   - Alternative approaches
+
+13. **Integrating C++ with Python**  
+   - Running Python code from C++  
+   - Running C++ code from python
+   - Using **pybind11** for seamless C++-Python interoperability
+
+14. **Advanced C++ Features**  
+   - Effective use of design patterns like **Singletons**  
+   - When to use classes and templates
+
+15. **Working with Third-Party C++ Libraries**  
+   - Best practices for using external libraries
+   - Using **OpenCV, Boost, and GDAL**
+
+
 ## Agenda
 
 * Git and gitlab
