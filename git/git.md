@@ -9,7 +9,7 @@ nobackgroundColor: lightblue
 
 # 🛠️ Git – Advanced Usage
 
-Some **pro tips** to level up your Git skills! 🎯
+Some **tips** to level up your Git skills!
 
 ---
 
@@ -21,7 +21,39 @@ echo "hello" > hello.txt
 git add hello.txt
 git commit -m "Adding new file"
 ```
-✅ **Initialize, stage, and commit** a file!
+✅ **Initialize, stage, and commit** a file
+
+<!---
+Always work within git repo, even when it's very small project.
+[When it begins to be bigger - open gitlab project]
+-->
+
+---
+
+
+# **SCM - Source Control Management** 🛠️  
+
+* **Source control** = ניהול תצורה ? 🤔  
+* **Source** 📄  
+  * Small 📏  
+  * Comparable 🔍  
+
+<!---
+Make everything text : 
+  markdown/marp
+  dot/mermaid
+  latex
+-->
+---
+
+### **Version Control Evolution**  
+
+📂 **SourceSafe** → 
+🏛 **ClearCase** → 
+🔄 **SVN** → 
+🌀 **Mercurial (Hg)** → 
+🐙 **Git**  
+
 
 ---
 
@@ -30,44 +62,84 @@ git commit -m "Adding new file"
 <img src="images/git_repo.png" width="1000" style="display: flex;" />
 
 ```bash
-git reset HEAD myfile.cpp
+git reset HEAD -- myfile.cpp
 ```
+
+<!---
+Missing arrow - from staging back to working
+Missing stash
+-->
 
 ---
 
 # 📦 Stash – Save Work in Progress
 
-<img src="images/stash.svg" alt="Local Image" width="500" height="400" />
+
+<img src="images/stash.svg" alt="Local Image" width="500" />
 
 🔹 **Temporarily save uncommitted changes**  
-🔹 Useful before switching branches  
 
+
+<!---
+May skip this
+-->
 
 ---
 
-# 🌱 Branching Strategies
+# 🌱 Branch
 
-<img src="images/branches.png" alt="Local Image" width="500" height="400" />
+<img src="images/branches.png" alt="Local Image" width="500"  />
 
   ```bash
   git checkout -b feature-xyz
   ```
 
----
-
-# 🔄 Merge vs. Rebase
-
-<img src="images/merge_rebase.png" width="1000" style="display: flex;" />
-
----
-
-# 📜 Git Flow – Best Practices
-
-<img src="images/flow.png" width="1000" style="display: flex;" />
+<!---
+[Many flavours of same command]
+Lightweight.
+Branch == Mission
+-->
 
 ---
 
-#  Pro Tips
+# **Branch == Single Task** 🚀
+
+- Each branch should **focus on one task** ✅
+- Keeps changes **isolated** 🔍
+- Makes **code reviews easier** 👀
+- Allows **parallel development** 🔄
+
+<!---
+feature, bugfix, squash
+-->
+
+---
+
+
+<img src="images/git-merge.gif" width="400" />
+
+- Merge **Frequently** ✅
+- Use **common repository** 🤝
+
+---
+
+# 📜 Git Flow 
+
+<img src="images/flow.png" width="1000" />
+
+---
+
+
+<img src="images/git_force.jpg" width="700" />
+
+<!---
+Protect the important branches !
+main/master/release
+-->
+
+---
+
+# **🚀 Tips**  
 
 - **Small commits** – Easier debugging  
 - **Pre-commit hooks** – Automate checks  
