@@ -15,6 +15,12 @@ Cpp and some more presentations and demonstrations
  
 ## Urgent Todos :
 
+* First :
+   * About me
+   * About the audience
+   * Bad Practices and a (new?) tool per week
+   * Questions and site
+   
 * Add to compiler two slides:
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment

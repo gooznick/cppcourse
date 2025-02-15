@@ -11,6 +11,7 @@ nobackgroundColor: lightblue
 
 Some **tips** to level up your Git skills!
 
+
 ---
 
 # 🔥 Git Basics
@@ -139,6 +140,19 @@ main/master/release
 
 ---
 
+#              פינת פשעי הקוד      
+<img src="images/wtfpmin.jpg" width="800"  />
+
+---
+
+# 🖥️ Coding Practices - git
+
+- ✅ **Always** ensure that code is compiled from a *verified* and *specific* Git revision.  
+- 🚫 **Never** use/deliver code compiled on a developer's personal machine.
+
+
+---
+
 # **🚀 Tips**  
 
 - **Small commits** – Easier debugging  
@@ -223,9 +237,42 @@ main/master/release
 ---
 
 
+# 🚀 Continuous Integration / Continuous Deployment
+
+### 🏗️ What is CI/CD?
+- **Continuous Integration (CI):** Automates code integration, testing, and building.
+- **Continuous Deployment (CD):** Automates the release process to production.
+
+---
+
+# 🚀 CI / CD
+
+### Why is it important?
+- ✅ **Automated testing** 🧪  
+- 🔄 **Ensures we don't go back** 🔙 (🪟 Windows, 🐧 Linux, 🎯 Target, 📊 Results)  
+- 🖥️ **Independent machine compilation** ⚙️  
+- 📜 **The best README** 🏆 
+
+
+---
+
+# 🏆 Best Practices
+
+⚡ **Keep pipelines fast** – Aim for **20-40 minutes** ⏳  
+🔄 **Move slow tests to nightly/weekly** – Must be checked frequently 🕒  
+🛠️ **Start with a build** – Add tests gradually 🔧  
+📦 **Deploy artifacts** – With/without debug info 📁  
+☁️ **Use cloud, Docker, or dedicated targets** 🌍  
+👥 **Ensure everyone can manage CI** – No single-point bottlenecks 🏗️  
+
+
+---
+
+
 # Some company's specific problems
 
-- Availabe space in the servers
+- Available space in the servers
+- gitlab CI vs Jenkins
 - Access rights 
   - gitlab ssh
   - Project user
