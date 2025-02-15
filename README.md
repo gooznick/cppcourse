@@ -19,6 +19,12 @@ Cpp and some more presentations and demonstrations
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment
 * In memory : Add the linux command to allocate page immediately.
+* Add "M_" as compiler reserved macro (usage demo)
+* merge animated gif.
+* Add opening lesson (Fermi Estimation)
+* preprecessor example : using #include <boost/detail/endian.hpp>
+  * BOOST_BIG_ENDIAN usage deprecated. how to find source ?
+* Restart - deleting history. wrong lfs pointers.
 
 ## Agenda
 
