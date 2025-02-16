@@ -15,6 +15,7 @@ Cpp and some more presentations and demonstrations
  
 ## Urgent Todos :
 
+* ext install marp-team.marp-vscode
 * First :
    * About me
    * About the audience

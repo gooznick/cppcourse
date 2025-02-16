@@ -1,305 +1,223 @@
 ---
-title: Git Mastery 🚀
-author: Eranbu
-date: 6/2024
+title: Preface
+author: eranbu
+date: 2/2025
 marp: true
 theme: gaia
-nobackgroundColor: lightblue
 ---
 
-# 🛠️ Git – Advanced Usage
+# **Welcome to Beyond C++ Course**
+Let's go beyond what you already know.  
 
-Some **tips** to level up your Git skills!
+![bg left](images/cpp.webp)
+
+
+<!---
+
+-->
+
+---
+
+
+# **👨‍🏫 About Me**  
+🔹 **[Your Name]** - Some years in the organization.  
+🔹 **Hobbies**: Writing code, Teaching, Debugging, Learning.  
+🔹 **Experience**: Soft real time embedded systems.  
+
+---
+
+# **📌 About This Course**  
+
+🔹 **We’ll Cover**:
+
+
+1. **🗂️ Version Control with Git and GitLab**  
+2. **🔧 C++ Build System and Toolchain**  
+3. **⚙️ The C++ Preprocessor**  
+4. **🖥️ The C++ Compiler**  
+5. **🔗 The Linker**  
+6. **📦 Application Binary Interface (ABI)**  
+7. **🐞 Debugging C++ Applications**  
+
+---
+
+# **📌 More Advanced Topics**  
+
+8. **💾 Memory Management**  
+9. **🧪 Software Testing**  
+10. **🧵 Multithreading & Concurrency**  
+11. **🔢 Numerical Computation**  
+12. **🚦 Error Handling in Modern C++**  
+13. **🐍 Integrating C++ with Python**  
+14. **🦾 Advanced C++ Features**  
+15. **📚 Working with Third-Party C++ Libraries**  
 
 
 ---
 
-# 🔥 Git Basics
+# **🛠️ Tools & Surprises!**  
 
-```bash
-git init
-echo "hello" > hello.txt
-git add hello.txt
-git commit -m "Adding new file"
+💡 **Each Lecture Will Introduce**:
+✔ **A New Tool**  
+✔ **And Another Thing...** 
+
+---
+
+# **🤖 ChatGPT Helped Too!**  
+
+🎨 **Icons & Inspiration**
+💡 **AI-Generated Ideas**  
+📝 **Reviewed, Not Auto-Generated!**  
+
+*No, ChatGPT won’t replace your C++ skills… yet!* 😆  
+
+---
+
+# **📂 Where to Find Materials?**  
+
+📌 **GitLab Repository**:  
+🔗 `https://gitlab.com/beyondcpp`  
+
+✔ **Slides & Code Examples**  
+✔ **Merge Requests & Issues Welcome!**  
+
+---
+
+# **📢 Recordings**  
+
+🎥 **You CANNOT count on recordings!**  
+📜 **Slides are NOT a full replacement!**  
+
+🧠 **Be present, ask questions, participate!**  
+
+---
+
+# **⏰ Class Schedule**  
+
+📅 **Start Time**: **08:30**  
+📅 **End Time**: **~09:45** (May be shorter or longer)  
+
+---
+
+
+### ❓ What will this code print?
+```cpp
+void foo(int i = 5) {std::cout << i;}
+int main() {
+    void (*fptr)();
+    fptr = foo;
+    fptr();
+}
 ```
-✅ **Initialize, stage, and commit** a file
+- 🅰 Compilation error  
+- 🅱 Undefined behavior  
+- 🅲 Prints `5`  
+- 🅳 Segmentation fault  
 
-<!---
-Always work within git repo, even when it's very small project.
-[When it begins to be bigger - open gitlab project]
--->
+<!-- 
+#include <iostream>
 
----
-
-
-# **SCM - Source Control Management** 🛠️  
-
-* **Source control** = ניהול תצורה ? 🤔  
-* **Source** 📄  
-  * Small 📏  
-  * Comparable 🔍  
-
-<!---
-Make everything text : 
-  markdown/marp
-  dot/mermaid
-  latex
--->
----
-
-### **Version Control Evolution**  
-
-📂 **SourceSafe** → 
-🏛 **ClearCase** → 
-🔄 **SVN** → 
-🌀 **Mercurial (Hg)** → 
-🐙 **Git**  
-
+✅ Correct Answer: 🅰 (Default arguments are bound at compile-time, but `fptr` has no parameter information.) -->
 
 ---
 
-# 📌 Basic Actions
-
-<img src="images/git_repo.png" width="1000" style="display: flex;" />
-
-```bash
-git reset HEAD -- myfile.cpp
+### ❓ What is the output of this program?
+```cpp
+std::optional<int> get_value(bool flag) {
+    if (flag) return 42;
+    return std::nullopt;
+}
+int main() {
+    std::cout << get_value(false).value_or(100);
+}
 ```
+- 🅰 Compilation error  
+- 🅱 Undefined behavior  
+- 🅲 `42`  
+- 🅳 `100`  
 
-<!---
-Missing arrow - from staging back to working
-Missing stash
--->
-
----
-
-# 📦 Stash – Save Work in Progress
-
-
-<img src="images/stash.svg" alt="Local Image" width="500" />
-
-🔹 **Temporarily save uncommitted changes**  
-
-
-<!---
-May skip this
--->
+<!-- 
+#include <iostream>
+#include <optional>
+✅ Correct Answer: 🅳 (`value_or(100)` provides a fallback when `std::nullopt` is returned.)
+ -->
 
 ---
 
-# 🌱 Branch
+### ❓ What is the output of this code?
+```cpp
+consteval int square(int x) {
+    return x * x;
+}
+int main() {
+    constexpr int a = square(4);
+    int b = square(5);
+    std::print("{} {}\n", a, b);
+}
+```
+- 🅰 Compilation error  
+- 🅱 Undefined behavior  
+- 🅲 `16 25`  
+- 🅳 Only prints 16, then crashes
 
-<img src="images/branches.png" alt="Local Image" width="500"  />
-
-  ```bash
-  git checkout -b feature-xyz
-  ```
-
-<!---
-[Many flavours of same command]
-Lightweight.
-Branch == Mission
--->
-
----
-
-# **Branch == Single Task** 🚀
-
-- Each branch should **focus on one task** ✅
-- Keeps changes **isolated** 🔍
-- Makes **code reviews easier** 👀
-- Allows **parallel development** 🔄
-
-<!---
-feature, bugfix, squash
--->
+<!-- ✅ Correct Answer: 🅲  -->
 
 ---
 
+### ❓ What does this code return?
+```matlab
+x = [1 2 3; 4 5 6; 7 8 9];
+y = x(2:end, 1:2);
+```
+- 🅰 `[1 2; 4 5; 7 8]`  
+- 🅱 `[4 5; 7 8]`  
+- 🅲 `[4 5; 7 8; 10 11]`  
+- 🅳 `[5 6; 8 9]`  
 
-<img src="images/git-merge.gif" width="400" />
-
-- Merge **Frequently** ✅
-- Use **common repository** 🤝
-
----
-
-# 📜 Git Flow 
-
-<img src="images/flow.png" width="1000" />
-
----
-
-
-<img src="images/git_force.jpg" width="700" />
-
-<!---
-Protect the important branches !
-main/master/release
--->
+<!-- ✅ Correct Answer: 🅱 (Rows `2:end` and columns `1:2` extract `[[4 5]; [7 8]]`.) -->
 
 ---
 
-#              פינת פשעי הקוד      
-<img src="images/wtfpmin.jpg" width="800"  />
+### ❓ What does this snippet print?
+```python
+x = [1, 2, 3]
+y = x
+y += [4, 5]
+print(x)
+```
+- 🅰 `[1, 2, 3]`  
+- 🅱 `[1, 2, 3, 4, 5]`  
+- 🅲 `TypeError`  
+- 🅳 `[1, 2, 3, 4]`  
+
+<!-- ✅ Correct Answer: 🅱 (`y +=` modifies `x` **in-place** instead of creating a new list.) -->
 
 ---
 
-# 🖥️ Coding Practices - git
+### ❓ What happens in this code?
+```python
+def check(value):
+    match value:
+        case 1 | 2:
+            return "One or Two"
+        case _:
+            return "Something else"
 
-- ✅ **Always** ensure that code is compiled from a *verified* and *specific* Git revision.  
-- 🚫 **Never** use/deliver code compiled on a developer's personal machine.
+print(check(2))
+```
+- 🅰 `"One or Two"`  
+- 🅱 `"Something else"`  
+- 🅲 `SyntaxError`  
+- 🅳 `TypeError`  
 
-
----
-
-# **🚀 Tips**  
-
-- **Small commits** – Easier debugging  
-- **Pre-commit hooks** – Automate checks  
-- **GitLab best practices**:
-  - **Protected branches**
-  - **CI/CD Pipelines**
-  - **Efficient workflows**
-
----
-
-# ✅ Pre-Commit Hooks
-
-<img src="images/precommit.png" width="1000" style="display: flex;" />
-
-💡 `.pre-commit-config.yaml`
+<!-- ✅ Correct Answer: 🅰 (Pattern matching in Python 3.10+ supports `|` for multiple cases.) -->
 
 ---
 
-# 🛡️ Useful Pre-Commit Hooks
+### ❓ What does `git checkout HEAD -- file.txt` do?
+- 🅰 Switches to the previous branch  
+- 🅱 Resets `file.txt` to the latest commit version  
+- 🅲 Removes `file.txt` from staging  
+- 🅳 Deletes `file.txt`  
 
-| 🛠️ Hook | 🔍 Purpose |
-|---------|-----------|
-| **Clang-Format** | Ensures consistent C++ style |
-| **Clang-Tidy** | Finds potential bugs |
-| **CMake-Format** | Enforces clean CMake syntax |
-| **EOF Fixer** | Adds missing newline at end of file |
-| **Trailing Space Fix** | Removes unnecessary spaces |
-| **Large File Detector** | Prevents committing large files |
-| **ShellCheck** | Validates shell scripts |
-
----
-
-# ⚠️ Git Dangers! 🚨
-
-❌ **Avoid these risky actions unless you're sure!**  
-- **Force push (`git push --force`)** 🔥  
-- **Rewriting history (e.g., `git rebase -i`)** 🕰️  
-- **Accidentally deleting a branch** 🗑️  
-- **`git reset --hard` (Loses changes!)** 😱  
-- **Committing large files (Use Git LFS)** 📂  
-
-<!---
-May skip this !
--->
----
-
-# 🏗️ Working with Submodules
-
-🛠️ **Managing external repositories inside your repo**  
-- **Choose SSH or HTTPS**  
-- **Access rights matter!**  
-- **Version/Branch/tip**  
-
-<!---
-In order to share code, we have to split into small repositories.
--->
-
----
-
-# 🏗️ Alternatives
-
-| **Scenario** | **Alternative** |
-|-------------|----------------------|
-| Managing **multiple repositories** | ✅ **Google Repo, gitman** |
-| Get **precompiled** binaries | ✅ **Manual Download** |
-| Working with **third-party libraries** | ✅ **Package Manager** |
-| Get other repo **into mine** | ✅ **Git Subtree** |
-
-<!---
-The other locations must be very stable !
--->
-
-
----
-
-# 📦 Large Files
-
-**Common large file types**:
-- 📊 Data files
-- 🏗 3rd-party binaries
-- 🔧 Precompiled libraries  
-
----
-
-# Solutions for Large Files
-
-- ✅ Use **Git LFS**
-- ✅ Store in **Artifactory**
-- ✅ Keep in a **shared directory**
-- ✅ Commit directly  
-
----
-
-# 🎯 More Git Tips & Tricks
-
-- **New project?** → `git add . && git commit -m "Initial commit"`
-- **Cherry-pick commits** from another branch  
-- **Git Worktree** – Work on multiple branches at once  
-- **Partial Clone** – Speed up large repo clones  
-- **`git bisect`** – Find the commit that introduced a bug  
-
----
-
-
-# 🚀 Continuous Integration / Continuous Deployment
-
-### 🏗️ What is CI/CD?
-- **Continuous Integration (CI):** Automates code integration, testing, and building.
-- **Continuous Deployment (CD):** Automates the release process to production.
-
----
-
-# 🚀 CI / CD
-
-### Why is it important?
-- ✅ **Automated testing** 🧪  
-- 🔄 **Ensures we don't go back** 🔙 (🪟 Windows, 🐧 Linux, 🎯 Target, 📊 Results)  
-- 🖥️ **Independent machine compilation** ⚙️  
-- 📜 **The best README** 🏆 
-
-
----
-
-# 🏆 Best Practices
-
-⚡ **Keep pipelines fast** – Aim for **20-40 minutes** ⏳  
-🔄 **Move slow tests to nightly/weekly** – Must be checked frequently 🕒  
-🛠️ **Start with a build** – Add tests gradually 🔧  
-📦 **Deploy artifacts** – With/without debug info 📁  
-☁️ **Use cloud, Docker, or dedicated targets** 🌍  
-👥 **Ensure everyone can manage CI** – No single-point bottlenecks 🏗️  
-
-
----
-
-
-# Some company's specific problems
-
-- Available space in the servers
-- gitlab CI vs Jenkins
-- Access rights 
-  - gitlab ssh
-  - Project user
-- Network drive access rights (mount linux/windows)
-
----
-
-# Questions? 🤔
-
+<!-- ✅ Correct Answer: 🅱 (Restores `file.txt` from the last committed version without affecting staging.) -->
