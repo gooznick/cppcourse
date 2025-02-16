@@ -15,10 +15,22 @@ Cpp and some more presentations and demonstrations
  
 ## Urgent Todos :
 
+* First :
+   * About me
+   * About the audience
+   * Bad Practices and a (new?) tool per week
+   * Questions and site
+   
 * Add to compiler two slides:
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment
 * In memory : Add the linux command to allocate page immediately.
+* Add "M_" as compiler reserved macro (usage demo)
+* merge animated gif.
+* Add opening lesson (Fermi Estimation)
+* preprecessor example : using #include <boost/detail/endian.hpp>
+  * BOOST_BIG_ENDIAN usage deprecated. how to find source ?
+* Restart - deleting history. wrong lfs pointers.
 * In git :
    * history of scm
    * Unrelated histories : `git merge repo1/master --allow-unrelated`
