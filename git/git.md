@@ -32,7 +32,7 @@ Always work within git repo, even when it's very small project.
 ---
 
 
-# **SCM - Source Control Management** 🛠️  
+# SCM - Source Control Management 🛠️  
 
 * **Source control** = ניהול תצורה ? 🤔  
 * **Source** 📄  
@@ -103,7 +103,7 @@ Branch == Mission
 
 ---
 
-# **Branch == Single Task** 🚀
+# Branch == Single Task 🚀
 
 - Each branch should **focus on one task** ✅
 - Keeps changes **isolated** 🔍
@@ -127,6 +127,12 @@ feature, bugfix, squash
 # 📜 Git Flow 
 
 <img src="images/flow.png" width="1000" />
+
+<!---
+Arrow is a commit or merge request
+Allowing MR only for forked repositories.
+fatal: refusing to merge unrelated histories
+-->
 
 ---
 
@@ -153,7 +159,7 @@ main/master/release
 
 ---
 
-# **🚀 Tips**  
+# 🚀 Tips
 
 - **Small commits** – Easier debugging  
 - **Pre-commit hooks** – Automate checks  
@@ -226,7 +232,6 @@ In order to share code, we have to split into small repositories.
 The other locations must be very stable !
 -->
 
-
 ---
 
 # 📦 Large Files
@@ -249,14 +254,79 @@ The other locations must be very stable !
 
 # 🎯 More Git Tips & Tricks
 
-- **New project?** → `git add . && git commit -m "Initial commit"`
 - **Cherry-pick commits** from another branch  
 - **Git Worktree** – Work on multiple branches at once  
-- **Partial Clone** – Speed up large repo clones  
 - **`git bisect`** – Find the commit that introduced a bug  
+- **`.gitignore`** – Ignore files not to be added 
+- **`.gitattributes`** – `merge=union` always add both
 
 ---
 
+# 🚨 CRLF vs LF: The Problem
+
+### **💡 Windows vs Linux Line Endings**
+| **OS** | **Line Ending** | **Character** |
+|--------|---------------|--------------|
+| **Windows** | CRLF | `\r\n` |
+| **Linux/macOS** | LF | `\n` |
+
+---
+
+## ⚠️ What Can Go Wrong?
+
+- **Bash scripts (`.sh`) fail** due to unexpected `\r`
+- **Git shows `^M` in `git diff`**
+- **Merge conflicts** due to inconsistent line endings
+- Some **windows editors** auto-convert LF → CRLF
+
+---
+
+# 🛠️ Fixing CRLF Issues in Git
+
+
+### 🌍 Global
+
+```sh
+git config --global core.autocrlf false  # Do not auto-convert 
+git config --global core.eol lf          # Checkout lf
+```
+
+### 📂 .gitattributes
+
+```sh
+* text=auto eol=lf  # Normalize all text files to LF
+```
+
+<!-- 
+Some tools :
+1. dos2unix / unix2dos
+2. notepad++
+3. vscode {"files.eol": "\n"}
+4. file hello.txt  : `ASCII text, with CRLF line terminators`
+5. git add --renormalize .
+-->
+
+---
+
+# 📂 vscode + git
+
+### Add this to the `.gitconfig` file:
+```
+  [core]
+      editor = code --wait
+  [merge]
+      tool = vscode
+  [mergetool "vscode"]
+      cmd = code --wait --merge $REMOTE $LOCAL $BASE $MERGED
+  [diff]
+      tool = vscode
+  [difftool "vscode"]
+      cmd = code --wait --diff $LOCAL $REMOTE
+```
+
+`git config --list --show-origin`
+
+---
 
 # 🚀 Continuous Integration / Continuous Deployment
 
@@ -270,9 +340,9 @@ The other locations must be very stable !
 
 ### Why is it important?
 - ✅ **Automated testing** 🧪  
-- 🔄 **Ensures we don't go back** 🔙 (🪟 Windows, 🐧 Linux, 🎯 Target, 📊 Results)  
+- 🔄 **Ensures we don't go back**  (🪟 Windows, 🐧 Linux, 🎯 Target, 📊 Results)  
 - 🖥️ **Independent machine compilation** ⚙️  
-- 📜 **The best README** 🏆 
+- 📜 **CI recipe is The best README** 🏆 
 
 
 ---
@@ -280,7 +350,7 @@ The other locations must be very stable !
 # 🏆 Best Practices
 
 ⚡ **Keep pipelines fast** – Aim for **20-40 minutes** ⏳  
-🔄 **Move slow tests to nightly/weekly** – Must be checked frequently 🕒  
+🔄 **Move slow tests to nightly/weekly** – Must be checked 🕒  
 🛠️ **Start with a build** – Add tests gradually 🔧  
 📦 **Deploy artifacts** – With/without debug info 📁  
 ☁️ **Use cloud, Docker, or dedicated targets** 🌍  
@@ -290,14 +360,24 @@ The other locations must be very stable !
 ---
 
 
+# 📦 GitLab Packages: What & Why?
+
+GitLab **Packages** provide **a built-in package registry** for managing dependencies, artifacts, and container images.
+
+✅ **Centralized storage** 
+✅ **CI/CD integration** 
+
+---
+
+
 # Some company's specific problems
 
-- Available space in the servers
-- gitlab CI vs Jenkins
-- Access rights 
-  - gitlab ssh
-  - Project user
-- Network drive access rights (mount linux/windows)
+- 💾 Available **Space** in the Servers  
+- ⚔️ **GitLab CI** vs **Jenkins**  
+- 🔐 **Access Rights**  
+  - **SSH Access** to GitLab 🔑  
+  - **Project User** 👥  
+- **Network Drive** Access (Linux/Windows Mounts)  
 
 ---
 

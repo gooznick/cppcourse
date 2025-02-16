@@ -16,12 +16,8 @@ Cpp and some more presentations and demonstrations
 ## Urgent Todos :
 
 * ext install marp-team.marp-vscode
-* First :
-   * About me
-   * About the audience
-   * Bad Practices and a (new?) tool per week
-   * Questions and site
-   
+* Target : debug run ssh etc.
+  
 * Add to compiler two slides:
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment
@@ -33,8 +29,8 @@ Cpp and some more presentations and demonstrations
   * BOOST_BIG_ENDIAN usage deprecated. how to find source ?
 * Restart - deleting history. wrong lfs pointers.
 * In git :
-   * history of scm
    * Unrelated histories : `git merge repo1/master --allow-unrelated`
+   * .gitattributes and ^M 
 * preprocessor : reserved :_M[..] __[...]
 * linker : sources for libs (command line and pragma comment, debugging)
 * linker: Add pragma mismatch, msvc usage, user usage

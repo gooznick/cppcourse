@@ -20,7 +20,7 @@ Let's go beyond what you already know.
 
 
 # **👨‍🏫 About Me**  
-🔹 **[Your Name]** - Some years in the organization.  
+🔹 Some years in the organization.  
 🔹 **Hobbies**: Writing code, Teaching, Debugging, Learning.  
 🔹 **Experience**: Soft real time embedded systems.  
 
@@ -55,11 +55,12 @@ Let's go beyond what you already know.
 
 ---
 
-# **🛠️ Tools & Surprises!**  
+# **🛠️ Tools**  
 
 💡 **Each Lecture Will Introduce**:
+
 ✔ **A New Tool**  
-✔ **And Another Thing...** 
+✔ **מדור פשעי תוכנה** 
 
 ---
 
