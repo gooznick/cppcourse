@@ -21,12 +21,9 @@ Cpp and some more presentations and demonstrations
 * In memory : Add the linux command to allocate page immediately.
 * In git :
    * history of scm
-   * **Source** Control
    * Unrelated histories : `git merge repo1/master --allow-unrelated`
-   * making more think "source" : presentation, cmake, markdown, tex, dot diagrams.
 * preprocessor : reserved :_M[..] __[...]
 * linker : sources for libs (command line and pragma comment, debugging)
-* git : add git-precommit, with clang-format
 * linker: Add pragma mismatch, msvc usage, user usage
 
 ### **C++ Lecture Schedule **  

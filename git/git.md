@@ -181,6 +181,9 @@ main/master/release
 - **`git reset --hard` (Loses changes!)** 😱  
 - **Committing large files (Use Git LFS)** 📂  
 
+<!---
+May skip this !
+-->
 ---
 
 # 🏗️ Working with Submodules
@@ -188,14 +191,33 @@ main/master/release
 🛠️ **Managing external repositories inside your repo**  
 - **Choose SSH or HTTPS**  
 - **Access rights matter!**  
-- **Always checkout the correct version**  
+- **Version/Branch/tip**  
+
+<!---
+In order to share code, we have to split into small repositories.
+-->
+
+---
+
+# 🏗️ Alternatives
+
+| **Scenario** | **Alternative** |
+|-------------|----------------------|
+| Managing **multiple repositories** | ✅ **Google Repo, gitman** |
+| Get **precompiled** binaries | ✅ **Manual Download** |
+| Working with **third-party libraries** | ✅ **Package Manager** |
+| Get other repo **into mine** | ✅ **Git Subtree** |
+
+<!---
+The other locations must be very stable !
+-->
 
 
 ---
 
 # 📦 Large Files
 
-❌ **Common large file types**:
+**Common large file types**:
 - 📊 Data files
 - 🏗 3rd-party binaries
 - 🔧 Precompiled libraries  
@@ -207,13 +229,12 @@ main/master/release
 - ✅ Use **Git LFS**
 - ✅ Store in **Artifactory**
 - ✅ Keep in a **shared directory**
-- ✅ Committing them directly  
+- ✅ Commit directly  
 
 ---
 
 # 🎯 More Git Tips & Tricks
 
-🚀 **Power moves** every developer should know:
 - **New project?** → `git add . && git commit -m "Initial commit"`
 - **Cherry-pick commits** from another branch  
 - **Git Worktree** – Work on multiple branches at once  
