@@ -51,14 +51,17 @@ Different operating systems have different native toolchains. Some, like Intel's
 
 ---
 
-# CUDA Toolchain 🚀
+# heterogeneous computing Toolchains 🚀
 
-<img src="images/cuda.png" alt="CUDA" width="500" />
+<img src="images/cuda.png" width="300" />
+<img src="images/sycl.png" width="300" />
+<img src="images/OpenCL.png" width="300" />
 
-* **Compiles** `.cu` files for NVIDIA GPUs
-* Includes `nvcc`, `cuobjdump`, `nvdisasm`, `nvprune`, Nsight profiler
+* **Compiler** : `nvcc` / `icpx`
+* **Debugger** 
 
 <!-- 
+**More** : `nvcc`, `cuobjdump`, `nvdisasm`, `nvprune`
 CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Clang but requires specific linker configurations.
 -->
 
@@ -156,6 +159,16 @@ Cross-compilation requires careful dependency management. Example: ARM cross-com
 -->
 
 ---
+
+### **🚀 Virtualization Methods**
+| **Feature** | **QEMU User** | **QEMU Full** | **Docker** | **WSL 1** | **WSL 2** | **VMware** | **VBox** |
+|-------------|---------------|---------------|------------|-----------|-----------|------------|----------------|
+| **Emulation** | User | cpu | uses kernel | layer | full os | full os | full os |
+| **Perform** | ⚠️  | ⚠️  | ✅  | ✅  | ✅   | ✅  | ✅   |
+| **Cross-Arch** | ✅  | ✅  | ❌  | ❌  | ❌  | ❌  | ❌  |
+
+---
+| **Type** | User-mode | Full System | Container | Compatibility | Light VM | Full | Full |
 
 # Cross-Compilation Demo 🏗️
 
