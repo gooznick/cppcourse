@@ -18,6 +18,11 @@ Cpp and some more presentations and demonstrations
 * ext install marp-team.marp-vscode
 * Target : debug run ssh etc.
   
+* Add to components :
+   * About qemu and virtualization
+   * Code crime - using not separated toolchain
+   * tool - strace / objdump / nm / c++filt / qemu / ldd / readelf / patchelf /  
+
 * Add to compiler two slides:
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment
