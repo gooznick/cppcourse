@@ -1,8 +1,15 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <vector>
 
 namespace py = pybind11;
+
+std::vector<double> create_vector(int n)
+{
+    std::vector<double> vec(n);
+    return vec;
+}
 
 py::array_t<double> create_matrix_array(int n) {
     std::vector<std::array<std::array<double, 3>, 3>> data(n);
@@ -25,4 +32,5 @@ py::array_t<double> create_matrix_array(int n) {
 
 PYBIND11_MODULE(demo, m) {
     m.def("create_matrix_array", &create_matrix_array);
+    m.def("create_vector", &create_vector, py::return_value_policy::move);
 }

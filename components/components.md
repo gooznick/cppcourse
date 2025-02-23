@@ -38,6 +38,13 @@ A software toolchain is a set of software development tools used together to com
 the examples/simple.sh example
 -->
 
+---
+
+# "...used together..."
+
+<br/>
+
+<img src="images/gear.jpg"  width="700" />
 
 ---
 
@@ -49,11 +56,16 @@ the examples/simple.sh example
 
 <!-- 
 Build systems automate compiling, linking, and installing software. Examples: Make, CMake, Ninja, Meson.
+
+According to the definition, it's part of the toolchain.
+
+My definition: Only the tools that depend one another are called "toolchain"
 -->
 
 ---
 
-# IDE - Integrated Development Environment 🖥️
+# IDE 
+### Integrated Development Environment 🖥️
 
 * **Features:** Code Editor, Compilation, Debugging, Toolchain Integration
 
@@ -70,11 +82,9 @@ IDEs help developers by integrating all tools into a single interface. Examples:
 * **Windows:**
   * MSVC
   * MinGW-w64 / Clang
-  * Intel C++ Compiler (icpc / icpx) [Classic/OneAPI]
 * **Linux/macOS:**
   * GNU toolchain (GCC)
   * Clang
-  * Intel C++ Compiler (icpc / icpx) [Classic/OneAPI]
 
 <!-- 
 LLVM
@@ -83,7 +93,7 @@ Different operating systems have different native toolchains. Some, like Intel's
 
 ---
 
-# heterogeneous computing Toolchains 🚀
+# Heterogeneous computing Toolchains
 
 <img src="images/cuda.png" width="300" />
 <img src="images/sycl.png" width="300" />
@@ -91,22 +101,10 @@ Different operating systems have different native toolchains. Some, like Intel's
 
 * **Compiler** : `nvcc` / `icpx`
 * **Debugger** 
-
+* **Profiler**
 <!-- 
 **More** : `nvcc`, `cuobjdump`, `nvdisasm`, `nvprune`
 CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Clang but requires specific linker configurations.
--->
-
----
-
-# Toolchain Compatibility ⚠️
-
-1. **Binary Formats:** ELF (Linux), PE (Windows)
-2. **Application Binary Interface (ABI):** Function calling conventions, data alignment
-3. **Debugging Symbols Formats:** DWARF (ELF), PDB (MSVC)
-
-<!-- 
-Ensuring toolchain compatibility requires using the correct binary format, ABI, and debug symbols.
 -->
 
 ---
@@ -130,7 +128,7 @@ I'll begin with both linux/windows but then I'll speak only about linux.
 # Static Executable Portability
 
 * ISA - Instruction Set Architecture
-   * X86 / X86_64 / Arm / 
+   * X86 / X86_64 / Arm
 * Instruction sets
    * MMX / SSE / AVX / FMA / AES
 * Executable format :
@@ -152,13 +150,17 @@ ELF - Executable and Linkable format
 
 # Static Executable Portability
 
+* Application Binary Interface (ABI):
+  * Function calling conventions, data alignment
 * Using syscalls/win32api that has changed:
    * Windows : CreateFile2() (windows8+)
    * Linux : clone3() (Linux 5.3+) 
 * Explicit or implicit calls !
 
 <!-- 
-The compiler may add syscalls/win32pi calls to the program (cout !!)
+Debugging Symbols Formats: DWARF (ELF), PDB (MSVC)
+
+The compiler may add syscalls/win32api calls to the program (cout !!)
 
 It may not be compatible with the running kernel/windows version.
 
@@ -281,10 +283,10 @@ ldd --version
 # Some Thoughts 
 
 * It's good to compile on `old` glibc (ipp!)
-* The gcc uses glibc which uses the kernel of my computer.
-* If I'm using static linked code, I'm (mostly) fine.
+* The gcc uses glibc which uses the kernel of **my machine**.
+* If I'm using static linked code, It's (mostly) fine.
 * When using dynamic linked code, it's tight with my glibc and kernel.
-* When compiling to other target, I have to cross compile.
+* When compiling to other target, I have to **cross compile**.
 
 
 ---
@@ -298,28 +300,6 @@ ldd --version
 
 ---
 
-# Executable Binaries 🏗️
-
-<img src="images/isa.png" width="700" />
-
-<!-- 
-Binary format varies by architecture and OS. x86_64, ARM, RISC-V have different instruction sets and calling conventions.
--->
-
----
-
-# Why Can't I Compile on Windows and Run on Linux? 🤔
-
-* **ABI Differences** (e.g., function calling conventions)
-* **Executable Formats** (PE vs ELF)
-* **Runtime Libraries & Syscalls** (`printf`, `malloc` differ)
-* **OS-Specific APIs** (`pthreads` vs `Win32 API`)
-
-<!-- 
-Binaries compiled for one OS rarely run on another due to fundamental system differences.
--->
-
----
 
 # Cross-Compilation 🌍
 
@@ -333,70 +313,190 @@ Cross-compilation allows compiling software for a different architecture or OS t
 
 # Cross-Compilation Challenges 🛠️
 
-* **Missing target's C/C++ libraries**
-* **Sysroot and cross toolchain dependencies**
+* Cross toolchain dependencies
+   * chroot
+   * docker
+   * virtual machine
+* Missing target's C/C++ libraries
+
 * **More similarity between host & target = Bigger problems**
 
 <!-- 
 Cross-compilation requires careful dependency management. Example: ARM cross-compilers for embedded systems.
+
+Example: 
+   Cross compiling for aarch64
+   Running ldd on the output will fail (!)
 -->
 
 ---
 
-### **🚀 Virtualization Methods**
-| **Feature** | **QEMU User** | **QEMU Full** | **Docker** | **WSL 1** | **WSL 2** | **VMware** | **VBox** |
-|-------------|---------------|---------------|------------|-----------|-----------|------------|----------------|
-| **Emulation** | User | cpu | uses kernel | layer | full os | full os | full os |
-| **Perform** | ⚠️  | ⚠️  | ✅  | ✅  | ✅   | ✅  | ✅   |
-| **Cross-Arch** | ✅  | ✅  | ❌  | ❌  | ❌  | ❌  | ❌  |
+# CMake Cross-Compilation 🛠️
+
+```cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+
+# Set cross-compiler
+set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+
+# Set sysroot if needed (optional)
+set(CMAKE_SYSROOT /usr/bin/aarch64-linux-gnu)
+
+# Set find root path mode (prevents using host libraries)
+set(CMAKE_FIND_ROOT_PATH /usr/bin/aarch64-linux-gnu)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+```
 
 ---
-| **Type** | User-mode | Full System | Container | Compatibility | Light VM | Full | Full |
 
-# Cross-Compilation Demo 🏗️
 
+# `strace` - System Call Tracing Tool 🛠️
+
+- A powerful debugging tool for **Linux** 🐧
+- Traces **system calls** and **signals**
+- Useful for debugging and profiling
+
+🔹 **Example Usage:**
 ```sh
-apt install mingw-w64
-x86_64-w64-mingw32-g++ -o hello.exe test.cpp
+strace ls
 ```
+📌 Shows all system calls used by `ls`
 
-```sh
-qemu-aarch64 ./binary
-```
+---
+
+## Common `strace` Flags ⚙️
+
+| Flag | Description |
+|------|-------------|
+| `-e trace=` | Filter system calls (e.g., `-e trace=open,read`) |
+| `-p PID` | Attach to a running process |
+| `-f` | Follow child processes |
+| `-c` | Count system calls (summary) |
+| `-o file` | Save output to a file |
 
 <!-- 
-This demonstrates cross-compiling a Windows executable from Linux using MinGW-w64 and running an ARM binary using QEMU.
+docker run --rm -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined ubuntu bash
+
+apt update && apt install -y strace
+
+strace ls
 -->
+
 
 ---
 
-# Usable but Unfamiliar Tool: `strace` 🕵️
 
-```sh
-strace -e open,read,write ./myprogram
-```
+## Windows Equivalent? 🖥️
 
-🔍 **Shows system calls used by a program.**
+🔹 Windows has no direct `strace`, but similar tool exist:
+- **`Process Monitor (ProcMon)`** – GUI-based syscall tracing (Sysinternals)
+
+
+---
+
+## Bad coding practice
+
+# Compiling with non-isolated toolchain
+
+* **Libraries** - Using host `glibc`, `libstdc++`, etc. 
+* **Kernel Headers** - Using host kernel headers
+* **Sysroot Path** - Linkage to `/usr/lib` from the host
+
+* `gcc -print-search-dirs`
+* `echo | gcc -E -Wp,-v -`
 
 <!-- 
-`strace` is useful for debugging permission issues, missing files, and system call errors.
+isolated build machine != isolated running machine !!!!
 -->
 
 ---
 
-# Usable but Unfamiliar Tool: `ldd` 🔎
 
-```sh
-ldd myprogram
-```
+# Virtualization 🖥️
 
-🔍 **Lists shared library dependencies.**
+---
+
+## Virtualization for Isolation 🌍
+
+* Run some python versions
+* Run separated toolchain
+* Microservices
+* Security
+
+---
+
+## Virtualization Technologies ⚙️
+
+* **VT-x / AMD-V**: CPU hardware support for virtualization
+* **Namespaces & Cgroups**: Linux OS isolation features (used in containers)
+* **Hypervisor**: Software layer to manage VMs (e.g., KVM, Hyper-V)
+
+---
+
+## Docker 🐳
+- **Container-based** virtualization
+- **Uses OS namespaces & cgroups** (Linux kernel features)
+- **Lightweight & fast** compared to VMs
+- **No full OS kernel emulation**
+
+<br/>
+- Isolated Toolchains
+
+---
+
+## QEMU 🖥️
+- **Full-system emulator or user-mode emulator**
+- **Can emulate different CPU architectures**
+- **Supports KVM for acceleration**
+
+<br/>
+- Embedded development
+
+
+---
+
+## WSL1 🏗️
+- **Windows Subsystem for Linux (WSL1)**
+- **Translates Linux syscalls into Windows syscalls**
+- **Does not use virtualization**
+- **Lower performance for native Linux features**
+
+---
+
+## WSL2 🚀
+- **Uses a lightweight VM with a real Linux kernel**
+- **Better performance than WSL1**
+- **Provides full Linux compatibility**
+- **Uses Hyper-V for virtualization**
+
+<br/>
+- Ideal for windows lovers
+- Under Security testing
+- Can work with Qemu
+
+---
+
+## VirtualBox 📦
+- **Type-2 hypervisor (runs on top of OS)**
+- **Slower than Type-1 hypervisors**
+
+<br/>
+- Desktop virtualization
 
 <!-- 
-Useful for checking which libraries are required and diagnosing missing dependencies.
--->
 
+## VMware 🏢
+- **Enterprise-grade virtualization**
+- **Offers both Type-1 and Type-2 hypervisors**
+- **Optimized for performance and enterprise workloads**
+-->
 ---
+
 
 # Summary ✅
 
