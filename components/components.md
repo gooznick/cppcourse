@@ -412,12 +412,16 @@ strace ls
 
 <!-- 
 isolated build machine != isolated running machine !!!!
+
+3rd party - ipp, onnx runtime etc...
 -->
 
 ---
 
 
 # Virtualization 🖥️
+
+<img src="images/containers.png" width="800" />
 
 ---
 
