@@ -10,6 +10,13 @@ theme: gaia
 
 Some advanced usage tips
 
+![bg left width:600px](images/semicolon.webp)
+
+<!--
+linux : 
+Ctrl+Shift+U → 037E → Enter
+-->
+
 --- 
 
 # `#include`
@@ -18,14 +25,45 @@ Some advanced usage tips
   * `#include <>` > `#include ""`
   * In most implementations `""` will look first in the local directory
 
+<!--
+echo | gcc -E -Wp,-v -
+-->
+
 --- 
 
 ⚠ **Common pitfalls:**
 - Ensure headers are **self-contained**
 - **Avoid contamination** - Do not define macros or `using namespace` in header file.
-- **Beware of contamination** - `#include <windows.h>`
+- **Don't use contaminated headers in headers** - `#include <windows.h>`
 - **Avoid using common names** - `#include <common_defs.h>`
 - Do not use **absolute paths** - `#include "c:\Users\davido\project\mordor.h"`
+- Do not use **Uppercase**
+
+<!--
+echo | gcc -E -Wp,-v -
+-->
+
+--- 
+
+⚠ **Some tools:**
+
+* Compile header only (include only cpp)
+* Include What You Use
+* clang-tidy
+
+```bash
+sudo apt install iwyu
+include-what-you-use --version
+sudo apt install clang-9
+iwyu iwyu.cpp 2> iwyu.txt---
+cat iwyu.txt | fix_include
+```
+
+```bash
+# create .clang-tidy
+clang-tidy-10 tidy.cpp -checks=*
+sudo apt install clang-tidy
+```
 
 ---
 
@@ -46,6 +84,12 @@ target_compile_definitions(my_program PRIVATE USE_EIGEN)
 target_compile_definitions(my_program PRIVATE USE_EIGEN=1)
 ```
 
+<!--
+Do not use many definitions !
+
+Check each definition, it's a different code !
+-->
+
 ---
 
 # Debug Definitions
@@ -62,6 +106,7 @@ target_compile_definitions(my_program PRIVATE USE_EIGEN=1)
   * "NDEBUG" - standard (for <assert.h>)
   * "_DEBUG" - used in MSVC (using debug runtime)
   * "DEBUG" - commonly used
+
 
 ---
 
@@ -158,6 +203,10 @@ int main() {
 
 # Predefined 
 
+```
+... all identifiers that contain a double underscore __ in any position and each identifier that begins with an underscore followed by an uppercase letter is always reserved,
+```
+
 * Non-standard:
   * `_MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__`
 
@@ -166,9 +215,32 @@ int main() {
 echo | g++ -dM -E -x c++ -
 ```
 
+```
+Properties -> C/C++ -> Preprocessor
+```
+
+---
+
+# Tool: clang-tidy
+
+Ignore : 
+```cpp
+badcode;  // NOLINT
+
+// NOLINTNEXTLINE
+badcode;
+
+// NOLINTBEGIN
+badcode;
+badcode;
+// NOLINTEND
+
+badcode; // NOLINT(cert-err-58-cpp)
+```
+
 --- 
 
-# ⚡ More `#pragma` Directives  
+# ⚡ `#pragma` Directives  
 
 * #pragma omp
 * #pragma warning(disable: 4996) 
@@ -177,6 +249,16 @@ echo | g++ -dM -E -x c++ -
 
 * #pragma GCC optimize ("O3")  
 * #pragma GCC poison free   
+
+<!--
+The ISO C++ language standard does not require the compilers to support any pragmas. However, several non-standard pragmas are supported by multiple implementations
+
+From the standard : 
+A preprocessing directive of the form
+
+# pragma pp-tokensopt new-line
+causes the implementation to behave in an implementation-defined manner.
+-->
 
 ---
 

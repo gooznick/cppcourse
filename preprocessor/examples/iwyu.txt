@@ -1,0 +1,10 @@
+
+iwyu.cpp should add these lines:
+
+iwyu.cpp should remove these lines:
+- #include <string>  // lines 2-2
+- #include <vector>  // lines 3-3
+
+The full include-list for iwyu.cpp:
+#include <iostream>  // for operator<<, endl, basic_ostream, cout, ostream
+---

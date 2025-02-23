@@ -18,20 +18,23 @@ Cpp and some more presentations and demonstrations
 * ext install marp-team.marp-vscode
 * Target : debug run ssh etc.
   
-* Add to components :
-   * About qemu and virtualization
-   * Code crime - using not separated toolchain
-   * tool - strace / objdump / nm / c++filt / qemu / ldd / readelf / patchelf /  
+* Add to preprocess :
+   * tools - clang-tidy
+   * wrong - no hierarchy API, using common includes
+* Add "M_" as compiler reserved macro (usage demo)
+* preprecessor example : using #include <boost/detail/endian.hpp>
+  * BOOST_BIG_ENDIAN usage deprecated. how to find source ?
+* clang-tidy and `compile_commands.json` as cmake output
+
+
 
 * Add to compiler two slides:
    * The bible (standard)
    * Undefined behavior : types, how to avoid, memcopy, alignment
 * In memory : Add the linux command to allocate page immediately.
-* Add "M_" as compiler reserved macro (usage demo)
 * merge animated gif.
 * Add opening lesson (Fermi Estimation)
-* preprecessor example : using #include <boost/detail/endian.hpp>
-  * BOOST_BIG_ENDIAN usage deprecated. how to find source ?
+
 * Restart - deleting history. wrong lfs pointers.
 * In git :
    * Unrelated histories : `git merge repo1/master --allow-unrelated`
