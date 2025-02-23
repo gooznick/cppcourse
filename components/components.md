@@ -279,6 +279,127 @@ ldd --version
 
 ---
 
+# Windows equivalents 
+
+`General` -> `Windows SDK Version`
+
+```cpp
+#define WINVER 0x0601
+#define _WIN32_WINNT 0x0601
+```
+
+```bash
+echo %INCLUDE%
+```
+
+```bash
+dumpbin /imports simple.exe
+Dependencies -imports simple.exe
+```
+
+<!-- 
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.22000.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.22000.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.22000.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.22000.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.22000.0\\cppwinrt
+
+
+:\Dependencies_x64_Release>Dependencies.exe -imports C:\Users\admin\source\repos\Project1\x64\Debug\Project1.exe
+[-] Import listing for file : C:\Users\admin\source\repos\Project1\x64\Debug\Project1.exe
+Import from module MSVCP140D.dll :
+         Function ?good@ios_base@std@@QEBA_NXZ
+         Function ?flags@ios_base@std@@QEBAHXZ
+         Function ?width@ios_base@std@@QEBA_JXZ
+         Function ?width@ios_base@std@@QEAA_J_J@Z
+         Function ?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QEAAHD@Z
+         Function ?sputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QEAA_JPEBD_J@Z
+         Function ?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QEAAXH_N@Z
+         Function ?_Osfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAXXZ
+         Function ?tie@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBAPEAV?$basic_ostream@DU?$char_traits@D@std@@@2@XZ
+         Function ?cout@std@@3V?$basic_ostream@DU?$char_traits@D@std@@@1@A
+         Function ?flush@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV12@XZ
+         Function ?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV12@D@Z
+         Function ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@P6AAEAV01@AEAV01@@Z@Z
+         Function ?uncaught_exception@std@@YA_NXZ
+         Function ?widen@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBADD@Z
+         Function ?fill@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBADXZ
+         Function ?rdbuf@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBAPEAV?$basic_streambuf@DU?$char_traits@D@std@@@2@XZ
+Import from module VCRUNTIME140_1D.dll :
+         Function __CxxFrameHandler4
+Import from module VCRUNTIME140D.dll :
+         Function __C_specific_handler
+         Function memcpy
+         Function __C_specific_handler_noexcept
+         Function __std_type_info_destroy_list
+         Function __current_exception
+         Function __current_exception_context
+         Function __vcrt_GetModuleFileNameW
+         Function __vcrt_GetModuleHandleW
+         Function __vcrt_LoadLibraryExW
+Import from module ucrtbased.dll :
+         Function _execute_onexit_table
+         Function _crt_atexit
+         Function _crt_at_quick_exit
+         Function terminate
+         Function _wmakepath_s
+         Function _wsplitpath_s
+         Function wcscpy_s
+         Function _register_onexit_function
+         Function __stdio_common_vsprintf_s
+         Function strcat_s
+         Function strcpy_s
+         Function __p__commode
+         Function _set_new_mode
+         Function _configthreadlocale
+         Function _register_thread_local_exe_atexit_callback
+         Function _initialize_onexit_table
+         Function __p___argv
+         Function __p___argc
+         Function _set_fmode
+         Function _exit
+         Function exit
+         Function _initterm_e
+         Function _initterm
+         Function _get_initial_narrow_environment
+         Function _initialize_narrow_environment
+         Function _configure_narrow_argv
+         Function __setusermatherr
+         Function _set_app_type
+         Function _seh_filter_exe
+         Function _CrtDbgReportW
+         Function _CrtDbgReport
+         Function strlen
+         Function _cexit
+         Function _seh_filter_dll
+         Function _c_exit
+Import from module KERNEL32.dll :
+         Function GetProcAddress
+         Function IsDebuggerPresent
+         Function RaiseException
+         Function MultiByteToWideChar
+         Function WideCharToMultiByte
+         Function RtlCaptureContext
+         Function RtlLookupFunctionEntry
+         Function RtlVirtualUnwind
+         Function UnhandledExceptionFilter
+         Function SetUnhandledExceptionFilter
+         Function GetCurrentProcess
+         Function TerminateProcess
+         Function IsProcessorFeaturePresent
+         Function QueryPerformanceCounter
+         Function GetCurrentProcessId
+         Function GetSystemTimeAsFileTime
+         Function InitializeSListHead
+         Function GetStartupInfoW
+         Function GetModuleHandleW
+         Function GetLastError
+         Function HeapAlloc
+         Function HeapFree
+         Function GetProcessHeap
+         Function VirtualQuery
+         Function FreeLibrary
+         Function GetCurrentThreadId
+[-] Import listing done
+-->
+---
+
 
 # Some Thoughts 
 
@@ -401,6 +522,8 @@ strace ls
 
 ## Bad coding practice
 
+---
+
 # Compiling with non-isolated toolchain
 
 * **Libraries** - Using host `glibc`, `libstdc++`, etc. 
@@ -514,5 +637,132 @@ This presentation covered toolchains, build systems, and challenges in cross-com
 -->
 
 ---
+
+
+---
+
+# Quiz Questions 🎓
+
+---
+
+Which tool can show imported functions from a Windows executable?
+
+1. Process Explorer
+2. dumpbin
+3. Task Manager
+4. Regedit
+
+<!-- Answer: 2 
+ (+Dependencies/Depends)
+-->
+
+---
+
+WSL1 primarily operates by:
+
+1. Hardware virtualization
+2. Hyper-V integration
+3. Syscall translation
+4. Containerization
+
+<!-- Answer: 3 
+That what makes it pretty slow
+-->
+
+---
+
+Which feature explicitly requires VT-x/AMD-V?
+
+1. Docker containers
+2. QEMU software emulation
+3. VirtualBox (hardware virtualization mode)
+4. WSL1
+
+<!-- Answer: 3 
+all others are software implementations
+-->
+
+---
+
+Which syscall may break backward compatibility on Linux if compiled on newer kernels?
+
+1. read()
+2. clone3()
+3. open()
+4. write()
+
+<!-- Answer: 2
+clone3 is a new syscall
+ -->
+
+---
+
+What is a typical consequence of linking against newer glibc?
+
+1. Smaller executable size
+2. Improved compatibility with older kernels
+3. Potentially breaking compatibility with older glibc versions
+4. Faster compilation times
+
+<!-- Answer: 3 -->
+
+---
+
+Which of the following tools can trace system calls inside a Docker container?
+
+1. strace (with SYS_PTRACE capability)
+2. nm
+3. objdump
+4. readelf
+
+<!-- Answer: 1 -->
+
+---
+
+Which ABI aspect affects portability of statically compiled executables?
+
+1. Operating system GUI
+2. Function calling conventions and data alignment
+3. File system structure
+4. Network latency
+
+<!-- Answer: 2 -->
+
+---
+
+Which is true about VirtualBox virtualization?
+
+1. Always uses pure software emulation
+2. Primarily uses hardware virtualization but can fall back to software emulation
+3. Does not support hardware virtualization
+4. Runs only on Linux
+
+<!-- Answer: 2 -->
+
+---
+
+Which toolchain component translates Linux syscalls into Windows syscalls?
+
+1. Docker
+2. WSL2
+3. WSL1
+4. QEMU
+
+<!-- Answer: 3 -->
+
+---
+
+If cross-compiling for ARM64, which tool helps verify shared library dependencies without executing the binary?
+
+1. ldd
+2. readelf
+3. strace
+4. gdb
+
+<!-- Answer: 1/2 
+mostly ldd is not supplied in the toolchain -->
+
+---
+
 
 # Thank You! 🎯
