@@ -110,18 +110,14 @@ the examples/simple.sh example
 
 ---
 
-# "...used together..."
+
+# **Toolchain** 🔗
 
 <br/>
 
-<img src="images/gear.jpg"  width="700" />
+A structured set of software development tools **where each component depends on the output or functionality of another**, forming a continuous workflow for compiling, assembling, linking, and debugging software. (e.b)
 
----
-
-
-# 🛠️ **Interdependent Toolchain** 🔗
-
-A structured set of software development tools **where each component depends on the output or functionality of another**, forming a continuous workflow for compiling, assembling, linking, and debugging software.
+<img src="images/gear.jpg"  width="300" />
 
 ---
 
@@ -140,7 +136,7 @@ Different operating systems have different native toolchains. Some, like Intel's
 
 ---
 
-# Heterogeneous computing Toolchains
+## Heterogeneous computing Toolchains 🧩
 
 <img src="images/cuda.png" width="300" />
 <img src="images/sycl.png" width="300" />
@@ -163,6 +159,77 @@ CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Cla
 
 <!-- 
 Cross-compilation allows compiling software for a different architecture or OS than the host system.
+-->
+
+---
+
+## Isolation 🔒
+
+
+<br/>
+
+### 📌 libippiv8.so
+ vs
+### 📌 libboost_filesystem-vc142-mt-gd-x64-1_76.dll
+
+
+---
+
+# Some Thoughts
+
+* If I'm using static linked code, It's (mostly) fine.
+* It's good to compile on `old` glibc (ipp!)
+* The gcc uses glibc of **my machine** (and it's kernel).
+* When using dynamic linked code, it's tight with my glibc and kernel.
+* When compiling to other target, I have to **cross compile**.
+
+<!-- 
+* static - except system calls and kernel ABI compatibility 
+* old -  IPP, NVIDIA CUDA,  uses that 
+* gcc - my glibc that was compiled with my kernel
+* dynamic - fail with older glibc
+* Cross-compilation - not always defined as different os , but I prefer that
+-->
+
+---
+
+
+![bg width:800px](images/yocto.webp)
+
+---
+
+### **What is Yocto?**
+🚀 A **flexible, open-source build system** for creating custom **Linux distributions** for embedded devices.
+
+### **Why Yocto?**
+✅ **Customizable**   
+✅ **Cross-Compilation** 
+✅ **Layer-Based Structure**  
+✅ **Optimized for Embedded Systems**  
+
+<!-- 
+former : buildroot
+
+✅ **Customizable** – Control kernel, libraries, and packages  
+✅ **Cross-Compilation** – Build for different architectures  
+✅ **Layer-Based Structure** – Modular and maintainable  
+✅ **Optimized for Embedded Systems** – Minimal footprint  
+
+-->
+
+---
+
+### **Output of a Yocto Build**
+* 📦 Root Filesystem 
+* 🖥️ Linux Kernel 
+* 🛠️ Bootloader 
+* 🎯 Toolchain
+  * SDK
+  * Script
+
+
+<!-- 
+
 -->
 ---
 
@@ -243,15 +310,10 @@ isolated build machine != isolated running machine !!!!
 
 3rd party - ipp, onnx runtime etc...
 difference between :
-* ipp
+* libippiv8.so
 * libboost_filesystem-vc142-mt-gd-x64-1_76.dll
 
 -->
-
----
-
-
-# Compiling with non-isolated toolchain
 
 ---
 
@@ -468,7 +530,7 @@ Import from module KERNEL32.dll :
 ---
 
 
-# Some Thoughts 
+# Some Thoughts (again !)
 
 * It's good to compile on `old` glibc (ipp!)
 * The gcc uses glibc which uses the kernel of **my machine**.
@@ -485,8 +547,6 @@ Import from module KERNEL32.dll :
 * I want to use dynamic libraries.
 * Some networking functions (gethostbyname)
 * Using cuda or other library that supports only dynamic link.
-
-
 
 ---
 
