@@ -1,0 +1,21 @@
+execve("./simple_s", ["./simple_s"], 0x7ffd6a9ce7a8 /* 70 vars */) = 0
+arch_prctl(0x3001 /* ARCH_??? */, 0x7ffc0b717bd0) = -1 EINVAL (Invalid argument)
+brk(NULL)                               = 0x2e294000
+brk(0x2e294e00)                         = 0x2e294e00
+arch_prctl(ARCH_SET_FS, 0x2e294400)     = 0
+set_tid_address(0x2e2946d0)             = 3572352
+set_robust_list(0x2e2946e0, 24)         = 0
+rseq(0x2e294da0, 0x20, 0, 0x53053053)   = 0
+uname({sysname="Linux", nodename="T-P", ...}) = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+readlink("/proc/self/exe", "/home/projects/cppcourse/"..., 4096) = 60
+getrandom("\xed\xc4\x52\xae\xef\x70\x9e\x38", 8, GRND_NONBLOCK) = 8
+brk(0x2e2b5e00)                         = 0x2e2b5e00
+brk(0x2e2b6000)                         = 0x2e2b6000
+mprotect(0x5cc000, 45056, PROT_READ)    = 0
+futex(0x5da69c, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+futex(0x5da6a8, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x4), ...}, AT_EMPTY_PATH) = 0
+write(1, "Hello, World!\n", 14)         = 14
+exit_group(0)                           = ?
++++ exited with 0 +++

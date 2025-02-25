@@ -13,7 +13,7 @@ marp: true
 
 ---
 
-# Toolchain Overview 🔗
+# Toolchain Definition 🔗
 
 <br/><br/> 
 
@@ -22,6 +22,76 @@ marp: true
 <!-- 
 A software toolchain is a set of software development tools used together to compile, link, optimize, and debug software. A well-integrated toolchain ensures compatibility across components.
 -->
+
+---
+
+# 🔧 C++ Toolchain Components(18)
+
+### **Compilers**: g++, clang++, cl.exe, icx, nvcc, icpx
+
+### **Linkers**:ld, lld, link.exe
+
+### **Assemblers**:as, ml.exe, ml64.exe
+
+### **Library Managers**:ar, lib.exe, strip
+
+### **Debuggers**:gdb, lldb, windbg
+
+---
+
+# 🔧 C++ Toolchain Components(20)
+
+### **Build Systems**: cmake, ninja, make, bazel, b2
+
+### **Dependency Management**:ldd, depends.exe, dependenciesGui.exe, pahole
+
+### **Profilers**:perf, valgrind, vtune
+
+### **Binary Utilities**:nm, objdump, readelf, dumpbin.exe, strings, patchelf, addr2line, strip
+
+---
+
+# 🔧 C++ Toolchain Components(13)
+
+### **Static Analysis**:clang-tidy, cppcheck, pvs-studio, sonar-scanner
+
+### **Code Formatting**:clang-format, uncrustify, cmake-format
+
+### **Package Managers**:vcpkg, conan, apt
+
+### **Debug Symbols**:symchk.exe, symstore.exe, eu-readelf
+
+
+---
+
+# Build Systems 🔨
+
+<img src="images/buildsystems.png" alt="Build Systems" width="700" />
+
+* **Features:** Dependency management, compiler flags, file manipulation, installation
+
+<!-- 
+Build systems automate compiling, linking, and installing software. Examples: Make, CMake, Ninja, Meson.
+
+According to the definition, it's part of the toolchain.
+
+My definition: Only the tools that depend one another are called "toolchain"
+-->
+
+---
+
+# Integrated Development Environment
+
+* **Features:** Code Editor, Compilation, Debugging, Toolchain Integration
+
+<img src="images/ides.png" width="600" />
+
+<!-- 
+IDEs help developers by integrating all tools into a single interface. Examples: Visual Studio, CLion, VS Code.
+
+New IDEs are only the word processor with some features that help
+-->
+
 
 ---
 
@@ -48,43 +118,20 @@ the examples/simple.sh example
 
 ---
 
-# Build Systems 🔨
 
-<img src="images/buildsystems.png" alt="Build Systems" width="700" />
+# 🛠️ **Interdependent Toolchain** 🔗
 
-* **Features:** Dependency management, compiler flags, file manipulation, installation
-
-<!-- 
-Build systems automate compiling, linking, and installing software. Examples: Make, CMake, Ninja, Meson.
-
-According to the definition, it's part of the toolchain.
-
-My definition: Only the tools that depend one another are called "toolchain"
--->
+A structured set of software development tools **where each component depends on the output or functionality of another**, forming a continuous workflow for compiling, assembling, linking, and debugging software.
 
 ---
 
-# IDE 
-### Integrated Development Environment 🖥️
 
-* **Features:** Code Editor, Compilation, Debugging, Toolchain Integration
+# Common Toolchains 💻
 
-<img src="images/ide_poll.png" width="700" />
+<img src="images/msvc.png"  width="300" />
+<img src="images/gcc.png"  width="300" />
+<img src="images/clang.png"  width="450" />
 
-<!-- 
-IDEs help developers by integrating all tools into a single interface. Examples: Visual Studio, CLion, VS Code.
--->
-
----
-
-# Toolchains by Platform 💻
-
-* **Windows:**
-  * MSVC
-  * MinGW-w64 / Clang
-* **Linux/macOS:**
-  * GNU toolchain (GCC)
-  * Clang
 
 <!-- 
 LLVM
@@ -108,6 +155,106 @@ CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Cla
 -->
 
 ---
+
+
+# Cross-Compilation 🌍
+
+<img src="images/cross.png" width="800" />
+
+<!-- 
+Cross-compilation allows compiling software for a different architecture or OS than the host system.
+-->
+---
+
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+---
+
+# `strace` - System Call Tracing Tool 🛠️
+
+- A powerful debugging tool for **Linux** 🐧
+- Traces **system calls** and **signals**
+- Useful for debugging and profiling
+
+🔹 **Example Usage:**
+```sh
+strace ls
+```
+📌 Shows all system calls used by `ls`
+
+---
+
+## Common `strace` Flags ⚙️
+
+| Flag | Description |
+|------|-------------|
+| `-e ` | Filter system calls (e.g., `-e execve,write`) |
+| `-p PID` | Attach to a running process |
+| `-f` | Follow child processes |
+| `-v` | Verbose (don't use ...) |
+| `-o file` | Save output to a file |
+
+<!-- 
+docker run --rm -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined ubuntu bash
+
+apt update && apt install -y strace
+
+strace ls
+
+strace -osimple.txt simple
+strace -osimple_s.txt simple_s
+
+-->
+
+
+---
+
+
+## Windows Equivalent? 🖥️
+
+🔹 Windows has no direct `strace`, but similar tool exist:
+- **`Process Monitor (ProcMon)`** – GUI-based syscall tracing (Sysinternals)
+
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+# Compiling with non-isolated toolchain
+
+* **Libraries** - Using host `glibc`, `libstdc++`, etc. 
+* **Kernel Headers** - Using host kernel headers
+* **Sysroot Path** - Linkage to `/usr/lib` from the host
+
+* `gcc -print-search-dirs`
+* `echo | gcc -E -Wp,-v -`
+
+<!-- 
+isolated build machine != isolated running machine !!!!
+
+3rd party - ipp, onnx runtime etc...
+difference between :
+* ipp
+* libboost_filesystem-vc142-mt-gd-x64-1_76.dll
+
+-->
+
+---
+
+
+# Compiling with non-isolated toolchain
+
+---
+
 
 
 ![bg](images/elf.jpg)
@@ -194,31 +341,24 @@ ldd simple
 nm -D simple | c++filt
 ```
 
-| **Shared Library**              | **Common Functions Implemented** |
-|---------------------------------|---------------------------------|
-| **`linux-vdso.so.1`** (Virtual Dynamic Shared Object) | `gettimeofday()`, `clock_gettime()`, `time()`, `getcpu()` (Optimized system calls hout a syscall instruction) |
-| **`libstdc++.so.6`** (GNU C++ Standard Library) | `std::vector`, `std::string`, `std::cout`, `std::map`, `std::sort`, `std::thread` (C++ ndard Library functions) |
-| **`libc.so.6`** (GNU C Library - glibc) | `printf()`, `malloc()`, `free()`, `open()`, `read()`, `write()`, `fork()`, `execve()`, `exit()` re C standard and system calls) |
-| **`libm.so.6`** (Math Library) | `sin()`, `cos()`, `sqrt()`, `log()`, `pow()`, `exp()`, `tan()`, `floor()`, `ceil()` (Mathematical ctions) |
-| **`/lib64/ld-linux-x86-64.so.2`** (Dynamic Linker) | `_start()`, `dlopen()`, `dlsym()`, `dlclose()` (Loads shared libraries and resolves bols) |
-| **`libgcc_s.so.1`** (GCC Support Library) | `__gcc_personality_v0()`, `__cxa_throw()`, `__cxa_begin_catch()`, `__cxa_end_catch()` (Exception handling, stack unwinding) |
-
+| **Shared Libraries**
+| **`linux-vdso.so.1`** 
+| **`libstdc++.so.6`** 
+| **`libc.so.6`** 
+| **`libm.so.6`** 
+| **`/lib64/ld-linux-x86-64.so.2`**
+| **`libgcc_s.so.1`** 
 
  ## **🚀 Function Breakdown**
- | **Function** | **Purpose** | **Implemented In** |
- |-------------|------------|--------------------|
- | **`__cxa_atexit@GLIBC_2.2.5`** | Registers a function to run when `exit()` is called (used for global/static destructors). | `libc.so.6` libc) |
- | **`__cxa_finalize@GLIBC_2.2.5`** | Runs functions registered with `__cxa_atexit` before program termination. | `libc.so.6` (glibc) |
- | **`__gmon_start__`** | Used for profiling (GNU `gprof`). **Weak symbol**, sometimes auto-inserted. | `libc.so.6` (if profiling enabled) |
- | **`_ITM_deregisterTMCloneTable`** | Transactional memory support (used in GCC's **Thread-Level Speculation**). **Weak symbol**. | `libgcc_s..1` |
- | **`_ITM_registerTMCloneTable`** | Registers transactional memory clone tables for **GCC optimizations**. | `libgcc_s.so.1` |
- | **`__libc_start_main@GLIBC_2.34`** | Entry point for **glibc-based programs** (sets up argc, env, calls `main()`). | `libc.so.6` (glibc) |
- | **`std::basic_ostream<char, std::char_traits<char> >::operator<<(...)`** | Handles `std::cout <<` operations (formatted output). | `libstdc.so.6` (GNU C++ Standard Library) |
- | **`std::ios_base::Init::Init()@GLIBCXX_3.4`** | Initializes global `std::cout` and `std::cin`. Required for C++ iostreams. | `libstdc++.so. |
- | **`std::ios_base::Init::~Init()@GLIBCXX_3.4`** | Cleans up iostreams (`std::cout`, `std::cin`) at program exit. | `libstdc++.so.6` |
- | **`std::cout@GLIBCXX_3.4`** | Global standard output stream (`std::cout`). | `libstdc++.so.6` |
- | **`std::basic_ostream<char, std::char_traits<char> >& std::endl(...)`** | Handles `std::endl`, which adds a newline (`\n`) and flushes tput. | `libstdc++.so.6` |
- | **`std::operator<< <std::char_traits<char> >(...)`** | Overloaded `operator<<` for C++ streams (`std::cout <<`). | `libstdc++.so.6` |
+ | **`__cxa_atexit@GLIBC_2.2.5`** | 
+ | **`__cxa_finalize@GLIBC_2.2.5`** | 
+ | **`_ITM_deregisterTMCloneTable`** | 
+ | **`_ITM_registerTMCloneTable`** | 
+ | **`__libc_start_main@GLIBC_2.34`** |
+ | **`std::basic_ostream<char, std::char_traits<char> >::operator<<(...)`** | 
+ | **`std::ios_base::Init::Init()@GLIBCXX_3.4`** | 
+ | **`std::cout@GLIBCXX_3.4`** | 
+
 
 
 -->
@@ -273,7 +413,7 @@ example: running simple dynamic example on two ubuntu's : newer and older.
 * `ldd`
 
 <!-- 
-versionning @GLOBC... 
+versionning @GLIBC... 
 ldd --version
 -->
 
@@ -304,98 +444,25 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.3253
 :\Dependencies_x64_Release>Dependencies.exe -imports C:\Users\admin\source\repos\Project1\x64\Debug\Project1.exe
 [-] Import listing for file : C:\Users\admin\source\repos\Project1\x64\Debug\Project1.exe
 Import from module MSVCP140D.dll :
-         Function ?good@ios_base@std@@QEBA_NXZ
-         Function ?flags@ios_base@std@@QEBAHXZ
-         Function ?width@ios_base@std@@QEBA_JXZ
-         Function ?width@ios_base@std@@QEAA_J_J@Z
-         Function ?sputc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QEAAHD@Z
-         Function ?sputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QEAA_JPEBD_J@Z
-         Function ?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QEAAXH_N@Z
-         Function ?_Osfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAXXZ
-         Function ?tie@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBAPEAV?$basic_ostream@DU?$char_traits@D@std@@@2@XZ
-         Function ?cout@std@@3V?$basic_ostream@DU?$char_traits@D@std@@@1@A
-         Function ?flush@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV12@XZ
-         Function ?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV12@D@Z
-         Function ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@P6AAEAV01@AEAV01@@Z@Z
-         Function ?uncaught_exception@std@@YA_NXZ
-         Function ?widen@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBADD@Z
-         Function ?fill@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBADXZ
-         Function ?rdbuf@?$basic_ios@DU?$char_traits@D@std@@@std@@QEBAPEAV?$basic_streambuf@DU?$char_traits@D@std@@@2@XZ
+         Function ?good@ios_base@std@@QEBA_NXZ...
+
+?sputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QEAA_JPEBD_J@Z
+         Function ?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QEAAXH_N@Z...
+
 Import from module VCRUNTIME140_1D.dll :
          Function __CxxFrameHandler4
 Import from module VCRUNTIME140D.dll :
-         Function __C_specific_handler
-         Function memcpy
-         Function __C_specific_handler_noexcept
-         Function __std_type_info_destroy_list
-         Function __current_exception
-         Function __current_exception_context
-         Function __vcrt_GetModuleFileNameW
-         Function __vcrt_GetModuleHandleW
-         Function __vcrt_LoadLibraryExW
+         Function __C_specific_handler...
+
 Import from module ucrtbased.dll :
-         Function _execute_onexit_table
-         Function _crt_atexit
-         Function _crt_at_quick_exit
-         Function terminate
-         Function _wmakepath_s
-         Function _wsplitpath_s
-         Function wcscpy_s
-         Function _register_onexit_function
-         Function __stdio_common_vsprintf_s
-         Function strcat_s
-         Function strcpy_s
-         Function __p__commode
-         Function _set_new_mode
-         Function _configthreadlocale
-         Function _register_thread_local_exe_atexit_callback
-         Function _initialize_onexit_table
-         Function __p___argv
-         Function __p___argc
-         Function _set_fmode
-         Function _exit
-         Function exit
-         Function _initterm_e
-         Function _initterm
-         Function _get_initial_narrow_environment
-         Function _initialize_narrow_environment
-         Function _configure_narrow_argv
-         Function __setusermatherr
-         Function _set_app_type
-         Function _seh_filter_exe
-         Function _CrtDbgReportW
-         Function _CrtDbgReport
-         Function strlen
-         Function _cexit
-         Function _seh_filter_dll
-         Function _c_exit
+         Function _execute_onexit_table...
+
+_register_onexit_function
+         Function __stdio_common_vsprintf_s...
+
 Import from module KERNEL32.dll :
-         Function GetProcAddress
-         Function IsDebuggerPresent
-         Function RaiseException
-         Function MultiByteToWideChar
-         Function WideCharToMultiByte
-         Function RtlCaptureContext
-         Function RtlLookupFunctionEntry
-         Function RtlVirtualUnwind
-         Function UnhandledExceptionFilter
-         Function SetUnhandledExceptionFilter
-         Function GetCurrentProcess
-         Function TerminateProcess
-         Function IsProcessorFeaturePresent
-         Function QueryPerformanceCounter
-         Function GetCurrentProcessId
-         Function GetSystemTimeAsFileTime
-         Function InitializeSListHead
-         Function GetStartupInfoW
-         Function GetModuleHandleW
-         Function GetLastError
-         Function HeapAlloc
-         Function HeapFree
-         Function GetProcessHeap
-         Function VirtualQuery
-         Function FreeLibrary
-         Function GetCurrentThreadId
+         Function GetProcAddress...
+
 [-] Import listing done
 -->
 ---
@@ -419,16 +486,7 @@ Import from module KERNEL32.dll :
 * Some networking functions (gethostbyname)
 * Using cuda or other library that supports only dynamic link.
 
----
 
-
-# Cross-Compilation 🌍
-
-<img src="images/cross.png" width="800" />
-
-<!-- 
-Cross-compilation allows compiling software for a different architecture or OS than the host system.
--->
 
 ---
 
@@ -472,72 +530,6 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 ```
-
----
-
-
-# `strace` - System Call Tracing Tool 🛠️
-
-- A powerful debugging tool for **Linux** 🐧
-- Traces **system calls** and **signals**
-- Useful for debugging and profiling
-
-🔹 **Example Usage:**
-```sh
-strace ls
-```
-📌 Shows all system calls used by `ls`
-
----
-
-## Common `strace` Flags ⚙️
-
-| Flag | Description |
-|------|-------------|
-| `-e trace=` | Filter system calls (e.g., `-e trace=open,read`) |
-| `-p PID` | Attach to a running process |
-| `-f` | Follow child processes |
-| `-c` | Count system calls (summary) |
-| `-o file` | Save output to a file |
-
-<!-- 
-docker run --rm -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined ubuntu bash
-
-apt update && apt install -y strace
-
-strace ls
--->
-
-
----
-
-
-## Windows Equivalent? 🖥️
-
-🔹 Windows has no direct `strace`, but similar tool exist:
-- **`Process Monitor (ProcMon)`** – GUI-based syscall tracing (Sysinternals)
-
-
----
-
-## Bad coding practice
-
----
-
-# Compiling with non-isolated toolchain
-
-* **Libraries** - Using host `glibc`, `libstdc++`, etc. 
-* **Kernel Headers** - Using host kernel headers
-* **Sysroot Path** - Linkage to `/usr/lib` from the host
-
-* `gcc -print-search-dirs`
-* `echo | gcc -E -Wp,-v -`
-
-<!-- 
-isolated build machine != isolated running machine !!!!
-
-3rd party - ipp, onnx runtime etc...
--->
 
 ---
 
