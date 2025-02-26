@@ -1,7 +1,7 @@
 ---
 title: Toolchain and Build System Components
 author: eranbu
-date: 6/2024
+date: 2/2025
 theme: gaia
 marp: true
 ---
@@ -20,12 +20,14 @@ marp: true
 <img src="images/definition.png" alt="Toolchain Definition" width="900" />
 
 <!-- 
-A software toolchain is a set of software development tools used together to compile, link, optimize, and debug software. A well-integrated toolchain ensures compatibility across components.
+1. כל הכלים מרגע כתיבת הקוד עד קבלת קובץ הריצה וגם אח"כ
+2. אח"כ - ניפוי שגיאות אופטימיזציה
+3. כלים צריכים לעבוד ביחד
 -->
 
 ---
 
-# 🔧 C++ Toolchain Components(18)
+# 🔧 18 Toolchain Components
 
 ### **Compilers**: g++, clang++, cl.exe, icx, nvcc, icpx
 
@@ -37,9 +39,16 @@ A software toolchain is a set of software development tools used together to com
 
 ### **Debuggers**:gdb, lldb, windbg
 
+<!-- 
+1. חלק ראשון - את רוב הכלים הקומפיילר יפעיל בעצמו
+2. נדגים כיצד קומפיילר מריץ את הכלים
+strace g++ simple.cpp
+3. debugger - all uses
+
+-->
 ---
 
-# 🔧 C++ Toolchain Components(20)
+# 🔧 +20 Toolchain Components
 
 ### **Build Systems**: cmake, ninja, make, bazel, b2
 
@@ -49,9 +58,17 @@ A software toolchain is a set of software development tools used together to com
 
 ### **Binary Utilities**:nm, objdump, readelf, dumpbin.exe, strings, patchelf, addr2line, strip
 
+<!-- 
+חלק שני כלים נפוצים לא חובה
+1. סדר בבנייה של הרבה קבצים, דגלים קומפילציה ועוד
+2. כלים לניתוח קובץ הריצה
+3. profile
+4. כלים לניתוח של קבצי הביניים
+
+-->
 ---
 
-# 🔧 C++ Toolchain Components(13)
+# 🔧 +13 Toolchain Components
 
 ### **Static Analysis**:clang-tidy, cppcheck, pvs-studio, sonar-scanner
 
@@ -61,7 +78,13 @@ A software toolchain is a set of software development tools used together to com
 
 ### **Debug Symbols**:symchk.exe, symstore.exe, eu-readelf
 
-
+<!-- 
+כלים שכדאי להכיר
+1. אנליזה סטטית - מציאת שגיאות ללא הרצה
+2. format - precommit
+3. הורדת חבילות מוכנות - ניתן לבחינה
+4. בחינת של מידע הניפוי
+-->
 ---
 
 # Build Systems 🔨
@@ -71,11 +94,15 @@ A software toolchain is a set of software development tools used together to com
 * **Features:** Dependency management, compiler flags, file manipulation, installation
 
 <!-- 
-Build systems automate compiling, linking, and installing software. Examples: Make, CMake, Ninja, Meson.
+two packages that are not toolchain (my opinion):
 
-According to the definition, it's part of the toolchain.
+1 - build system
+תפקידה - ליצור את אוסף שורות הפקודה לכלים המרכזיים
 
-My definition: Only the tools that depend one another are called "toolchain"
+cmake - meta build system
+makefiles/visual studio code
+ninja - python
+
 -->
 
 ---
@@ -87,37 +114,62 @@ My definition: Only the tools that depend one another are called "toolchain"
 <img src="images/ides.png" width="600" />
 
 <!-- 
-IDEs help developers by integrating all tools into a single interface. Examples: Visual Studio, CLion, VS Code.
 
-New IDEs are only the word processor with some features that help
+2 - (not part of toolchain) IDE
+
+visual studio - can use many toolchains 
+example - set toolchain from visual studio - General -> Platform Toolset
+
+New IDEs are only the word processor with some features that helps : emacs, sublime, vscode
+
 -->
 
 
 ---
 
-# Toolchain Components 🏗️
-
-<img src="images/components.jpg" alt="Toolchain Components" width="700" />
-
-<!-- 
-* GCC Toolchain: g++, objdump, readelf, strings, nm, c++filt, ar...
-* MSVC: cl, link, dumpbin, editbin...
-* LLVM Toolchain: clang++, lld, llvm-nm, llvm-objdump...
-* Cross-compilation toolchains: aarch64-linux-gnu-gcc, arm-none-eabi-gcc...
-
-the examples/simple.sh example
--->
-
----
-
+![bg left](images/gear.jpg)
 
 # **Toolchain** 🔗
 
 <br/>
 
-A structured set of software development tools **where each component depends on the output or functionality of another**, forming a continuous workflow for compiling, assembling, linking, and debugging software. (e.b)
+A structured set of software development tools **where each component depends on the output or functionality of another**, forming a continuous workflow for compiling, assembling, linking, and debugging software.
+ (E.B)
 
-<img src="images/gear.jpg"  width="300" />
+
+<!-- 
+
+My definition
+
+תלות של הקומפוננטות אחת בשניה
+-->
+---
+
+# Toolchain Components 🏗️
+
+
+<img src="images/components.jpg" alt="Toolchain Components" width="700" />
+
+<!-- 
+מה קורה בשלבי הקומפילציה
+
+creating makefiles
+
+
+g++ -E simple.cpp -o simple.i
+g++ -S simple.i -o simple.s
+g++ -c simple.s -o simple.o
+g++ simple.o -o simple
+
+1. g++ -print-prog-name=cc1plus
+2. run with : `strace -f -e execve `
+
+cat simple.i
+cat simple.s
+objdump -d simple.o
+objdump -d simple
+
+-->
 
 ---
 
@@ -130,8 +182,13 @@ A structured set of software development tools **where each component depends on
 
 
 <!-- 
-LLVM
-Different operating systems have different native toolchains. Some, like Intel's ICC, support multiple platforms.
+LLVM - framework, clang - compiler
+
+1. Faster than gcc
+2. Readable error messages 
+3. static analyzers (clang-tidy)
+
+Some, like Intel's ICC, support multiple platforms.
 -->
 
 ---
@@ -146,236 +203,58 @@ Different operating systems have different native toolchains. Some, like Intel's
 * **Debugger** 
 * **Profiler**
 <!-- 
-**More** : `nvcc`, `cuobjdump`, `nvdisasm`, `nvprune`
-CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Clang but requires specific linker configurations.
+חברות רוצות לייצר רק את המומחיות שלהם 
+בשקף זה קומפיילרים
+הן רוצות שהקומפיילר יעבוד במירב הסביבות
+
+**More** : `cuobjdump`, `nvdisasm`, `nvprune`
+CUDA toolchain is specialized for GPU programming. Works with MSVC, GCC, and Clang
 -->
 
----
 
+---
 
 # Cross-Compilation 🌍
 
 <img src="images/cross.png" width="800" />
 
 <!-- 
-Cross-compilation allows compiling software for a different architecture or OS than the host system.
--->
+הגדרה 
 
----
+טכנולוגיה המאפשרת קומפילציה של קוד ריצה במערכת שונה מהמערכת בה נרוץ
+תהליך הקומפילציה הוא עיבוד וניתוח טקסט,
+אין סיבה אמיתית שיזדקק למערכת היעד אלא רק למידע עליה
 
-## Isolation 🔒
+embedded systems CANNOT run compiler (arduino)
 
+sudo apt install -y g++-aarch64-linux-gnu
+aarch64-linux-gnu-g++ simple.cpp -o simple 
 
-<br/>
+גם המחשב שלי יודע לקמפל קוד שהוא לא יודע להריץ
+g++ avx.cpp -mavx512f -oavx
+# Illegal instruction (core dumped)
 
-### 📌 libippiv8.so
- vs
-### 📌 libboost_filesystem-vc142-mt-gd-x64-1_76.dll
-
-
----
-
-# Some Thoughts
-
-* If I'm using static linked code, It's (mostly) fine.
-* It's good to compile on `old` glibc (ipp!)
-* The gcc uses glibc of **my machine** (and it's kernel).
-* When using dynamic linked code, it's tight with my glibc and kernel.
-* When compiling to other target, I have to **cross compile**.
-
-<!-- 
-* static - except system calls and kernel ABI compatibility 
-* old -  IPP, NVIDIA CUDA,  uses that 
-* gcc - my glibc that was compiled with my kernel
-* dynamic - fail with older glibc
-* Cross-compilation - not always defined as different os , but I prefer that
--->
-
----
-
-
-![bg width:800px](images/yocto.webp)
-
----
-
-### **What is Yocto?**
-🚀 A **flexible, open-source build system** for creating custom **Linux distributions** for embedded devices.
-
-### **Why Yocto?**
-✅ **Customizable**   
-✅ **Cross-Compilation** 
-✅ **Layer-Based Structure**  
-✅ **Optimized for Embedded Systems**  
-
-<!-- 
-former : buildroot
-
-✅ **Customizable** – Control kernel, libraries, and packages  
-✅ **Cross-Compilation** – Build for different architectures  
-✅ **Layer-Based Structure** – Modular and maintainable  
-✅ **Optimized for Embedded Systems** – Minimal footprint  
-
--->
-
----
-
-### **Output of a Yocto Build**
-* 📦 Root Filesystem 
-* 🖥️ Linux Kernel 
-* 🛠️ Bootloader 
-* 🎯 Toolchain
-  * SDK
-  * Script
-
-
-<!-- 
-
--->
----
-
-# Tool
-
-<img src="../images/multitool.png" width="300" />
-
----
-
-# `strace` - System Call Tracing Tool 🛠️
-
-- A powerful debugging tool for **Linux** 🐧
-- Traces **system calls** and **signals**
-- Useful for debugging and profiling
-
-🔹 **Example Usage:**
-```sh
-strace ls
-```
-📌 Shows all system calls used by `ls`
-
----
-
-## Common `strace` Flags ⚙️
-
-| Flag | Description |
-|------|-------------|
-| `-e ` | Filter system calls (e.g., `-e execve,write`) |
-| `-p PID` | Attach to a running process |
-| `-f` | Follow child processes |
-| `-v` | Verbose (don't use ...) |
-| `-o file` | Save output to a file |
-
-<!-- 
-docker run --rm -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined ubuntu bash
-
-apt update && apt install -y strace
-
-strace ls
-
-strace -osimple.txt simple
-strace -osimple_s.txt simple_s
-
--->
-
-
----
-
-
-## Windows Equivalent? 🖥️
-
-🔹 Windows has no direct `strace`, but similar tool exist:
-- **`Process Monitor (ProcMon)`** – GUI-based syscall tracing (Sysinternals)
-
-
----
-
-
-![bg](images/dont.webp)
-
-<!-- 
-Bad practice
--->
-
----
-
-# Compiling with non-isolated toolchain
-
-* **Libraries** - Using host `glibc`, `libstdc++`, etc. 
-* **Kernel Headers** - Using host kernel headers
-* **Sysroot Path** - Linkage to `/usr/lib` from the host
-
-* `gcc -print-search-dirs`
-* `echo | gcc -E -Wp,-v -`
-
-<!-- 
-isolated build machine != isolated running machine !!!!
-
-3rd party - ipp, onnx runtime etc...
-difference between :
-* libippiv8.so
-* libboost_filesystem-vc142-mt-gd-x64-1_76.dll
+חידה- מתי מחשב צריך להריץ קוד בזמן קומפילציה?
+consteval constexpr
 
 -->
 
 ---
 
 
+![bg left](images/gear.jpg)
 
-![bg](images/elf.jpg)
+# **Summary** 🔗
 
-<!-- 
-In the rest of the lecture, we will answer a (simple?) question :
-
-I Compiled simple program that adds two numbers. 
-Which platform can run it ?
-
-And when the program is more complicated ?
-
-I'll begin with both linux/windows but then I'll speak only about linux.
--->
-
----
-
-# Static Executable Portability
-
-* ISA - Instruction Set Architecture
-   * X86 / X86_64 / Arm
-* Instruction sets
-   * MMX / SSE / AVX / FMA / AES
-* Executable format :
-   * PE (exe) / ELF 
-* Execution :
-   * _start → mainCRTStartup → main /  _start → main
-<!-- 
-
-Executable is not portable across different ISA/IS/OS
-
-Demo : AVX instruction set
-
-PE portable executable
-ELF - Executable and Linkable format
-
--->
-
----
-
-# Static Executable Portability
-
-* Application Binary Interface (ABI):
-  * Function calling conventions, data alignment
-* Using syscalls/win32api that has changed:
-   * Windows : CreateFile2() (windows8+)
-   * Linux : clone3() (Linux 5.3+) 
-* Explicit or implicit calls !
+* All toolchain components should be available in order to compiler.
+* Toolchain can compile to it's target 
 
 <!-- 
-Debugging Symbols Formats: DWARF (ELF), PDB (MSVC)
+סיכום ביניים 
 
-The compiler may add syscalls/win32api calls to the program (cout !!)
-
-It may not be compatible with the running kernel/windows version.
-
-Example : syscall.cpp
-
-Most of the time - we'll be fine, because kernel and win32api have backward compatibility.
+הקומפיילר וכלי העזר שלו צריכים לרוץ ביחד
+הקומפיילר הוא סט של כלים
+אילו עוד מצרכים שקשורים הדוק לקומפיילר אנחנו צריכים?
 
 -->
 
@@ -388,74 +267,114 @@ Most of the time - we'll be fine, because kernel and win32api have backward comp
 * **Compiler-Specific Headers:** `x86intrin.h`, `intrin.h`
 
 <!-- 
-By default some of those are implemented in shared objects.
+1. ספריות שמקשרות בין השפה למערכת ההפעלה
+2. ספריות של מערכת ההפעלה
+3. ספריות ספציפיות לקומפיילר
 
-Libraries and headers differ by OS and compiler. 
-Some functions are available only in specific environments.
+אי אפשר להעתיק קומפיילר ולהניח שהוא ירוץ
+ הוא צריך את כל הסביבה שלו 
+header, environment variables, scripts
 
-<math.h>, <complex.h> and <fenv.h> implemented in libm.so
+msvc : "x64 native tools command line"
+set 
+echo %INCLUDE%
+echo %LIB%
+cl
 
-demo - simple program ("simple") link without "-static"
+כשמקבלים סביבת קומפילציה דבר ראשון לנסות לקמפל קוד פשוט 
+c / c++ / cuda /...
 
-```sh
-g++ simple.cpp -osimple
+איזה מידע על היעד צריך הקומפיילר לדעת
+
+-->
+
+---
+
+# 🖥️ **System Data**  
+
+* **🛠️ ISA - Instruction Set Architecture**
+  * **x86 / x86_64 / ARM**
+* **📜 Instruction Sets**
+  * **MMX / SSE / AVX / FMA / AES**
+
+* **🚀 Execution Formats && Flow**
+  * **Windows PE**: `_start → mainCRTStartup → main`
+  * **Linux ELF**: `_start → main`
+<!-- 
+איזה מידע הקומפיילר צריך לדעת
+1. ארכיטקטורת מעבד ISA
+2. סט פקודות מעבד
+3. מערכת ההפעלה
+
+PE portable executable
+ELF - Executable and Linkable format
+
+ואיזה מידע נוסף ?
+
+-->
+
+
+---
+
+# 🏗️ **Compiler's External Data**  
+
+📦 **Libraries** → Uses host **glibc, libstdc++**  
+⚙️ **Kernel Headers** → Uses **host kernel/Windows headers** 
+📂 **Sysroot Path** → Links to **`/usr/lib`** from host  
+
+🔍 **Check Compiler Data:**  
+🖥️ `echo | gcc -E -Wp,-v -`  
+📜 `g++ -print-search-dirs`  
+
+
+<!-- 
+Search dirs :
+/usr/local/include
+/usr/include/x86_64-linux-gnu
+/usr/include
+
+include dirs :
+/lib/:/usr/lib/
+
+לשם מידע על מערכת ההפעלה הקומפיילר עושה שימוש במחשב המארח
+מה שיכול להיות מסוכן
+
+win32API / glibc 
+
+Windows : General -> Windows SDK version (or WINNT_VER)
+
+-->
+
+---
+
+
+# 🏗️ **glibc - The GNU C Library**  
+
+📦 **Core library** for **GNU/Linux** 
+🔹 `open`, `read`, `write`, `malloc`  
+🔹 `printf`, `getaddrinfo`, `dlopen`  
+🔹 `pthread_create`, `crypt`, `login`, `exit`  
+
+✅ **Backward compatible** 
+❌ **Tightly coupled with the Linux kernel**
+
+<!-- 
+in simple's ldd we can find /lib/x86_64-linux-gnu/libc.so.6
+
 ldd simple
-nm -D simple | c++filt
-```
+nm simple
+file simple
 
-| **Shared Libraries**
-| **`linux-vdso.so.1`** 
-| **`libstdc++.so.6`** 
-| **`libc.so.6`** 
-| **`libm.so.6`** 
-| **`/lib64/ld-linux-x86-64.so.2`**
-| **`libgcc_s.so.1`** 
+Running it will show the version(2.35)
+GLIBC_2.34
+_ZSt4cout@GLIBCXX_3.4
 
- ## **🚀 Function Breakdown**
- | **`__cxa_atexit@GLIBC_2.2.5`** | 
- | **`__cxa_finalize@GLIBC_2.2.5`** | 
- | **`_ITM_deregisterTMCloneTable`** | 
- | **`_ITM_registerTMCloneTable`** | 
- | **`__libc_start_main@GLIBC_2.34`** |
- | **`std::basic_ostream<char, std::char_traits<char> >::operator<<(...)`** | 
- | **`std::ios_base::Init::Init()@GLIBCXX_3.4`** | 
- | **`std::cout@GLIBCXX_3.4`** | 
+interpreter /lib64/ld-linux-x86-64.so.2
 
-
-
--->
-
----
-
-# Dynamic linking
-
-* `libstdc++.so.6` : c++ implementations.
-* `libgcc_s.so.1` : gcc internal functions implementations.
-* `ld-linux-x86-64.so.2` 
-* `libc.so.6`
-
-<!-- 
 Mostly **backward** compatible.
-Can install some older versions on same machine
-
-Glibc must be compiled with the current kernel.
-
--->
-
----
-
-
-# glibc - The GNU C Library
-
-The project provides the **core libraries for the GNU system** and GNU/Linux systems. 
-
-These APIs include such foundational facilities as **open, read, write, malloc, printf, getaddrinfo, dlopen, pthread_create, crypt, login, exit** and more.
-
-The GNU C Library is designed to be a **backwards compatible**, portable, and high performance ISO C library.
-
-<!-- 
-Mostly **backward** compatible.
-Can install some older versions on same machine
+run dockers :
+docker run -it --rm -v`pwd`:/opt ubuntu:22.04
+docker run -it --rm -v`pwd`:/opt ubuntu:18.04
 
 Glibc must be compiled with the current kernel.
 
@@ -527,28 +446,233 @@ Import from module KERNEL32.dll :
 
 [-] Import listing done
 -->
----
-
-
-# Some Thoughts (again !)
-
-* It's good to compile on `old` glibc (ipp!)
-* The gcc uses glibc which uses the kernel of **my machine**.
-* If I'm using static linked code, It's (mostly) fine.
-* When using dynamic linked code, it's tight with my glibc and kernel.
-* When compiling to other target, I have to **cross compile**.
 
 
 ---
 
-# When I cannot use static link ?
+<!-- 
+first solution - use old glibc, minimize syscalls usage
 
-* Missing static libraries (3rd, gcc's c++)
-* I want to use dynamic libraries.
-* Some networking functions (gethostbyname)
-* Using cuda or other library that supports only dynamic link.
+`void add(int a, int b)` won't have problems
+-->
+
+## Making cross platform executable 🔒
+
+<br/>
+
+### 📌 libippiv8.so
+ vs
+### 📌 libboost_filesystem-vc142-mt-gd-x64-1_76.dll
+
 
 ---
+
+# 🚀 **Static Executable**  
+
+* ✅ **Executable format** 
+* ✅ **External dependencies** 
+* 🤔 **Instruction Set** 
+* ❌ **System Call Compatibility Issues**  
+  * 🖥️ **Windows**: `CreateFile2()` (Windows 8+) 
+  * 🐧 **Linux**: `clone3()` (Linux 5.3+) 
+
+
+<!-- 
+g++ simple.cpp -g -O0 -static -osimple
+gdb simple
+catch syscall
+info shared
+c
+
+No shared libraries
+Ends with syscall
+
+
+Most of the time - we'll be fine, because kernel and win32api have backward compatibility.
+
+-->
+
+---
+
+# 🚫 **When Can't I Use Static Linking?**  
+
+❌ **Missing static libraries** (3rd-party, `libstdc++`).  
+🔗 **Need dynamic libraries** for flexibility.  
+🌐 **Some networking functions** (`gethostbyname`).  
+⚡ **CUDA & other libs** that require dynamic linking.  
+
+
+<!-- 
+By default some of those are implemented in shared objects.
+
+Libraries and headers differ by OS and compiler. 
+Some functions are available only in specific environments.
+
+<math.h>, <complex.h> and <fenv.h> implemented in libm.so
+
+demo - simple program ("simple") link without "-static"
+
+```sh
+g++ simple.cpp -osimple
+ldd simple
+nm -D simple | c++filt
+```
+
+| **Shared Libraries**
+| **`linux-vdso.so.1`** 
+| **`libstdc++.so.6`** 
+| **`libc.so.6`** 
+| **`libm.so.6`** 
+| **`/lib64/ld-linux-x86-64.so.2`**
+| **`libgcc_s.so.1`** 
+
+ ## **🚀 Function Breakdown**
+ | **`__cxa_atexit@GLIBC_2.2.5`** | 
+ | **`__cxa_finalize@GLIBC_2.2.5`** | 
+ | **`_ITM_deregisterTMCloneTable`** | 
+ | **`_ITM_registerTMCloneTable`** | 
+ | **`__libc_start_main@GLIBC_2.34`** |
+ | **`std::basic_ostream<char, std::char_traits<char> >::operator<<(...)`** | 
+ | **`std::ios_base::Init::Init()@GLIBCXX_3.4`** | 
+ | **`std::cout@GLIBCXX_3.4`** | 
+
+-->
+
+---
+
+# 🏁 **Key Conclusions**  
+
+✅ **Static linking** is (mostly) safe.  
+🕰️ **Old `glibc`** is better for compatibility (IPP!).  
+🔗 **GCC uses host `glibc` & kernel**.  
+⚠️ **Dynamic linking** ties to system `glibc` & kernel.  
+🎯 **Cross-compilation** is needed for different targets.  
+
+<!-- 
+* static - except system calls and kernel ABI compatibility 
+* old -  IPP, NVIDIA CUDA,  uses that 
+* gcc - my glibc that was compiled with my kernel
+* dynamic - fail with older glibc
+* Cross-compilation - not always defined as different os , but I prefer that
+
+יש אפשרות לעשות שימוש בספריה אחרת, לא מומלץ
+
+מקרה בוחן -
+yocto
+-->
+
+---
+
+
+![bg width:800px](images/yocto.webp)
+
+---
+
+### **What is Yocto?**
+🚀 A **flexible, open-source build system** for creating custom **Linux distributions** for embedded devices.
+
+### **Why Yocto?**
+✅ **Customizable**   
+✅ **Cross-Compilation** 
+✅ **Layer-Based Structure**  
+✅ **Optimized for Embedded Systems**  
+
+<!-- 
+former : buildroot
+
+✅ **Customizable** – Control kernel, libraries, and packages  
+✅ **Cross-Compilation** – Build for different architectures  
+✅ **Layer-Based Structure** – Modular and maintainable  
+✅ **Optimized for Embedded Systems** – Minimal footprint  
+
+-->
+
+---
+
+### **Output of a Yocto Build**
+* 📦 Root Filesystem 
+* 🖥️ Linux Kernel 
+* 🛠️ Bootloader 
+* 🎯 Toolchain
+  * SDK
+  * Script
+
+
+<!-- 
+we will get a cross compiler and a script (to set env)
+
+We may use our machine's glibc/forget use script/wrong script
+
+USE ISOLATION !
+
+* only single gcc !
+
+-->
+
+---
+
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+---
+
+# `strace` - System Call Tracing Tool 🛠️
+
+- A powerful debugging tool for **Linux** 🐧
+- Traces **system calls** and **signals**
+- Useful for debugging and profiling
+
+🔹 **Example Usage:**
+```sh
+strace ls
+```
+📌 Shows all system calls used by `ls`
+
+---
+
+## Common `strace` Flags ⚙️
+
+| Flag | Description |
+|------|-------------|
+| `-e ` | Filter system calls (e.g., `-e execve,write`) |
+| `-p PID` | Attach to a running process |
+| `-f` | Follow child processes |
+| `-v` | Verbose (won't use "..." in output) |
+| `-o file` | Save output to a file |
+
+<!--
+
+strace -e execve -osimple.txt simple 
+-->
+
+---
+
+
+## Windows Equivalent? 🖥️
+
+🔹 Windows has no direct `strace`, but similar tool exist:
+- **`Process Monitor (ProcMon)`** – GUI-based syscall tracing (Sysinternals)
+
+
+---
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+# ⚠️ **Bad Practices**  
+
+❌ **No isolation** in the build process.  
+🔀 **Mixing shared objects** from different toolchains.  
+🏗️ **Running directly in the compilation environment.**  
+
+---
+
 
 # Cross-Compilation Challenges 🛠️
 
@@ -685,10 +809,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 ✔ Compatibility between components is key
 
 <!-- 
-This presentation covered toolchains, build systems, and challenges in cross-compilation.
 -->
-
----
 
 
 ---
