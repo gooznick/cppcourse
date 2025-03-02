@@ -6,6 +6,11 @@ marp: true
 theme: gaia
 ---
 
+<!--
+Preparations :
+  vscode :     "C_Cpp.errorSquiggles": "disabled",
+-->
+
 # C/C++ Preprocessor
 
 Some advanced usage tips
@@ -26,26 +31,195 @@ Ctrl+Shift+U → 037E → Enter
   * In most implementations `""` will look first in the local directory
 
 <!--
+Other default include directories :
+
+g++:
 echo | gcc -E -Wp,-v -
+
+msvc:
+echo %INCLUDE%
 -->
 
 --- 
+
+# Hierarchy in `#include ""`
+
+<br/>
+<img src="images/hierarchy.png"  width="200" />
+
+
+hierarchy.cpp : `#include <1/1.h>`
+1.h : `#include <2/2.h>`
+2.h : `#include "1b.h"`
+
+<!--
+
+msvc:
+"" searches back in the #include hierarchy
+
+g++:
+does not 
+-->
+---
+
+# Hierarchy in `#include ""`
+
+<br/>
+<img src="images/hierarchy_g++.png"  width="700" />
+<img src="images/hierarchy_msvc.png"  width="700" />
+
+---
+
+# Include files names
+
+```cpp
+#include "string"
+
+int main()
+{
+    std::string str("Hello World");
+    return 0;
+
+}
+```
+
+<!--
+clash
+
+has string file in directory.
+use <>, dont use common names, use prefix or directory (proj/string)
+
+-->
+
+
+---
+
+```cpp
+#include "1\foo.h" // defines foo
+
+int main()
+{
+    foo();
+    return 0;
+}
+```
+<br/>
+<br/>
+
+<img src="images/plat_g++.png"  width="700" />
+
+
+<!--
+Same with lowercase and uppercase (windows ignores)
+-->
+
+---
+
+```cpp
+#include "a.h" // defines a()
+
+
+int main() {
+    a();
+    return 0;
+}
+```
+
+```cpp
+In file included from a.h:3,
+                 from main.cpp:1:
+b.h: In function ‘int sum_a_and_b()’:
+b.h:13:16: error: ‘a’ was not declared in this scope
+   13 |     return b()+a();
+```
+<!--
+must show whole example...
+
+Circular dependency.
+-->
+
+---
+
+# Tracking API
+<br/>
+
+<img src="images/tracking.jpeg"  width="500" />
+
+
+<!--
+
+g++ main.cpp -Itracker -Itracker/manager -Itracker_manager
+
+The api should be flat.
+How to flatten ? 
+"manager.h" : `#include "../../manager/manager.h"`
+-->
+
+
+---
+
+# Warning source (msvc)
+
+
+<br/>
+
+<img src="images/endian_msvc.png"  width="800" />
+
+
+---
+
+# Slow compilation
+
+
+```cpp
+int main() {
+    using namespace boost::multiprecision;
+
+    cpp_dec_float_100 big_float = fibonacci<cpp_dec_float_100>(10);
+    std::cout << "Fibonacci(10) as decimal: " << big_float << '\n';
+
+    return 0;
+}
+```
+
+
+---
 
 ⚠ **Common pitfalls:**
 - Ensure headers are **self-contained**
 - **Avoid contamination** - Do not define macros or `using namespace` in header file.
-- **Don't use contaminated headers in headers** - `#include <windows.h>`
+- **Don't use contaminating headers in headers** - `#include <windows.h>`
 - **Avoid using common names** - `#include <common_defs.h>`
 - Do not use **absolute paths** - `#include "c:\Users\davido\project\mordor.h"`
-- Do not use **Uppercase**
-
+- Do not use **Uppercase** or **Slash**
+- Don't **force include** or use **precompiled headers**.
 <!--
-echo | gcc -E -Wp,-v -
 -->
 
 --- 
 
-⚠ **Some tools:**
+⚠ **Some flags:**
+
+* Show includes:
+  * `g++ -H` / `cl /showIncludes` / `C/C++ -> Advanced -> Show Includes`
+* Include directories:
+  * `-I` / `/I` / `C/C++ -> General -> Additional Include Directories`
+* Internal include directories:
+  * `echo | gcc -E -Wp,-v -`
+  * `echo %INCLUDE%`
+
+--- 
+
+⚠ **Include what you use:**
+
+```bash
+mkdir build
+cd build
+cmake ..
+iwyu_tool -p compile_commands.json
+iwyu_tool -p compile_commands.json > iwyu.txt
+cat iwyu.txt | fix_include 
+```
 
 * Compile header only (include only cpp)
 * Include What You Use
@@ -64,6 +238,13 @@ cat iwyu.txt | fix_include
 clang-tidy-10 tidy.cpp -checks=*
 sudo apt install clang-tidy
 ```
+
+---
+
+# Definitions
+<br/>
+
+<img src="images/corrections.png"  width="300" />
 
 ---
 
@@ -92,13 +273,41 @@ Check each definition, it's a different code !
 
 ---
 
+
+# Predefined 
+
+```
+... all identifiers that contain a double underscore __ in any position and each identifier that begins with an underscore followed by an uppercase letter is always reserved,
+```
+
+* Non-standard:
+  * `_MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__`
+
+* Show all definitions:
+```bash
+echo | g++ -dM -E -x c++ -
+```
+
+```
+Properties -> C/C++ -> Preprocessor
+```
+
+[MSVC](images/msvc_macros.pdf)
+
+<!--
+echo | g++ -dM -E -x c++
+
+https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros?view=msvc-170
+-->
+
+---
+
+
 # Debug Definitions
 
 ``` cpp
 #ifdef DEBUG
-#define LOG(x) std::cout << x << std::endl
-#else
-#define LOG(x)
+std::cout << "The value of x is " << x << std::endl
 #endif
 ```
 
@@ -127,23 +336,35 @@ New :
 * Don't use within a cpp file
 * If file can be #included more than once, use `.inc` extension
 
+<!--
+not standard !
+-->
+
+
 ---
 
 # Stringify
 
 ```cpp
-#include <iostream>
-
 #define xstr(s) str(s)
 #define str(s) #s
-#define foo 4
+#define foo 4.0
 
 int main()
 {
-     std:: cout<< str(foo) << std::endl;
-     std:: cout<< xstr(foo) << std::endl;
+     std:: cout << foo << std::endl;
+     std:: cout << str(foo) << std::endl;
+     std:: cout << xstr(foo) << std::endl;
+     return 0;
 }
 ```
+
+<!--
+4
+foo
+4.0
+-->
+
 
 ---
 
@@ -154,21 +375,30 @@ int main()
 #define SQUARE(x) x * x
 #define ABS(x) (x < 0 ? -x : x)
 
-void foo(int a){
-  int b = SQUARE(a + 1); 
-  int c = ABS(a++);
+void main(){
+    int a = 1;
+    std::cout<<"a="<<a<<std::endl;
+    std::cout<<"SQUARE(a)="<<SQUARE(a + 1)<<std::endl;
+    std::cout<<"ABS(a)="<<ABS(a++)<<std::endl;
+    std::cout<<"a="<<a<<std::endl;
 }
 ```
 
 * Exception :
 ```cpp
-#define DEBUG_PRINT(x) std::cout << "DEBUG: " << #x " = " << x << std::endl
+#define DEBUG_PRINT(x) std::cout << "DEBUG: " << #x " = " << x << "in line" << __LINE__ << std::endl
 
 void foo(int x)
 {
   DEBUG_PRINT(x);
 }
 ```
+
+<!--
+macro/main.cpp
+macro/good.cpp
+-->
+
 ---
 
 # Boost preprocess library
@@ -190,6 +420,11 @@ int main() {
 }
 ```
 
+
+<!--
+color/color.cpp
+-->
+
 ---
 
 # Predefined 
@@ -201,25 +436,6 @@ int main() {
 
 ---
 
-# Predefined 
-
-```
-... all identifiers that contain a double underscore __ in any position and each identifier that begins with an underscore followed by an uppercase letter is always reserved,
-```
-
-* Non-standard:
-  * `_MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__`
-
-* Show all definitions:
-```bash
-echo | g++ -dM -E -x c++ -
-```
-
-```
-Properties -> C/C++ -> Preprocessor
-```
-
----
 
 # Tool: clang-tidy
 
@@ -291,7 +507,7 @@ cl /P myfile.cpp
 
 ---
 
-# 🛠️ Debugging - 1
+# 🛠️ Debugging
 
 ```cpp
 #include <gdal.h>
@@ -310,27 +526,9 @@ int main()
 
 ---
 
-# 🛠️ Debugging - 2
 
-```cpp
-#include <Slike.h>
+# 🛠️ Defined - 1
 
-int main()
-{
-  return 1;
-}
-```
-
-Fails only in linux :
-`fatal error: Slike.h: No such file or directory`
-
-<!---
-upper/lower case
--->
-
----
-
-# 🛠️ Debugging - 3
 
 ```cpp
 #include <algorithm>
@@ -359,51 +557,49 @@ windows defines min and max
 
 ---
 
-# 🛠️ Debugging - 4
+# 🛠️ Defined - 2
 
-Compiling :
+
 ```cpp
-#include <a.h>
-#include <b.h>
+#include <string>
+#include <iostream>
+
+std::string is_unix(bool unix){return unix?"yes":"no";}
+
+int main()
+{
+
+    std::cout<<"Is Unix: "<<is_unix(true)<<std::endl;
+    
+    return 0;
+}
 ```
 
-Not compiling :
-```cpp
-#include <b.h>
-#include <a.h>
+```
+main2.cpp:4:26: error: expected ‘,’ or ‘...’ before numeric constant
+    4 | std::string is_unix(bool unix){return unix?"yes":"no";}
 ```
 
 <!---
-Check contamination.
-Fwd declaration.
+#define NOMINMAX 
+windows defines min and max
+(it defines IN and OUT too)
 -->
+
 
 ---
 
-# 🛠️ Debugging - 5
+# 🛠️  Words to Avoid 
 
-```cpp
-// A.h
-#pragma once
-#include "B.h"  
-struct A {
-    B* obj;  
-};
-```
+| Category | Examples |
+|----------|---------|
+| **C Standard Macros** | `NULL`, `TRUE`, `FALSE`, `EOF` |
+| **OS-Specific Macros** | `unix`, `linux`, `WIN32` |
+| **Windows API Conflicts** | `IN`, `OUT`, `min`, `max` |
+| **STL Conflicts** | `index`, `count`, `list`|
+| **Reserved Names** | `find`, `erase`, `_MyVar`, `__my_var` |
 
-```cpp
-// B.h
-#pragma once
-#include "A.h"  
-struct B {
-    A* obj;  
-};
-```
 
-<!---
-error: ‘A’ does not name a type
-fwd declaration.
--->
 
 ---
 
