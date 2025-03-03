@@ -1,7 +1,7 @@
 ---
 title: preprocessor
 author: eranbu
-date: 6/2024
+date: 2/2024
 marp: true
 theme: gaia
 ---
@@ -24,13 +24,39 @@ Ctrl+Shift+U → 037E → Enter
 
 --- 
 
+![bg left width:600px](images/preproces.png)
+
+# Preprocessing 🛠️
+
+* #include
+* #define
+* #define ()
+* #pragma
+
+
+--- 
+
+![bg left width:600px](images/preproces.png)
+
+# Preprocessing 🛠️
+
+## **#include**
+* #define
+* #define ()
+* #pragma
+
+--- 
+
 # `#include`
 
 * Two kinds :
   * `#include <>` > `#include ""`
-  * In most implementations `""` will look first in the local directory
+  * In most implementations, `""` looks **first** in the local directory
 
 <!--
+Takes all contents and put in the the file
+In practice <> are library, user may change the warning level
+
 Other default include directories :
 
 g++:
@@ -42,7 +68,7 @@ echo %INCLUDE%
 
 --- 
 
-# Hierarchy in `#include ""`
+# `#include ""` Hierarchy 🏗️
 
 <br/>
 <img src="images/hierarchy.png"  width="200" />
@@ -70,7 +96,15 @@ does not
 
 ---
 
-# Include files names
+# Hierarchy in `#include ""`
+
+🛠 **Compiler Differences:**
+- **MSVC**: `""` searches **back up** the `#include` hierarchy
+- **g++**: `""` does **not** search back up
+
+---
+
+# **Filename Conflicts**
 
 ```cpp
 #include "string"
@@ -91,8 +125,10 @@ use <>, dont use common names, use prefix or directory (proj/string)
 
 -->
 
-
 ---
+
+# Platform-Dependent Paths ⚠️
+
 
 ```cpp
 #include "1\foo.h" // defines foo
@@ -110,14 +146,16 @@ int main()
 
 
 <!--
+(The problem is that it's windows slash and not platform independent backslash)
 Same with lowercase and uppercase (windows ignores)
 -->
 
 ---
 
+# Circular Dependencies 🔄
+
 ```cpp
 #include "a.h" // defines a()
-
 
 int main() {
     a();
@@ -140,6 +178,34 @@ Circular dependency.
 
 ---
 
+# `math.h` vs `cmath`
+
+Very simple :
+
+All **C standard library header files** has equivalent `c???` where the symbols are defined in `std` namespace.
+
+```cpp
+#include <math.h>
+
+double mysin(double x){return sin(x);}
+
+
+```cpp
+#include <cmath>
+
+double mysin(double x){return std::sin(x);}
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
 # Tracking API
 <br/>
 
@@ -152,11 +218,36 @@ g++ main.cpp -Itracker -Itracker/manager -Itracker_manager
 
 The api should be flat.
 How to flatten ? 
-"manager.h" : `#include "../../manager/manager.h"`
+1. Use trampoline :"manager.h" : `#include "../../manager/manager.h"`
+2. Add -I of all directories
+3. Install flat
 -->
+
+---
+
+🚨 **Bad Practices to Avoid:**
+- Use **forward declarations** whenever possible.
+- Always use **forward slashes** `/` for cross-platform compatibility.
+- **Use quotes (#include "")** for non system includes.
+- Use **single and flat** include directory for each api.
+- Use **directory** name in the #include command (`#include <myproj/myfile.h>`)
 
 
 ---
+
+
+# Detecting Include Issues 🕵️‍♂️
+
+📌 **Show included files:**
+```sh
+g++ -H main.cpp
+cl /showIncludes main.cpp
+```
+
+🔍 **Find which header caused an issue**
+
+---
+
 
 # Warning source (msvc)
 
@@ -165,10 +256,13 @@ How to flatten ?
 
 <img src="images/endian_msvc.png"  width="800" />
 
+<!--
+
+-->
 
 ---
 
-# Slow compilation
+# Slow Compilation 🐌💨
 
 
 ```cpp
@@ -182,6 +276,55 @@ int main() {
 }
 ```
 
+<!--
+Show includes :
+1. look for network files
+2. look for large files/heavy dependencies
+3. try `g++  -ftime-report slow.cpp`
+4. forward declarations (remove some headers)
+5. move include to cpp (fwd/pimpl)
+-->
+
+---
+
+# PImpl Idiom 🏗️
+
+### ❌ Without PImpl (Slow Compilation)
+
+```cpp
+#include <my_class_impl.h> // very slow / problematic header file
+
+class MyClass {
+public:
+    MyClass(const std::string& name);
+    void printName();
+
+private:
+    MyClassImpl m_impl; 
+};
+```
+
+---
+
+# PImpl Idiom 🏗️
+
+### ✅ With PImpl (Optimized)
+
+```cpp
+#include <memory>
+
+class MyClassImpl;  // Forward declaration
+
+class MyClass {
+public:
+    MyClass(const std::string& name);
+    ~MyClass();  // Required to properly delete the pimpl object
+    void printName();
+
+private:
+    std::unique_ptr<MyClassImpl> m_pImpl;  // Pointer to implementation
+};
+```
 
 ---
 
@@ -208,36 +351,63 @@ int main() {
   * `echo | gcc -E -Wp,-v -`
   * `echo %INCLUDE%`
 
+
+---
+# Tool: clang-tidy
+
+```bash
+git clone --depth=1 https://github.com/llvm/llvm-project.git
+cd llvm-project/
+mkdir build
+cd build/
+wget https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-x86_64.sh
+chmod +x cmake-3.31.6-linux-x86_64.sh 
+
+bin/cmake -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install/ -G "Unix Makefiles" ../llvm 
+make -j8 install-clang-tidy
+
+install/clang-tidy iwyu.cpp -p build/ --checks "-*,misc-include-cleaner" --fix -- -I./llvm-project/build/lib/clang/21/include 
+```
+---
+
+### **📌 `.clang-tidy` File**
+```yaml
+Checks: >
+  fuchsia-header-anon-namespaces,
+  google-global-names-in-headers,
+  hicpp-deprecated-headers,
+  misc-definitions-in-headers,
+  misc-header-include-cycle,
+  modernize-deprecated-headers,
+  bugprone-suspicious-include,
+  misc-include-cleaner,
+  readability-duplicate-include
+```
+<!--
+
+| **Check Name** | **Purpose** |
+|--------------|------------|
+| `fuchsia-header-anon-namespaces` | Prevents anonymous namespaces in headers (avoids ODR violations). |
+| `google-global-names-in-headers` | Warns against defining global names in headers. |
+| `hicpp-deprecated-headers` | Detects deprecated C headers (`<stdio.h>` → `<cstdio>`). |
+| `misc-definitions-in-headers` | Detects variable/function definitions in headers. |
+| `misc-header-include-cycle` | Detects circular includes. |
+| `modernize-deprecated-headers` | Replaces deprecated C headers (`<string.h>` → `<cstring>`). |
+| `bugprone-suspicious-include` | Detects likely incorrect includes (e.g., local files shadowing system headers). |
+| `misc-include-cleaner` | Detects unnecessary includes. |
+| `readability-duplicate-include` | Detects duplicate `#include` statements. |
+-->
+
 --- 
 
-⚠ **Include what you use:**
+![bg left width:600px](images/preproces.png)
 
-```bash
-mkdir build
-cd build
-cmake ..
-iwyu_tool -p compile_commands.json
-iwyu_tool -p compile_commands.json > iwyu.txt
-cat iwyu.txt | fix_include 
-```
+# Preprocessing 🛠️
 
-* Compile header only (include only cpp)
-* Include What You Use
-* clang-tidy
-
-```bash
-sudo apt install iwyu
-include-what-you-use --version
-sudo apt install clang-9
-iwyu iwyu.cpp 2> iwyu.txt---
-cat iwyu.txt | fix_include
-```
-
-```bash
-# create .clang-tidy
-clang-tidy-10 tidy.cpp -checks=*
-sudo apt install clang-tidy
-```
+* #include
+## **#define**
+* #define ()
+* #pragma
 
 ---
 
@@ -267,18 +437,90 @@ target_compile_definitions(my_program PRIVATE USE_EIGEN=1)
 
 <!--
 Do not use many definitions !
+It a different program !!
 
 Check each definition, it's a different code !
 -->
+
+
+---
+
+
+# 🛠️ Predefined - windows
+
+
+```cpp
+#include <algorithm>
+#include <Windows.h>
+
+bool is_odd(int IN){return IN % 2 == 1;}
+
+int main()
+{
+
+    int k = std::min(3, 4);
+    return 0;
+}
+```
+
+```
+error C2589: '(' : illegal token on right side of '::'
+error C2059: syntax error : '::'
+```
+
+<!---
+#define NOMINMAX 
+#define WIN32_LEAN_AND_MEAN
+windows defines min and max
+(it defines IN and OUT too)
+-->
+
+---
+
+# 🛠️ Predefined - unix
+
+```cpp
+#include <string>
+#include <iostream>
+
+std::string is_unix(bool unix){return unix?"yes":"no";}
+
+int main()
+{
+
+    std::cout<<"Is Unix: "<<is_unix(true)<<std::endl;
+    
+    return 0;
+}
+```
+
+
+<!---
+main2.cpp:4:26: error: expected ‘,’ or ‘...’ before numeric constant
+    4 | std::string is_unix(bool unix){return unix?"yes":"no";}
+
+-->
+
 
 ---
 
 
 # Predefined 
 
-```
-... all identifiers that contain a double underscore __ in any position and each identifier that begins with an underscore followed by an uppercase letter is always reserved,
-```
+* Standard :
+  * `__FILE__`  `__LINE__`  `__func__`
+  * `__DATE__`  `__TIME__`
+  * `__cplusplus` → **C++ standard version**
+
+<br/>
+
+...all identifiers that contain a double underscore __ in any position and each identifier that begins with an underscore followed by an uppercase letter **is always reserved**
+
+
+---
+
+# Predefined 
+
 
 * Non-standard:
   * `_MSC_VER/__INTEL_COMPILER/__clang__/__INTEL_LLVM_COMPILER/__GNUC__`
@@ -302,6 +544,18 @@ https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros?view=msvc-1
 
 ---
 
+
+# 🛠️  Words to Avoid 
+
+| Category | Examples |
+|----------|---------|
+| **C Standard Macros** | `NULL`, `TRUE`, `FALSE`, `EOF` |
+| **OS-Specific Macros** | `unix`, `linux`, `WIN32` |
+| **Windows API Conflicts** | `IN`, `OUT`, `min`, `max` |
+| **STL Conflicts** | `index`, `count`, `list`|
+| **Reserved Names** | `find`, `erase`, `_MyVar`, `__my_var` |
+
+---
 
 # Debug Definitions
 
@@ -365,8 +619,48 @@ foo
 4.0
 -->
 
+---
+
+# 🛠️ Debugging
+
+```cpp
+#include <gdal.h>
+
+int main()
+{
+  return 1;
+}
+```
+
+`undefined reference to 'main'`
+
+<!---
+#define main Main
+-->
 
 ---
+
+# Preprocessing 🛠️ to file
+
+The **BEST** method to debug preprocessor problems.
+
+* `g++ -E`
+* `cl.exe /P`
+* `C/C++ -> Preprocessor -> Preprocess to a file`
+
+---
+
+![bg left width:600px](images/preproces.png)
+
+# Preprocessing 🛠️
+
+* #include
+* #define
+## **#define ()**
+* #pragma
+
+---
+
 
 # Macro
 
@@ -383,6 +677,10 @@ void main(){
     std::cout<<"a="<<a<<std::endl;
 }
 ```
+
+---
+
+# Macro
 
 * Exception :
 ```cpp
@@ -401,58 +699,29 @@ macro/good.cpp
 
 ---
 
-# Boost preprocess library
+# 🛠️ Debugging Macros  
 
-## Example : to_string
 
+**Check command-line definitions:**
+- Use `#ifdef` + `#error` to debug:
 ```cpp
-
-enum Color{RED,GREEN,BLUE};
-
-int main() {
-    Color color = RED;
-    std::cout << "Color: " << to_string(color) << std::endl;
-
-    color = BLUE;
-    std::cout << "Color: " << to_string(color) << std::endl;
-
-    return 0;
-}
+#ifdef MY_MACRO
+#error "MY_MACRO is defined!"
+#endif
 ```
-
-
-<!--
-color/color.cpp
--->
+🔹 **Compilation will stop, and the error will be shown.**
 
 ---
 
-# Predefined 
+![bg left width:600px](images/preproces.png)
 
-* Standard :
-  * `__FILE__`  `__LINE__`  `__func__`
-  * `__DATE__`  `__TIME__`
-  * `__cplusplus` → **C++ standard version**
+# Preprocessing 🛠️
 
----
+* #include
+* #define
+* #define ()
+## **#pragma**
 
-
-# Tool: clang-tidy
-
-Ignore : 
-```cpp
-badcode;  // NOLINT
-
-// NOLINTNEXTLINE
-badcode;
-
-// NOLINTBEGIN
-badcode;
-badcode;
-// NOLINTEND
-
-badcode; // NOLINT(cert-err-58-cpp)
-```
 
 --- 
 
@@ -478,131 +747,66 @@ causes the implementation to behave in an implementation-defined manner.
 
 ---
 
-# 🛠️ Debugging Preprocessor Output  
+# ⚡ `#pragma` vs `_Pragma()`  
 
-**Preprocess the code (without compiling)**:
-gcc:
-```bash
-g++ -E myfile.cpp
-```
+`_Pragma()` can be inserted into a macro :
 
-msvc:
-```bash
-cl /P myfile.cpp
+```cpp
+#define DO_PRAGMA(x) _Pragma (#x)
+#define TODO(x) DO_PRAGMA(message ("TODO - " #x))
+
+TODO(Remember to fix this)
+
 ```
 
 ---
 
-# 🛠️ Debugging Macros  
 
+# Boost preprocessor library I
 
-**Check command-line definitions:**
-- Use `#ifdef` + `#error` to debug:
-```cpp
-#ifdef MY_MACRO
-#error "MY_MACRO is defined!"
-#endif
-```
-🔹 **Compilation will stop, and the error will be shown.**
-
----
-
-# 🛠️ Debugging
+## Example : to_string
 
 ```cpp
-#include <gdal.h>
 
-int main()
-{
-  return 1;
-}
-```
+enum Color{RED,GREEN,BLUE};
 
-`undefined reference to 'main'`
+int main() {
+    Color color = RED;
+    std::cout << "Color: " << to_string(color) << std::endl;
 
-<!---
-#define main Main
--->
+    color = BLUE;
+    std::cout << "Color: " << to_string(color) << std::endl;
 
----
-
-
-# 🛠️ Defined - 1
-
-
-```cpp
-#include <algorithm>
-#include <Windows.h>
-
-bool is_odd(int IN){return IN % 2 == 1;}
-
-int main()
-{
-
-    int k = std::min(3, 4);
     return 0;
 }
 ```
 
-```
-error C2589: '(' : illegal token on right side of '::'
-error C2059: syntax error : '::'
-```
 
-<!---
-#define NOMINMAX 
-windows defines min and max
-(it defines IN and OUT too)
+<!--
+color/color.cpp
 -->
+
 
 ---
 
-# 🛠️ Defined - 2
-
+# Boost preprocessor library II
 
 ```cpp
-#include <string>
-#include <iostream>
+// Define attributes as a valid sequence of tuples
+#define ATTRIBUTES ((name, std::string)) ((age, int)) ((height, double))
 
-std::string is_unix(bool unix){return unix?"yes":"no";}
+// Define a class using the macros
+class Person {
+private:
+    BOOST_PP_SEQ_FOR_EACH(GENERATE_MEMBERS, _, ATTRIBUTES)
 
-int main()
-{
-
-    std::cout<<"Is Unix: "<<is_unix(true)<<std::endl;
-    
-    return 0;
-}
+public:
+    BOOST_PP_SEQ_FOR_EACH(GENERATE_GETTERS, _, ATTRIBUTES)
+    BOOST_PP_SEQ_FOR_EACH(GENERATE_SETTERS, _, ATTRIBUTES)
+};
 ```
-
-```
-main2.cpp:4:26: error: expected ‘,’ or ‘...’ before numeric constant
-    4 | std::string is_unix(bool unix){return unix?"yes":"no";}
-```
-
-<!---
-#define NOMINMAX 
-windows defines min and max
-(it defines IN and OUT too)
--->
-
 
 ---
-
-# 🛠️  Words to Avoid 
-
-| Category | Examples |
-|----------|---------|
-| **C Standard Macros** | `NULL`, `TRUE`, `FALSE`, `EOF` |
-| **OS-Specific Macros** | `unix`, `linux`, `WIN32` |
-| **Windows API Conflicts** | `IN`, `OUT`, `min`, `max` |
-| **STL Conflicts** | `index`, `count`, `list`|
-| **Reserved Names** | `find`, `erase`, `_MyVar`, `__my_var` |
-
-
-
----
-
 
 # 🎯 Summary  
 
