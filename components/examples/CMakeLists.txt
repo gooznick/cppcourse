@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.10)
-project(simple)
+project(defs)
 
-add_executable(simple simple.cpp)
+add_executable(defs add_one.cpp main.cpp)

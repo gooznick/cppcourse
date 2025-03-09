@@ -1,0 +1,10 @@
+Checks: >
+  fuchsia-header-anon-namespaces,
+  google-global-names-in-headers,
+  hicpp-deprecated-headers,
+  misc-definitions-in-headers,
+  misc-header-include-cycle,
+  modernize-deprecated-headers,
+  bugprone-suspicious-include,
+  misc-include-cleaner,
+  readability-duplicate-include
