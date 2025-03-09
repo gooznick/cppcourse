@@ -9,17 +9,17 @@ theme: gaia
 <!--
 Preparations :
   vscode :     "C_Cpp.errorSquiggles": "disabled",
+  cl.exe window, with large font, on the lecture directory
+  g++ in linux, large font, on the lecture directory
 -->
 
 # C/C++ Preprocessor
 
 Some advanced usage tips
 
-![bg left width:600px](images/semicolon.webp)
+![bg left width:500px](images/corrections.png)
 
 <!--
-linux : 
-Ctrl+Shift+U → 037E → Enter
 -->
 
 --- 
@@ -33,6 +33,11 @@ Ctrl+Shift+U → 037E → Enter
 * #define ()
 * #pragma
 
+<!--
+לא נכנס לשלבי הקומפילציה של קורס קומפילציה
+מה שמעניין אותנו כמתכנתים
+אילו שגיאות עלולות להגרם משלב זה
+-->
 
 --- 
 
@@ -44,6 +49,10 @@ Ctrl+Shift+U → 037E → Enter
 * #define
 * #define ()
 * #pragma
+
+<!--
+searches a sequence of implementation-defined places for a header identified uniquely by the specified sequence between the < and > delimiters, and causes the replacement of that directive by the entire contents of the header.
+-->
 
 --- 
 
@@ -60,12 +69,52 @@ In practice <> are library, user may change the warning level
 Other default include directories :
 
 g++:
-echo | gcc -E -Wp,-v -
+echo | g++ -E -Wp,-v -
 
 msvc:
 echo %INCLUDE%
 -->
 
+---
+
+### **📂 Include Search Directories**  
+
+#### **🌍 Environment Variables:**  
+🔹 **G++/Clang:** `CPATH` / `C_INCLUDE_PATH` / `CPLUS_INCLUDE_PATH`  
+🔹 **MSVC:** `INCLUDE`  
+
+#### **⚙️ Compiler Flags:**  
+✅ **G++/Clang:** `-I /path/to/include` | `-isystem /path/to/include`
+✅ **MSVC:** `/I"path\to\include"`  
+
+#### **🛠️ CMake:**  
+```cmake
+target_include_directories(my_target PRIVATE /path/to/include)
+```
+
+<!--
+target_include_directories(my_target SYSTEM PRIVATE /path/to/include)
+
+system directory - no warnings by default in g++ !
+
+no_warn demo.
+-->
+
+---
+
+# 🕒 **Demo Time**  
+
+<br/><br/><br/>
+
+## 📂 **Hierarchy**
+
+<!--
+show the files hierarchy
+ g++ hierarchy.cpp 
+ vs
+ cl.exe hierarchy.cpp 
+
+-->
 --- 
 
 # `#include ""` Hierarchy 🏗️
@@ -146,6 +195,9 @@ int main()
 
 
 <!--
+plat 
+
+
 (The problem is that it's windows slash and not platform independent backslash)
 Same with lowercase and uppercase (windows ignores)
 -->
@@ -171,6 +223,8 @@ b.h:13:16: error: ‘a’ was not declared in this scope
    13 |     return b()+a();
 ```
 <!--
+circ 
+
 must show whole example...
 
 Circular dependency.
@@ -186,14 +240,13 @@ All **C standard library header files** has equivalent `c???` where the symbols 
 
 ```cpp
 #include <math.h>
-
 double mysin(double x){return sin(x);}
-
+```
 
 ```cpp
 #include <cmath>
-
 double mysin(double x){return std::sin(x);}
+```
 
 ---
 
@@ -227,11 +280,17 @@ How to flatten ?
 
 🚨 **Bad Practices to Avoid:**
 - Use **forward declarations** whenever possible.
-- Always use **forward slashes** `/` for cross-platform compatibility.
+- Always use **forward slashes** `/` and **lowercase**.
 - **Use quotes (#include "")** for non system includes.
 - Use **single and flat** include directory for each api.
 - Use **directory** name in the #include command (`#include <myproj/myfile.h>`)
 
+- **Avoid using common names** - `#include <common_defs.h>`
+- Do not use **absolute paths** - `#include "c:\Users\davido\project\mordor.h"`
+- Don't **force include** or use **precompiled headers**.
+<!--
+
+-->
 
 ---
 
@@ -246,6 +305,10 @@ cl /showIncludes main.cpp
 
 🔍 **Find which header caused an issue**
 
+<!--
+
+-->
+
 ---
 
 
@@ -257,7 +320,10 @@ cl /showIncludes main.cpp
 <img src="images/endian_msvc.png"  width="800" />
 
 <!--
+endian
 
+show in msvc. 
+cl will write a warning without it's source
 -->
 
 ---
@@ -328,31 +394,12 @@ private:
 
 ---
 
-⚠ **Common pitfalls:**
-- Ensure headers are **self-contained**
-- **Avoid contamination** - Do not define macros or `using namespace` in header file.
-- **Don't use contaminating headers in headers** - `#include <windows.h>`
-- **Avoid using common names** - `#include <common_defs.h>`
-- Do not use **absolute paths** - `#include "c:\Users\davido\project\mordor.h"`
-- Do not use **Uppercase** or **Slash**
-- Don't **force include** or use **precompiled headers**.
-<!--
--->
+# Tool
+
+<img src="../images/multitool.png" width="300" />
 
 --- 
 
-⚠ **Some flags:**
-
-* Show includes:
-  * `g++ -H` / `cl /showIncludes` / `C/C++ -> Advanced -> Show Includes`
-* Include directories:
-  * `-I` / `/I` / `C/C++ -> General -> Additional Include Directories`
-* Internal include directories:
-  * `echo | gcc -E -Wp,-v -`
-  * `echo %INCLUDE%`
-
-
----
 # Tool: clang-tidy
 
 ```bash
@@ -360,20 +407,23 @@ git clone --depth=1 https://github.com/llvm/llvm-project.git
 cd llvm-project/
 mkdir build
 cd build/
+```
 
 linux :
+```
 wget https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-x86_64.sh
 chmod +x cmake-3.31.6-linux-x86_64.sh 
 bin/cmake -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install/ -G "Unix Makefiles" ../llvm 
 make -j8 install-clang-tidy
-
+```
 windows :
+```
 cmake -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install/  ../llvm 
 cmake --build build --target install-clang-tidy -- -j8
-
+```
 
 install/clang-tidy iwyu.cpp -p build/ --checks "-*,misc-include-cleaner" --fix -- -I./llvm-project/build/lib/clang/21/include 
-```
+
 ---
 
 ### **📌 `.clang-tidy` File**
@@ -388,6 +438,11 @@ Checks: >
   bugprone-suspicious-include,
   misc-include-cleaner,
   readability-duplicate-include
+
+CheckOptions:
+  - key: misc-header-include-cycle.IgnoredFilesList
+    value: "/my_project/third_party/"
+
 ```
 <!--
 
@@ -404,6 +459,35 @@ Checks: >
 | `readability-duplicate-include` | Detects duplicate `#include` statements. |
 -->
 
+--- 
+
+# Tool: clang-tidy in windows
+
+* Use MSVC `command prompt`
+* Create `compile_commands.json`
+  * `-G "Ninja" -DCMAKE_MAKE_PROGRAM="d:\ninja\ninja.exe"`
+* Run `run-clang-tidy.py` 
+  * `-quiet -fix`
+
+* More
+  * `clang-apply-replacements` .
+  * `// NOLINTBEGIN(readability-magic-numbers)` .
+  * `// NOLINTEND(readability-magic-numbers)` .
+
+<!--
+
+| **Check Name** | **Purpose** |
+|--------------|------------|
+| `fuchsia-header-anon-namespaces` | Prevents anonymous namespaces in headers (avoids ODR violations). |
+| `google-global-names-in-headers` | Warns against defining global names in headers. |
+| `hicpp-deprecated-headers` | Detects deprecated C headers (`<stdio.h>` → `<cstdio>`). |
+| `misc-definitions-in-headers` | Detects variable/function definitions in headers. |
+| `misc-header-include-cycle` | Detects circular includes. |
+| `modernize-deprecated-headers` | Replaces deprecated C headers (`<string.h>` → `<cstring>`). |
+| `bugprone-suspicious-include` | Detects likely incorrect includes (e.g., local files shadowing system headers). |
+| `misc-include-cleaner` | Detects unnecessary includes. |
+| `readability-duplicate-include` | Detects duplicate `#include` statements. |
+-->
 --- 
 
 ![bg left width:600px](images/preproces.png)
@@ -475,11 +559,28 @@ error C2059: syntax error : '::'
 ```
 
 <!---
+used_defs
+
 #define NOMINMAX 
 #define WIN32_LEAN_AND_MEAN
 windows defines min and max
 (it defines IN and OUT too)
 -->
+
+---
+
+
+# 🛠️ Predefined - windows
+
+
+```cpp
+#define NOMINMAX 
+#define WIN32_LEAN_AND_MEAN
+
+#include <Windows.h>
+```
+
+* `#include <Windows.h>` only in cpp file !
 
 ---
 
@@ -495,16 +596,16 @@ int main()
 {
 
     std::cout<<"Is Unix: "<<is_unix(true)<<std::endl;
-    
     return 0;
 }
 ```
 
 
 <!---
+used_defs: main2
+
 main2.cpp:4:26: error: expected ‘,’ or ‘...’ before numeric constant
     4 | std::string is_unix(bool unix){return unix?"yes":"no";}
-
 -->
 
 
@@ -576,6 +677,56 @@ std::cout << "The value of x is " << x << std::endl
   * "_DEBUG" - used in MSVC (using debug runtime)
   * "DEBUG" - commonly used
 
+---
+
+# Tester
+
+``` cpp
+class Algorithm
+{
+public :
+    Algorithm(int v);
+    void Add(int n);
+    void Print();
+private:
+    int _v;
+};
+
+void test1()
+{
+    Algorithm a(10);
+    a.Add(5);
+    assert(a._v == 15);
+}
+```
+
+<!--
+test
+-->
+
+---
+
+![bg left width:500px](images/semicolon.webp)
+
+
+``` cpp
+#include <iostream>
+
+
+int main()
+{
+    std::cout<<"hello world"<<std::endl;
+    return 0;
+}
+```
+
+<!--
+semicol
+
+linux : 
+Ctrl+Shift+U → 037E → Enter
+-->
+
 
 ---
 
@@ -600,30 +751,6 @@ New :
 not standard !
 -->
 
-
----
-
-# Stringify
-
-```cpp
-#define xstr(s) str(s)
-#define str(s) #s
-#define foo 4.0
-
-int main()
-{
-     std:: cout << foo << std::endl;
-     std:: cout << str(foo) << std::endl;
-     std:: cout << xstr(foo) << std::endl;
-     return 0;
-}
-```
-
-<!--
-4
-foo
-4.0
--->
 
 ---
 
@@ -703,6 +830,32 @@ macro/main.cpp
 macro/good.cpp
 -->
 
+
+
+---
+
+# Stringify
+
+```cpp
+#define xstr(s) str(s)
+#define str(s) #s
+#define foo 4.0
+
+int main()
+{
+     std:: cout << foo << std::endl;
+     std:: cout << str(foo) << std::endl;
+     std:: cout << xstr(foo) << std::endl;
+     return 0;
+}
+```
+
+<!--
+4
+foo
+4.0
+-->
+
 ---
 
 # 🛠️ Debugging Macros  
@@ -716,6 +869,19 @@ macro/good.cpp
 #endif
 ```
 🔹 **Compilation will stop, and the error will be shown.**
+
+---
+
+⚠ **Common pitfalls:**
+- Ensure headers are **self-contained**
+- **Avoid contamination** - Do not define macros or `using namespace` in header file.
+- **Don't use contaminating headers in headers** - `#include <windows.h>`
+- **Undef** at the end of the file.
+
+
+
+<!--
+-->
 
 ---
 
@@ -814,15 +980,5 @@ public:
 
 ---
 
-# 🎯 Summary  
-
-✔️ **Choose header names and directories wisely**  
-✔️ **Know how to preprocesses a file**  
-✔️ **Understand `#include` pitfalls**  
-✔️ **Use macros wisely**  
-✔️ **Use Boost Preprocessor**  
-
-
----
 
 # 🎉 Questions?  
