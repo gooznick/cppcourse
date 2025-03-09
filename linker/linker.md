@@ -6,6 +6,12 @@ theme: gaia
 marp: true
 ---
 
+<!---
+Prepare  :
+linux cmake 3.24
+
+-->
+
 <img src="images/errors.webp" width="400" style="display: flex;" />
 
 ---
@@ -41,30 +47,7 @@ Symbols must be **defined before use** in command:
 g++ main.o -lfoo -o app  # ❌ Undefined reference
 g++ -lfoo main.o -o app  # ✅ Correct order
 ```
----
 
-# Linux linkage
-
-🛠 **Fix:**  
-- Use `--start-group ... --end-group`
-- Reorder `.o` and `.a` 
-```bash
-g++ main.o -Wl,--start-group -lfoo -lbar -Wl,--end-group -o app
-```
-<!---
-Windows :
-```
-cl /c file.cpp
-link file.obj /OUT:file.exe
-```
-
-
-Linux :
-```
-g++ -c file.cpp
-g++ file.o -o file.out
-```
--->
 
 ---
 
@@ -79,6 +62,27 @@ g++ main.o -o app
 ```bash
 g++ main.o -o app -lfoo
 ```
+Or
+```bash
+g++ main.o -Wl,--start-group -lfoo -lbar -Wl,--end-group -o app
+```
+
+---
+
+# **Undefined reference**  
+
+* Find where it's defined (`readelf`, `grep -r`)
+* Find link command (`link.txt` in cmake)
+* Make sure the missing symbol is after the user
+* Change cmake link order or add `LINK_GROUP`
+
+
+<!---
+order example
+
+target_link_libraries(main PRIVATE "$<LINK_GROUP:RESCAN,add,mul>")
+
+-->
 
 ---
 
@@ -103,6 +107,7 @@ g++ main.o -o app -lfoo
 
 
 ---
+
 ## **Advanced**
 
 * Explore dependencies (`dependencies` / `ldd`)
@@ -159,6 +164,14 @@ _N1A3fooEv      # void A::foo()
 ?foo@A@@YAXXZ      # void A::foo()
 ```
 
+<!---
+c++filt
+
+#include <dbghelp.h>
+#include <cxxabi.h>
+
+-->
+
 --- 
 
 ### *extern "C"*
@@ -189,6 +202,7 @@ Notes :
 * Linux - default is visible, Windows - default is invisible.
 * Which functions are exported: `nm -D` , `objdump` / `dependencies`
 ---
+
 # 🔹 Function Visibility in Windows
 
 ```cpp
@@ -286,6 +300,20 @@ value '0' doesn't match value '2'
 
 ---
 
+## ❌ Cannot find ` mydll.lib` (MSVC)
+
+
+### **Problem**
+```text
+LINK : fatal error LNK1104: cannot open file 'Debug\add.lib' 
+
+```
+
+### **Solution**
+✅ In windows, a `.lib` file is created **Only if there are exported symbols**. Check `__declspec(dllexport)`
+
+---
+
 ## ❌ Incorrect Shared Object (`.so`) Link Order
 
 ### **Problem**
@@ -309,7 +337,7 @@ value '0' doesn't match value '2'
 
 ### **Solution**
 ✅ **Check if the library is found**
-✅ **Fix missing paths**
+✅ **Fix missing paths `LD_LIBRARY_PATH`**
 
 ---
 
@@ -322,6 +350,160 @@ value '0' doesn't match value '2'
 * Linux : gdb -> `info shared`
 
 ---
+
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+
+
+
+--- 
+
+# Dependency walker
+
+* https://www.dependencywalker.com/
+* https://github.com/lucasg/Dependencies
+
+<!-- 
+Some more tools :
+
+procmon - windows error message will tell you the dll problem and not the dependency
+
+-->
+
+---
+
+# 🔍 Linker Debugging Tools
+
+
+✅ **Linux:** `LD_DEBUG`, `LD_PRELOAD`
+✅ **Windows:** `gflags`
+
+---
+
+# 🛠️ `LD_DEBUG`
+
+🔹 Debug **dynamic linker activity** 🏗️  
+🔹 Show **symbol resolution, library loading** 🕵️‍♂️  
+
+```bash
+LD_DEBUG=all ./my_program  # Show everything 👀
+LD_DEBUG=libs ./my_program  # Library loading 🔍
+LD_DEBUG=symbols ./my_program  # Symbol lookup 🔡
+```
+
+---
+
+# 🏗️ `LD_PRELOAD`
+
+🔹 **Inject shared libraries** 📌  
+🔹 **Override functions without rebuilding** 🔄  
+
+```bash
+LD_PRELOAD=/path/to/mylib.so ./my_program
+```
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+
+# ⚠️ Exporting All Symbols
+
+🔹 By default, all symbols may be exported 📤  
+🔹 **Problem:** Exposing unnecessary functions may cause **symbol conflicts** 🛑  
+🔹 **Example:** Exporting 3rd-party libraries like **Boost, IPP, OpenCV**
+
+---
+
+# 🚨 What Can Go Wrong?
+
+❌ **Symbol Conflicts** – Runtime crashes, wrong ABI ⚡  
+❌ **Linking Issues** – Different version might be used across libraries 📌  
+❌ **Unintended ABI Exposure** – Internal functions can accidentally be used 🛠️  
+
+---
+
+# 🔒 How to Prevent
+
+✅ **Use Default Visibility Hidden:**
+```cmake
+target_compile_options(my_lib PRIVATE -fvisibility=hidden)
+```
+
+---
+
+
+✅ **Use `version scripts` in Linux (`.map` files):**
+```bash
+myLib.so {
+    global:
+        myPublicFunction;
+    local:
+        *;
+};
+```
+```bash
+gcc -Wl,--version-script=myLib.map -shared -o myLib.so myLib.o
+```
+```cmake
+target_link_options(my_lib PRIVATE
+    "LINKER:-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/myLib.map"
+)
+```
+
+---
+
+# 🔍 How to Verify Symbol Exports
+
+✅ **Linux: Use `nm` or `objdump`**
+```bash
+nm -D myLib.so  # Lists exported symbols
+objdump -T myLib.so  # Shows dynamic symbols
+```
+
+🔹 **Check exports before releasing shared libraries!** 🚀
+
+---
+
+
+### **📌 SO Versioning in Linux**  
+
+🔹 **Structure:**  
+```
+libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
+```
+- **1** = Major (Breaking changes 🚨)  
+- **2** = Minor (New features 🛠️)  
+- **3** = Patch (Bug fixes 🐞)  
+
+---
+
+### **📌 SO Version in CMake**  
+
+```cmake
+add_library(mylib SHARED mylib.cpp)
+
+set_target_properties(mylib PROPERTIES
+    VERSION 1.2.3      # Full version
+    SOVERSION 1        # Major version
+)
+```
+🔹 **Creates:**  
+```
+libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
+```
+
+---
+
 
 # ❓ Q: What happens if a function exported by a DLL is missing in the `.lib` file?
 
