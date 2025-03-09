@@ -1,15 +1,17 @@
 ---
 title: compiler
 author: eranbu
-date: 6/2024
+date: 3/2024
 marp: true
 theme: gaia
 
 ---
 
-# C/CPP Compiler
+![bg left width:500px](images/compiler.png)
 
-A **C/C++ compiler** is a grumpy wizard that grudgingly transforms your poetic code into **machine gibberish**, while delighting in pointing out every tiny mistake you make.
+# Compiler 🧙‍♂️
+
+A **compiler** is a grumpy wizard that grudgingly transforms your poetic code into **machine gibberish**, while delighting in pointing out every tiny mistake you make.
 
 ---
 
@@ -19,24 +21,22 @@ A **C/C++ compiler** is a grumpy wizard that grudgingly transforms your poetic c
 
 ---
 
-Magics list:
-1. Code Reordering (Instruction Scheduling)
+# 🔧 Optimization Tricks
 
-2. Function Inlining
+✨ **Magical Optimizations:**
 
-3. Variable Elimination (Dead Code Elimination)
-
-4. Register Allocation
-
-5. Loop Unrolling
-
-7. Removal of Asserts or Debug Checks
-
-8. Constant Folding and Propagation
-
-9. Code Merging
+- Code Reordering 🌀
+- Function Inlining ⚡
+- Dead Code Elimination ☠️
+- Register Allocation 📦
+- Loop Unrolling 🔄
+- Debug Code Removal 🚫
+- Constant Folding 🧮
+- Code Merging 🏗️
 
 ---
+
+# 📝 Example Code
 
 ```cpp
 #include <stdint.h>
@@ -51,9 +51,13 @@ uint64_t foo()
 }
 ```
 
+<!--
+sum of squares from 0 to 1023.
+-->
+
 ---
 
-# No Optimization
+# 🐌 No Optimization
 
 ```asm
 _Z3foov:
@@ -80,7 +84,7 @@ _Z3foov:
 
 ---
 
-# Maximal Optimization
+# 🚀 Max Optimization
 
 
 ```asm
@@ -91,24 +95,27 @@ _Z3foov:
 
 ---
 
-# Notes :
+# 🛠️ Optimization Notes
 
+- Debug symbols can **coexist** with optimized code 🧐
+- Partial optimization is possible (e.g., per file)
 
-* One may use optimized code **with** debug symbols.
-* One may optimize _some_ of the code (usually whole file)
+<!--
+show how to remove optimization from a single file
+visual studio
+-->
 
 
 ---
 
-# Language
+# 🌍 Language Evolution
 
 ![Image](images/versions.png)
 
 ---
 
-# Language
+# ⚡ Modern C++ Features
 
-* g++ --std=c++20
 
 ```cpp
 #include <iostream>
@@ -122,13 +129,16 @@ int main() {
 }
 ```
 
+`g++ --std=c++20`
+
+
 <!---
 4 16 36 64 100
 -->
 
 ---
 
-# The C/C++ Spec
+# 📜 The C++ Standard
 
 <img src="images/bible.png" alt="Local Image" width="400"  />
 
@@ -139,11 +149,11 @@ int main() {
 
 <img src="images/ub.jpeg" alt="Local Image" width="200"  />
 
-* **Behavior not specified by the C++ standard**  
-* The compiler is **free to do anything** (crash, optimize, etc.)
-* No guarantees! UB can cause:
-  * Crashes  
-  * Silent data corruption  
+- **Behavior not defined by C++** 🚨
+- Compiler **can do anything** 🤯
+- UB may cause:
+  - Crashes 💥
+  - Silent data corruption 🕵️‍♂️
 
 💀 **Avoid UB at all costs!**
 
@@ -191,6 +201,11 @@ float f = 1.5f;
 int* ip = (int*)&f; 
 ```
 
+<!---
+ub_return
+
+-->
+
 ---
 
 # 🛠️ Optimization Flags  
@@ -203,6 +218,18 @@ int* ip = (int*)&f;
 | **Max Optimizations** | `/Ox` | `-O3` | Highest optimization level |
 | **Optimize for Size** | `/Os` | `-Os` | Optimize for small binaries |
 
+---
+
+# 🚀 Debugging optimized code
+
+✔ **Add debug information** (`/Zo /Zi`, `-g`) 
+✔ **Don't touch fp !** (`/Oy`,`-fno-omit-frame-pointer`) 
+✔ **No inlining** (`-fno-inline`) 
+
+<!---
+The -fno-omit-frame-pointer flag preserves the frame pointer (rbp) in function calls
+
+-->
 
 ---
 
@@ -220,9 +247,27 @@ int* ip = (int*)&f;
 
 # 🚀 More Flags?  
 
-✔ **Linking Flags** (`/MD`, `-static`)  
 ✔ **Standard Selection** (`/std:c++17`, `-std=c++20`)  
 ✔ **Multithreading Flags** (`/openmp`, `-fopenmp`)  
+✔ **Allows larger object files** (`/bigobj`)  
+✔ **Position-independent code** (`-fPIC`) 
+
+
+---
+
+# Single file flags
+
+```cmake
+add_executable(my_program main.cpp special.cpp other.cpp)
+
+set_source_files_properties(special.cpp PROPERTIES COMPILE_FLAGS "-O3")
+```
+
+<!---
+single
+
+-->
+
 
 ---
 
@@ -233,16 +278,16 @@ int* ip = (int*)&f;
 
 ---
 
-# Common Compilation Errors & Fixes
+# 🛠️ Debugging Compilation Errors
 
-* Compile a single file. (`make VERBOSE=1` / `cmake --build . -- VERBOSE=1`)
-* Begin with first error / warning.
-* Check flags and preprocessor definitions.
-* Check the preprocessed file
+* Compile **one file at a time** 📝
+  * `make VERBOSE=1` / `cmake --build . -- VERBOSE=1`
+  * `compile_commands.json`
 
-* Check list of included files (`-H`/`/showIncludes`)<!--- slow compilation -->
-  * Too long ?
-  * Network ?
+* Start with the **first error** 🚨
+
+* Try a **different compiler**.
+
 
 ---
 
@@ -403,30 +448,119 @@ enum BoolType
 ```
 ---
 
-Slow compilation
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+--- 
+
+
+# 🔍 Disassembly Tools for Debugging
+
+Disassembling compiled files helps in:
+
+- **Understanding compiler optimizations** 🛠️
+- **Debugging crashes & undefined behavior** 🚨
+- **Reverse engineering unknown binaries** 🕵️‍♂️
+- **Analyzing performance bottlenecks** 🚀
+
+**Common File Types:**
+
+- **Windows:** `.obj`, `.exe`
+- **Linux:** `.o`, `elf file`
+
+---
+
+# 🛠️ Objdump & Dumpbin
+
+| **Tool**     | **Platform** | **Purpose** |
+|-------------|-------------|------------|
+| `objdump`  | Linux    | Disassemble ELF `.o`, `ELF` files 🐧 |
+| `dumpbin`  | Windows     | Disassemble `.obj`, `.exe` files 🏁 |
+
+---
+
+# 📌 Example Usage for Debugging
+
+```bash
+objdump -d my_program    # Disassemble object file
+objdump -t my_program    # Show symbol table
+```
+
+```cmd
+dumpbin /DISASM my_program.obj   # Disassemble object file
+dumpbin /SYMBOLS my_program.exe  # View symbol table
+dumpbin /HEADERS my_program.exe  # Inspect binary headers
+```
+
+---
+
+**Use Case:**
+- Check if compiler optimized out variables or functions.
+- Inspect function call ordering in the binary.
+- Verify symbol visibility & linkage issues.
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+# Prevent UB in your code
+
+<img src="images/compiler_complaint.png"  width="1200"  />
+
+
+---
+# 🚨 Sanitizers
+
+💡 **Sanitizers (UBSan, ASan, MSan)** detect dangerous runtime issues like:
+- 🔥 **UB: Signed overflows, invalid pointer derefs**
+- 💾 **Memory errors: Out-of-bounds, use-after-free**
+- ⚡ **Thread & race conditions (TSan)**
+
+---
+
+# 🛠️ How Do They Work?
+
+🔍 **Compile-time instrumentation** adds checks
+🐞 **Runtime validation** detects UB
+⚠️ **Crashes or warnings** when UB happens
+
+```bash
+# G++/Clang
+-fsanitize=undefined,address,thread,memory
+
+# MSVC
+/fsanitize=address
+```
+
+---
+
+# 🛠️ How Do They Work?
+
 
 ```cpp
-#include <boost/multiprecision/cpp_dec_float.hpp>
-
-template <typename T>
-T fibonacci(int n) {
-    if (n <= 1) return n;
-    return fibonacci<T>(n - 1) + fibonacci<T>(n - 2);
-}
+#include <climits>
 
 int main() {
-    using namespace boost::multiprecision;
-    cpp_dec_float_100 big_float = fibonacci<cpp_dec_float_100>(10); // Use float precision
+   int max = INT_MAX;
+    max++;  //  UB: Signed integer overflow
+
     return 0;
 }
 ```
 
-```bash
-time g++ -std=c++17 -O2 slow.cpp -o slow_compile
-```
+---
 
-<!---
-real    0m2.020s
-user    0m1.809s
-sys     0m0.166s
--->
+# 🛠️ How Do They Work?
+
+<img src="images/godbolt_ubsan.png"  width="1000"  />
+
+---
+

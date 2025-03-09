@@ -465,7 +465,7 @@ CheckOptions:
 
 * Use MSVC `command prompt`
 * Create `compile_commands.json`
-  * `-G "Ninja" -DCMAKE_MAKE_PROGRAM="d:\ninja\ninja.exe"`
+  * `-G "Ninja" -DCMAKE_MAKE_PROGRAM="d:\ninja\ninja.exe" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
 * Run `run-clang-tidy.py` 
   * `-quiet -fix`
 
