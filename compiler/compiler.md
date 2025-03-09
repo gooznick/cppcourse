@@ -23,8 +23,6 @@ A **compiler** is a grumpy wizard that grudgingly transforms your poetic code in
 
 # 🔧 Optimization Tricks
 
-✨ **Magical Optimizations:**
-
 - Code Reordering 🌀
 - Function Inlining ⚡
 - Dead Code Elimination ☠️
@@ -97,6 +95,8 @@ _Z3foov:
 
 # 🛠️ Optimization Notes
 
+- More optimized code - more undefined behaviors
+- More optimized code - harder to debug
 - Debug symbols can **coexist** with optimized code 🧐
 - Partial optimization is possible (e.g., per file)
 
@@ -112,7 +112,23 @@ visual studio
 
 ![Image](images/versions.png)
 
+
 ---
+
+# 🚀 CMake: Enabling C++20
+
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(MyCpp20Project LANGUAGES CXX)
+
+add_executable(my_program main.cpp)
+
+target_compile_features(my_program PUBLIC cxx_std_20)
+```
+
+---
+
 
 # ⚡ Modern C++ Features
 
@@ -156,6 +172,77 @@ int main() {
   - Silent data corruption 🕵️‍♂️
 
 💀 **Avoid UB at all costs!**
+
+---
+
+# 💀 Undefined Behavior
+
+```cpp
+#include <iostream>
+#include <limits>
+int main() {
+    int x = std::numeric_limits<int>::max();
+    int y = x + 1; 
+    std::cout << "y: " << y << "\n";  
+    return 0;
+}
+```
+
+C99 standard (§3.4.3/1):
+
+An example of undefined behavior is the behavior on integer overflow
+
+---
+
+# 💀 Undefined Behavior
+
+```cpp
+#include <iostream>
+
+int main() {
+    float f = 3.14f;
+    int* p = (int*)&f; 
+    *p = 42; 
+    std::cout << *p << "\n";
+}
+```
+
+If we attempt to access a value using a type not allowed it is classified as undefined behavior(UB). 
+
+<!---
+*p = 42;  // ARM may crash here !
+-->
+
+---
+
+
+# 💀 (Un)defined Behavior
+
+```cpp
+#include <iostream>
+
+int main() {
+    float f = 3.14f;
+    int i;
+    std::memcpy(&i, &f, sizeof(f));
+    std::cout << i << "\n";
+}
+```
+
+---
+
+# 💀 (Un)defined Behavior
+
+```cpp
+#include <iostream>
+#include <bit>
+
+int main() {
+    float f = 3.14f;
+    int i = std::bit_cast<int>(f);
+    std::cout << i << "\n";
+}
+```
 
 ---
 
@@ -282,7 +369,7 @@ single
 
 * Compile **one file at a time** 📝
   * `make VERBOSE=1` / `cmake --build . -- VERBOSE=1`
-  * `compile_commands.json`
+  * `compile_commands.json` / `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
 
 * Start with the **first error** 🚨
 
@@ -329,20 +416,6 @@ int main() {
 ---
 
 ```cpp
-#include <algorithm>
-
-uint64_t square(uint32_t i) {
-    return i*i;
-}
-```
-
-<!---
-'uint64_t' does not name a type
- -->
-
----
-
-```cpp
 class A
 {
     A(){};
@@ -357,8 +430,32 @@ expected initializer before 'a'
 
 <!---
 A::A()' is private within this context```
+error: calling a private constructor of class 'A'
+
+use another compiler !
 -->
 
+---
+
+```cpp
+#include <iostream>
+
+
+int main() {
+    int foo();
+    foo = 42; //  Error: Redeclaration of `foo` as a variable
+    std::cout << foo << "\n";
+    return 0;
+}
+```
+
+<!---
+int foo{};
+use another compiler !
+
+clang :
+warning: empty parentheses interpreted as a function declaration [-Wvexing-parse]
+-->
 
 ---
 
@@ -380,6 +477,9 @@ note: Conversion loses qualifiers
 
 <!---
 A::a()' has single parameter - this. "this" in foo is const, it cannot change to non const.
+
+clang :
+ error: 'this' argument to member function 'a' has type 'const A', but function is not marked const
 -->
 
 ---
@@ -391,9 +491,10 @@ int main()
 }
 ```
 
-```
+
 fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include ""' to your source?
-```
+
+
 <!---
 /Yu
 -->
@@ -425,17 +526,9 @@ void foo(int answer)
 5:34: error: stray '\342' in program
      printf( “The answer is %d\n���,answer );
                                   ^
-5:35: error: stray '\200' in program
-     printf( “The answer is %d\n���,answer );
-                                   ^
-5:36: error: stray '\235' in program
-     printf( “The answer is %d\n��,answer );
-                                    ^
- In function 'void foo(int)':
-5:16: error: 'The' was not declared in this scope
-     printf( “The answer is %d\n”,answer );
-                ^~~
+
 ```
+
 
 ---
 
@@ -540,6 +633,12 @@ Bad practice
 /fsanitize=address
 ```
 
+<!-- 
+export UBSAN_OPTIONS=print_stacktrace=1,
+UBSAN_OPTIONS=suppressions=MyUBSan.supp
+
+-->
+
 ---
 
 # 🛠️ How Do They Work?
@@ -564,3 +663,5 @@ int main() {
 
 ---
 
+
+# 🎉 Questions?  
