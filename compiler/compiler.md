@@ -233,7 +233,7 @@ int main(){
     int i = 0x10000000;
     do{
         i*=2;
-
+        std::cout<<i<<std::endl;
     } while (i > 0);
     return 0;
 }
@@ -242,6 +242,8 @@ int main(){
 ```
 536870912
 1073741824
+```
+```
 -2147483648
 ```
 
@@ -251,6 +253,16 @@ overflow
 C99 standard (§3.4.3/1):
 An example of undefined behavior is the behavior on integer overflow
 -->
+
+---
+
+<img src="images/ub_no_cout.png" width="400" />
+
+
+---
+
+<img src="images/ub_cout.png" width="700" />
+
 
 ---
 
@@ -494,12 +506,13 @@ single
 
 # 🤯 Debugging Weird Compiler Errors  
 
-- **Read the entire error message** 
-- **Create a minimal example**
-- **Enable extra warnings** 
-- **Start reading from the bottom of first error** 
-- **Missing `{}` or `;`** 
-- **Problem in header file** 
+- Read the **entire error message** 
+- Create a **minimal example**
+- Enable **extra warnings** 
+- Start reading from the **bottom** of **first** error
+- Search missing `{}` or `;`
+- Problem in **header file** may affect cpp
+- **Google** the error message (partial/full)
 
 
 ---
@@ -587,10 +600,7 @@ msvc:
 <source>(6): error C2146: syntax error: missing ';' before identifier 'a'
 <source>(6): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
 ```
-# Link UBSan runtime explicitly for Clang (GCC links it automatically)
-if(ENABLE_UBSAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_link_libraries(my_program PRIVATE -fsanitize=undefined)
-endif()
+
 clang++:
 ```
 <source>:4:2: error: expected ';' after struct
@@ -727,8 +737,9 @@ int main()
 }
 ```
 
-
+```
 fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include ""' to your source?
+```
 
 
 <!---
