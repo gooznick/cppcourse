@@ -11,7 +11,82 @@ theme: gaia
 
 # Compiler 🧙‍♂️
 
-A **compiler** is a grumpy wizard that grudgingly transforms your poetic code into **machine gibberish**, while delighting in pointing out every tiny mistake you make.
+A **compiler** is a grumpy wizard that grudgingly transforms your **poetic code** into **machine gibberish**, while delighting in pointing out every tiny mistake you make.
+
+---
+
+# 📜 The C++ Standard
+
+<img src="images/bible.png" alt="Local Image" width="400"  />
+
+[C++17 Standard](../preprocessor/images/c++17.pdf)
+
+---
+
+
+# 🌍 Language Evolution
+
+![Image](images/versions.png)
+
+
+---
+# 📜 cppreference
+
+<img src="images/support.png"  width="700"  />
+
+---
+
+
+# 🚀 Enabling C++ version
+
+|     | g++ | MSVC | _cplusplus |
+|-------------|-----------|-----------|-|
+| c++17 | `-std=c++17` | `/std=c++17` |201703L|
+| c++20 | `-std:c++20` | `/std:c++20` |202002L|
+
+
+🔹 MSVC requires `/Zc:__cplusplus`
+🔹 Partial implementations : `-std=c++2a`, `-std=c++0x`
+
+---
+
+# 🚀 Enabling C++ version
+
+<br/>
+
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(MyCpp20Project LANGUAGES CXX)
+
+add_executable(my_program main.cpp)
+
+target_compile_features(my_program PUBLIC cxx_std_20)
+```
+
+---
+
+# ⚡ Modern C++ Features
+
+
+```cpp
+#include <iostream>
+#include <ranges>
+
+int main() {
+    auto squares = std::views::iota(1, 11) | std::views::transform([](int n) { return n * n; });
+    for (int n : squares | std::views::filter([](int n) { return n % 2 == 0; })) 
+        std::cout << n << " "; 
+    return 0;
+}
+```
+
+`g++ --std=c++20`
+
+
+<!---
+4 16 36 64 100
+-->
 
 ---
 
@@ -91,207 +166,6 @@ _Z3foov:
  ret
 ```
 
----
-
-# 🛠️ Optimization Notes
-
-- More optimized code - more undefined behaviors
-- More optimized code - harder to debug
-- Debug symbols can **coexist** with optimized code 🧐
-- Partial optimization is possible (e.g., per file)
-
-<!--
-show how to remove optimization from a single file
-visual studio
--->
-
-
----
-
-# 🌍 Language Evolution
-
-![Image](images/versions.png)
-
-
----
-
-# 🚀 CMake: Enabling C++20
-
-
-```cmake
-cmake_minimum_required(VERSION 3.20)
-project(MyCpp20Project LANGUAGES CXX)
-
-add_executable(my_program main.cpp)
-
-target_compile_features(my_program PUBLIC cxx_std_20)
-```
-
----
-
-
-# ⚡ Modern C++ Features
-
-
-```cpp
-#include <iostream>
-#include <ranges>
-
-int main() {
-    auto squares = std::views::iota(1, 11) | std::views::transform([](int n) { return n * n; });
-    for (int n : squares | std::views::filter([](int n) { return n % 2 == 0; })) 
-        std::cout << n << " "; 
-    return 0;
-}
-```
-
-`g++ --std=c++20`
-
-
-<!---
-4 16 36 64 100
--->
-
----
-
-# 📜 The C++ Standard
-
-<img src="images/bible.png" alt="Local Image" width="400"  />
-
----
-
-
-# Undefined Behavior (UB)
-
-<img src="images/ub.jpeg" alt="Local Image" width="200"  />
-
-- **Behavior not defined by C++** 🚨
-- Compiler **can do anything** 🤯
-- UB may cause:
-  - Crashes 💥
-  - Silent data corruption 🕵️‍♂️
-
-💀 **Avoid UB at all costs!**
-
----
-
-# 💀 Undefined Behavior
-
-```cpp
-#include <iostream>
-#include <limits>
-int main() {
-    int x = std::numeric_limits<int>::max();
-    int y = x + 1; 
-    std::cout << "y: " << y << "\n";  
-    return 0;
-}
-```
-
-C99 standard (§3.4.3/1):
-
-An example of undefined behavior is the behavior on integer overflow
-
----
-
-# 💀 Undefined Behavior
-
-```cpp
-#include <iostream>
-
-int main() {
-    float f = 3.14f;
-    int* p = (int*)&f; 
-    *p = 42; 
-    std::cout << *p << "\n";
-}
-```
-
-If we attempt to access a value using a type not allowed it is classified as undefined behavior(UB). 
-
-<!---
-*p = 42;  // ARM may crash here !
--->
-
----
-
-
-# 💀 (Un)defined Behavior
-
-```cpp
-#include <iostream>
-
-int main() {
-    float f = 3.14f;
-    int i;
-    std::memcpy(&i, &f, sizeof(f));
-    std::cout << i << "\n";
-}
-```
-
----
-
-# 💀 (Un)defined Behavior
-
-```cpp
-#include <iostream>
-#include <bit>
-
-int main() {
-    float f = 3.14f;
-    int i = std::bit_cast<int>(f);
-    std::cout << i << "\n";
-}
-```
-
----
-
-# Common Types of Undefined Behavior
-
-```cpp
-// ❌ 1. Division by zero (UB: Crash or unexpected result)
-int x = 42;
-int y = x / 0; 
-
-// ❌ 2. Out-of-bounds array access (UB: Overwriting random memory)
-int arr[5];
-arr[10] = 7; 
-
-// ❌ 3. Dereferencing null or invalid pointer (UB: Segmentation fault)
-int* p = nullptr;
-*p = 5; 
-
-// ❌ 4. Using an uninitialized variable (UB: Garbage value or crash)
-int a;
-int b = a + 1; 
-```
-
----
-
-```cpp
-// ❌ 5. Use-after-free (UB: Accessing freed memory)
-int* ptr = new int(10);
-delete ptr;
-std::cout << *ptr; 
-
-// ❌ 6. Signed integer overflow (UB: Compilers assume it NEVER happens!)
-int max = INT_MAX;
-int result = max + 1; // UB: Wraparound not guaranteed in signed integers
-
-// ❌ 7. Non-void function missing a return statement (UB: Can cause random behavior)
-int brokenFunction() {
-    // No return statement! UB if this function is called.
-}
-
-// ❌ 8. Type punning (UB: Violates strict aliasing rules)
-float f = 1.5f;
-int* ip = (int*)&f; 
-```
-
-<!---
-ub_return
-
--->
 
 ---
 
@@ -321,277 +195,165 @@ The -fno-omit-frame-pointer flag preserves the frame pointer (rbp) in function c
 ---
 
 
-# ⚠️ Warning & Debugging Flags  
+# 🛠️ Optimizations & Debugging
 
-| **Flag** | **MSVC** | **GCC** | **Effect** |
-|---------|-----------------|-----------------|------------|
-| **Enable All** | `/W4` | `-Wall` | Show most warnings |
-| **Extra Warnings** | `/Wall` | `-Wextra` | More strict checking |
-| **Treat as Errors** | `/WX` | `-Werror` | Warnings become errors |
-| **Debug Info** | `/Zi` | `-g` | Enable debugging symbols |
+- ⚡ More optimized code → More **undefined behaviors**
+- 🛠️ More optimized code → **Harder to debug**  
+- 🧐 Debug symbols can **coexist** with optimized code  
+- 🎯 **Partial optimization** is possible (e.g., per file) 
 
----
-
-# 🚀 More Flags?  
-
-✔ **Standard Selection** (`/std:c++17`, `-std=c++20`)  
-✔ **Multithreading Flags** (`/openmp`, `-fopenmp`)  
-✔ **Allows larger object files** (`/bigobj`)  
-✔ **Position-independent code** (`-fPIC`) 
-
-
----
-
-# Single file flags
-
-```cmake
-add_executable(my_program main.cpp special.cpp other.cpp)
-
-set_source_files_properties(special.cpp PROPERTIES COMPILE_FLAGS "-O3")
-```
-
-<!---
-single
-
+<!--
+show how to remove optimization from a single file
+visual studio
 -->
 
 
 ---
 
-# Godbolt
 
 
-<img src="images/godbolt.png" alt="Local Image" width="1000"  />
+<img src="images/undefined.png"  width="900"  />
+
+---
+
+# Undefined Behavior (UB)
+
+- **Behavior not defined by C++** 🚨
+- Compiler **can do anything** 🤯
+- UB may cause:
+  - Crashes 💥
+  - Silent data corruption 🕵️‍♂️
 
 ---
 
-# 🛠️ Debugging Compilation Errors
-
-* Compile **one file at a time** 📝
-  * `make VERBOSE=1` / `cmake --build . -- VERBOSE=1`
-  * `compile_commands.json` / `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
-
-* Start with the **first error** 🚨
-
-* Try a **different compiler**.
-
-
----
+# 💀 Undefined Behavior
 
 ```cpp
-#include <iostream>
+int main(){
+    int i = 0x10000000;
+    do{
+        i*=2;
 
-void printHello() {
-    std::cout << "Hello, world!" << std::endl;
-}
-
-int main() {
-    printHe1lo(); 
+    } while (i > 0);
     return 0;
 }
 ```
 
-🔹 **Error: `undefined reference`**
+```
+536870912
+1073741824
+-2147483648
+```
 
-<!---
-undefined reference 
+<!--
+overflow
+
+C99 standard (§3.4.3/1):
+An example of undefined behavior is the behavior on integer overflow
 -->
 
 ---
+
+# 💀 Undefined Behavior
 
 ```cpp
 #include <iostream>
 
 int main() {
-    char hello[5] = "hello";
-    std::cout<<hello;
-}
-```
-
-<!---
- error: initializer-string for char array is too long
- -->
-
-
----
-
-```cpp
-class A
-{
-    A(){};
-}
-
-A a;
-```
-
-```
-expected initializer before 'a'
-```
-
-<!---
-A::A()' is private within this context```
-error: calling a private constructor of class 'A'
-
-use another compiler !
--->
-
----
-
-```cpp
-#include <iostream>
-
-
-int main() {
-    int foo();
-    foo = 42; //  Error: Redeclaration of `foo` as a variable
-    std::cout << foo << "\n";
+    int64_t i;
+    double* d = (double*)&i; 
+    *d = 1.0; 
+    std::cout << i << "\n";
     return 0;
 }
 ```
 
-<!---
-int foo{};
-use another compiler !
+If we attempt to access a value using a type not allowed it is classified as undefined behavior(UB). 
 
-clang :
-warning: empty parentheses interpreted as a function declaration [-Wvexing-parse]
+<!---
+*p = 42;  // ARM may crash here !
 -->
 
 ---
 
-```cpp
- struct A
-    {
-        int a() {return 1;}
-    };
 
-void foo(const A& a){
-    a.a();
+# 😊 (Un)defined Behavior
+
+```cpp
+#include <iostream>
+
+int main() {
+    float f = 3.14f;
+    int i;
+    std::memcpy(&i, &f, sizeof(f));
+    std::cout << i << "\n";
 }
 ```
 
+---
+
+# 😊 (Un)defined Behavior
+
+```cpp
+#include <iostream>
+#include <bit>
+
+int main() {
+    float f = 3.14f;
+    int i = std::bit_cast<int>(f);
+    std::cout << i << "\n";
+}
 ```
-error C2662: 'int A::a(void)': cannot convert 'this' pointer from 'const A' to 'A &'
-note: Conversion loses qualifiers
+
+---
+
+# Common Types of Undefined Behavior
+
+```cpp
+// ❌ 1. Int Division by zero 
+int x = 42;
+int y = x / 0; 
+
+// ❌ 2. Out-of-bounds array access
+int arr[5];
+arr[10] = 7; 
+
+// ❌ 3. Dereferencing null or invalid pointer
+int* p = nullptr;
+*p = 5; 
+
+// ❌ 4. Using an uninitialized variable
+int a;
+int b = a + 1; 
+```
+
+---
+
+```cpp
+// ❌ 5. Use-after-free
+int* ptr = new int(10);
+delete ptr;
+std::cout << *ptr; 
+
+// ❌ 6. Signed integer overflow
+int max = INT_MAX;
+int result = max + 1; 
+
+// ❌ 7. Missing a return statement
+int brokenFunction() {
+    // No return statement! 
+}
+
+// ❌ 8. Type punning
+float f = 1.5f;
+int* ip = (int*)&f; 
 ```
 
 <!---
-A::a()' has single parameter - this. "this" in foo is const, it cannot change to non const.
+ub_return
 
-clang :
- error: 'this' argument to member function 'a' has type 'const A', but function is not marked const
 -->
 
----
-
-```cpp
-int main()
-{
-    return 1;
-}
-```
-
-
-fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include ""' to your source?
-
-
-<!---
-/Yu
--->
-
----
-
-```cpp
-#include <stdio.h>
-
-void foo(int answer)
-{
-    printf( “The answer is %d\n”,answer );
-}
-```
-
-```
-5:13: error: stray '\342' in program
-     printf( ���The answer is %d\n”,answer );
-             ^
-5:14: error: stray '\200' in program
-     printf( ���The answer is %d\n”,answer );
-              ^
-5:15: error: stray '\234' in program
-     printf( ��The answer is %d\n”,answer );
-               ^
-5:32: error: stray '\' in program
-     printf( “The answer is %d\n”,answer );
-                                ^
-5:34: error: stray '\342' in program
-     printf( “The answer is %d\n���,answer );
-                                  ^
-
-```
-
-
----
-
-```cpp
-enum BoolType
-{
-  FALSE = 0,
-  TRUE = 1
-};
-```
----
-
-# Tool
-
-<img src="../images/multitool.png" width="300" />
-
---- 
-
-
-# 🔍 Disassembly Tools for Debugging
-
-Disassembling compiled files helps in:
-
-- **Understanding compiler optimizations** 🛠️
-- **Debugging crashes & undefined behavior** 🚨
-- **Reverse engineering unknown binaries** 🕵️‍♂️
-- **Analyzing performance bottlenecks** 🚀
-
-**Common File Types:**
-
-- **Windows:** `.obj`, `.exe`
-- **Linux:** `.o`, `elf file`
-
----
-
-# 🛠️ Objdump & Dumpbin
-
-| **Tool**     | **Platform** | **Purpose** |
-|-------------|-------------|------------|
-| `objdump`  | Linux    | Disassemble ELF `.o`, `ELF` files 🐧 |
-| `dumpbin`  | Windows     | Disassemble `.obj`, `.exe` files 🏁 |
-
----
-
-# 📌 Example Usage for Debugging
-
-```bash
-objdump -d my_program    # Disassemble object file
-objdump -t my_program    # Show symbol table
-```
-
-```cmd
-dumpbin /DISASM my_program.obj   # Disassemble object file
-dumpbin /SYMBOLS my_program.exe  # View symbol table
-dumpbin /HEADERS my_program.exe  # Inspect binary headers
-```
-
----
-
-**Use Case:**
-- Check if compiler optimized out variables or functions.
-- Inspect function call ordering in the binary.
-- Verify symbol visibility & linkage issues.
 
 ---
 
@@ -610,6 +372,14 @@ Bad practice
 
 
 ---
+
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+
+---
+
 # 🚨 Sanitizers
 
 💡 **Sanitizers (UBSan, ASan, MSan)** detect dangerous runtime issues like:
@@ -663,5 +433,309 @@ int main() {
 
 ---
 
+# ⚠️ Warning & Debugging Flags  
+
+| **Flag** | **MSVC** | **GCC** | **Effect** |
+|---------|-----------------|-----------------|------------|
+| **Enable All** | `/W4` | `-Wall` | Show most warnings |
+| **Extra Warnings** | `/Wall` | `-Wextra` | More strict checking |
+| **Treat as Errors** | `/WX` | `-Werror` | Warnings become errors |
+| **Debug Info** | `/Zi` | `-g` | Enable debugging symbols |
+
+---
+
+# 🚀 More Flags?  
+
+✔ **Standard Selection** (`/std:c++17`, `-std=c++20`)  
+✔ **Multithreading Flags** (`/openmp`, `-fopenmp`)  
+✔ **Allows larger object files** (`/bigobj`)  
+✔ **Position-independent code** (`-fPIC`) 
+
+
+---
+
+# Single file flags
+
+```cmake
+add_executable(my_program main.cpp special.cpp other.cpp)
+
+set_source_files_properties(special.cpp PROPERTIES COMPILE_FLAGS "-O3")
+```
+
+<!---
+single
+
+-->
+
+
+---
+
+# Godbolt
+
+
+<img src="images/godbolt.png" alt="Local Image" width="1000"  />
+
+---
+
+
+# 🛠️ Debugging Compilation Errors
+
+* Compile **one file at a time** 📝
+  * `make VERBOSE=1` / `cmake --build . -- VERBOSE=1`
+  * `compile_commands.json` / `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
+
+* Start with the **first error** 🚨
+
+* Try a **different compiler**.
+
+
+
+---
+
+# 🤯 Debugging Weird Compiler Errors  
+
+- **Read the entire error message** 
+- **Create a minimal example**
+- **Enable extra warnings** 
+- **Start reading from the bottom of first error** 
+- **Missing `{}` or `;`** 
+- **Problem in header file** 
+
+
+---
+
+```cpp
+#include <iostream>
+
+void printHello() {
+    std::cout << "Hello, world!" << std::endl;
+}
+
+int main() {
+    printHe1lo(); 
+    return 0;
+}
+```
+
+---
+
+msvc:
+```
+<source>(8): error C3861: 'printHe1lo': identifier not found
+```
+
+clang++:
+```
+<source>:8:5: error: use of undeclared identifier 'printHe1lo'; did you mean 'printHello'?
+    8 |     printHe1lo(); 
+      |     ^~~~~~~~~~
+      |     printHello
+<source>:3:6: note: 'printHello' declared here
+    3 | void printHello() {
+      |      ^
+```
+
+
+<!---
+-->
+
+---
+
+```cpp
+#include <iostream>
+
+int main() {
+    char hello[5] = "hello";
+    std::cout<<hello;
+}
+```
+
+<!---
+-->
+
+
+---
+
+msvc:
+```
+<source>(4): error C2117: 'hello': array bounds overflow
+```
+
+clang++:
+```
+<source>:4:21: error: initializer-string for char array is too long, 
+array size is 5 but initializer has size 6 
+(including the null terminating character)
+    4 |     char hello[5] = "hello";
+      |                     ^~~~~~~
+```
+---
+
+```cpp
+struct A
+{
+    A(){};
+}
+
+A a;
+```
+
+---
+
+msvc:
+```
+<source>(6): error C2146: syntax error: missing ';' before identifier 'a'
+<source>(6): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+```
+# Link UBSan runtime explicitly for Clang (GCC links it automatically)
+if(ENABLE_UBSAN AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_link_libraries(my_program PRIVATE -fsanitize=undefined)
+endif()
+clang++:
+```
+<source>:4:2: error: expected ';' after struct
+    4 | }
+      |  ^
+1 error generated.
+```
+
+
+<!---
+
+-->
+
+---
+
+```cpp
+#include <iostream>
+
+
+int main() {
+    int foo();
+    foo = 42; 
+    std::cout << foo << "\n";
+    return 0;
+}
+```
+
+---
+
+msvc:
+```
+example.cpp
+<source>(6): error C2659: '=': function as left operand
+```
+
+clang++:
+```
+<source>: In function 'int main()':
+<source>:5:12: warning: empty parentheses were disambiguated as a function declaration [-Wvexing-parse]
+    5 |     int foo();
+      |            ^~
+<source>:5:12: note: remove parentheses to default-initialize a variable
+    5 |     int foo();
+      |            ^~
+      |            --
+<source>:5:12: note: or replace parentheses with braces to value-initialize a variable
+<source>:6:9: error: assignment of function 'int foo()'
+    6 |     foo = 42; //  Error: Redeclaration of `foo` as a variable
+      |     ~~~~^~~~
+```
+
+---
+
+# 🤯 Weird Compilation Errors  
+
+"When the compiler speaks a language I don’t understand..."  
+
+---
+
+```
+1>------ Build started: Project: Project1, Configuration: Debug Win32 ------
+1>  Source.cpp
+1>c:\documents\visual studio 2013\projects\project1\project1\source.cpp : fatal error C1001: 
+An internal error has occurred in the compiler.
+1>  (compiler file 'f:\dd\vctools\compiler\cxxfe\sl\p1\c\p0io.c', line 2807)
+1>   To work around this problem, try simplifying or changing the program near the locations listed above.
+1>  Please choose the Technical Support command on the Visual C++ 
+1>   Help menu, or open the Technical Support help file for more information
+========== Build: 0 succeeded, 1 failed, 0 up-to-date, 0 skipped ==========
+```
+
+---
+
+
+```cpp
+#include <vector>
+
+class Foo{};
+int main()
+{
+    std::vector<Foo> foo;
+    foo.emplace_back(5); 
+    return 0;
+}
+```
+
+---
+
+msvc:
+```
+xmemory0(819): error C2664: 'Foo::Foo(Foo &&)': cannot convert argument 1 from '_Ty' to 'const Foo &'
+        with
+        [
+            _Ty=int
+        ]
+```
+
+clang++:
+```
+/bits/new_allocator.h:191:23: error: no matching constructor for initialization of 'Foo'
+```
+
+---
+
+```cpp
+ struct A
+    {
+        int a() {return 1;}
+    };
+
+void foo(const A& a){
+    a.a();
+}
+```
+
+```
+error C2662: 'int A::a(void)': cannot convert 'this' pointer from 'const A' to 'A &'
+note: Conversion loses qualifiers
+```
+
+<!---
+A::a()' has single parameter - this. "this" in foo is const, it cannot change to non const.
+
+clang :
+ error: 'this' argument to member function 'a' has type 'const A', but function is not marked const
+-->
+
+---
+
+```cpp
+int main()
+{
+    return 1;
+}
+```
+
+
+fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include ""' to your source?
+
+
+<!---
+/Yu
+-->
+
+
+--- 
 
 # 🎉 Questions?  
