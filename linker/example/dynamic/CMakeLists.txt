@@ -6,6 +6,12 @@ add_library(mul SHARED mul.cpp)
 add_library(add SHARED add.cpp)
 add_library(pow SHARED pow.cpp)
 
+set_target_properties(pow PROPERTIES
+  LINK_FLAGS "-Wl,--no-undefined"
+)
+target_link_libraries(pow PRIVATE mul add)
+
+
 # CMAKE_INSTALL_RPATH
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 

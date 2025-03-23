@@ -121,14 +121,32 @@ U is undefined
 
 1. Object files (`.o`) compiled  
 2. Linker resolves symbols **in order**  
-3. Statically links `.a` files  
-4. Dynamically links `.so` files  
+3. Links `.a` and `.so` files  
+3. Produces `executable`
 
 ⚠ **Order matters in Linux!**  
 Symbols must be **defined before use** in command:  
 ```bash
 g++ main.o -lfoo -o app  # ❌ Undefined reference
 g++ -lfoo main.o -o app  # ✅ Correct order
+```
+
+---
+
+# Link Stages: Linux
+
+When linux creates an `so` file it does not link it!
+
+Missing symbols will be raised only when linking the executable.
+
+The `--no-undefined` flag changes that:
+```cmake
+add_library(pow SHARED pow.cpp)
+
+set_target_properties(pow PROPERTIES
+  LINK_FLAGS "-Wl,--no-undefined"
+)
+target_link_libraries(pow PRIVATE mul add)
 ```
 
 ---
@@ -214,15 +232,12 @@ int add(int a, int b) {
 # 📦 Portable Export Macro
 
 ```cpp
-#ifdef _WIN32
   #ifdef MYLIB_EXPORTS
     #define MYLIB_API __declspec(dllexport)
   #else
     #define MYLIB_API __declspec(dllimport)
   #endif
-#else
-  #define MYLIB_API
-#endif
+
 
 MYLIB_API int add(int a, int b);
 ```
@@ -245,7 +260,9 @@ target_compile_definitions(mylib PRIVATE MYLIB_EXPORTS)
 <!---
 No lib will be created if there are no __dllexport functions !
 -->
+
 ---
+
 
 
 # 🐧 Create a `.so` (Linux)
@@ -256,6 +273,7 @@ add_library(add SHARED add.cpp)
 ```
 
 - 🧩 No need for `__declspec(dllexport)`
+
 ```cpp
 int add(int a, int b) {
   return a + b;
@@ -264,50 +282,10 @@ int add(int a, int b) {
 
 ---
 
-# 📦 Optional Export Control (GCC visibility)
-
-```cpp
-#define MYLIB_API __attribute__((visibility("default")))
-
-MYLIB_API int add(int a, int b);
-```
-
-```cmake
-target_compile_options(mylib PRIVATE -fvisibility=hidden)
-```
-
-- ✅ Hides symbols by default
-- ✅ Exports only tagged symbols (like `MYLIB_API`)
-
-
----
-
-# 🧾 Export Control with Version Script
-
-- 🛠 Create a version script (`exports.map`):
-```text
-{
-  global:
-    add;
-  local:
-    *;
-};
-```
-
-- 📦 Use it in CMake:
-```cmake
-set_target_properties(add PROPERTIES
-  LINK_FLAGS "-Wl,--version-script=${CMAKE_SOURCE_DIR}/exports.map"
-)
-```
-
-✅ Only `add` is visible — all other symbols stay hidden.
-
----
-
 # 📚 Linking with a `.so` (Linux)
 
-- 🧱 Link with `-ladd`, provide `.so` at runtime
+- 🧱 Link with `-ladd`
+- Provide `.so` at runtime
 
 ### 🔍 `.so` Search Order:
 1. `DT_RPATH` (Deprecated)
@@ -315,7 +293,6 @@ set_target_properties(add PROPERTIES
 1. `DT_RUNPATH` 
 2. `/etc/ld.so.cache`  
 
-💡 Use `ldd ./app` to check `.so` dependencies
 
 ---
 
@@ -335,15 +312,199 @@ set_target_properties(main PROPERTIES
   SKIP_BUILD_RPATH ON
 )
 ```
+---
+
+# 🔧 CMake **Global** vs **Project**
+
+- Global
+```cmake
+set(CMAKE_SKIP_BUILD_RPATH TRUE)
+```
+
+- More fine-grained control
+```cmake
+set_target_properties(main 
+  PROPERTIES
+  SKIP_BUILD_RPATH TRUE
+)
+```
+
+---
+
+# Tool
+
+<img src="../images/multitool.png" width="300" />
+
+
+--- 
+
+# Dependency walker
+
+* https://www.dependencywalker.com/
+* https://github.com/lucasg/Dependencies
+
+<!-- 
+Some more tools :
+
+procmon - windows error message will tell you the dll problem and not the dependency
+
+-->
+
+---
+
+# 🔍 Runtime Linker Debugging Tools
+
+
+✅ **Linux:** `LD_DEBUG`, `LD_PRELOAD`
+✅ **Windows:** `procmon`
+
+---
+
+# 🛠️ `LD_DEBUG`
+
+🔹 Debug **dynamic linker activity** 🏗️  
+🔹 Show **symbol resolution, library loading** 🕵️‍♂️  
+
+```bash
+LD_DEBUG=all ./my_program  # Show everything 👀
+LD_DEBUG=libs ./my_program  # Library loading 🔍
+LD_DEBUG=symbols ./my_program  # Symbol lookup 🔡
+```
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+
+# ⚠️ Exporting All Symbols
+
+🔹 By default, all symbols may be exported 📤  
+🔹 **Problem:** Exposing unnecessary functions may cause **symbol conflicts** 🛑  
+🔹 **Example:** Exporting 3rd-party libraries like **Boost, IPP, OpenCV**
+
+---
+
+# 🚨 What Can Go Wrong?
+
+❌ **Symbol Conflicts** – Runtime crashes, wrong ABI ⚡  
+❌ **Linking Issues** – Different version might be used across libraries 📌  
+❌ **Unintended ABI Exposure** – Internal functions can accidentally be used 🛠️  
+
+---
+
+
+# 🔍 How to Verify Symbol Exports
+
+✅ **Linux: Use `nm` or `objdump`**
+```bash
+nm -D myLib.so  # Lists exported symbols
+objdump -T myLib.so  # Shows dynamic symbols
+```
+
+🔹 **Check exports before releasing shared libraries!** 🚀
+
+---
+
+# Function Visibility 
+
+✅ **Windows (DLLs)** → Uses `__declspec(dllexport)` & `__declspec(dllimport)`.  
+✅ **Linux (SOs)** → Uses `__attribute__((visibility("default")))`.  
+
+Notes :
+* `__declspec(dllimport)` is optional, for functions.
+* Linux - default is visible, Windows - default is invisible.
+* Which functions are exported: `nm -D` , `objdump` / `dependencies`
+
+---
+
+# 🔹 Function Visibility in Windows
+
+```cpp
+#ifdef BUILD_DLL
+#define API_EXPORT __declspec(dllexport)
+#else
+#define API_EXPORT __declspec(dllimport)
+#endif
+
+API_EXPORT void myFunction(); // Exported function
+```
+✅ **Importing (from EXE or another DLL)** → Use `__declspec(dllimport)`
+
+---
+
+# 📦 Function Visibility in Linux I
+
+```cpp
+#define MYLIB_API __attribute__((visibility("default")))
+
+MYLIB_API int add(int a, int b);
+```
+
+```cmake
+target_compile_options(mylib PRIVATE -fvisibility=hidden)
+```
+
+- ✅ Hides symbols by default
+- ✅ Exports only tagged symbols (like `MYLIB_API`)
+
+
+---
+
+# 📦 Function Visibility in Linux II
+
+- 🛠 Create a version script (`exports.map`):
+```text
+{
+  global:
+    add;
+  local:
+    *;
+};
+```
+
+- 📦 Use it in CMake:
+```cmake
+set_target_properties(add PROPERTIES
+  LINK_FLAGS "-Wl,--version-script=${CMAKE_SOURCE_DIR}/exports.map"
+)
+```
+
 
 ---
 
 ## **Advanced**
 
-* Explore dependencies (`dependencies` / `ldd`)
-* Load dynamically (boost::dll)
-* Delay load in windows
+* Manual loading
+* Name mangling
 * Versioning (`so.1.2.3`)
+
+---
+
+
+# 🧩 Manually Loading DLLs
+
+- ✅ Load at runtime (plugins, late binding)
+- 🧠 Use `dlsym` / `GetProcAddress` / `boost::dll`
+- 🔄 Flexible, optional dependencies
+- ❗ Must know symbol names
+- 🪧 `extern "C"` avoids name mangling
+- 🕒 Manage global/static init
+
+---
+
+# ⚠️ Manual Loading: Pitfalls
+
+- 🔍 Hard to debug missing or broken symbols
+- 📛 Symbol names must match exactly
+- 🔗 No linker error → runtime crash
+- 🧪 Test for load failure (`nullptr`, try/catch)
 
 --- 
 
@@ -357,7 +518,7 @@ boost::dll::shared_library lib("mylib.dll");
 boost::dll::shared_library lib("libmylib.so");
 #endif
 // Import the function dynamically
-boost::function<void()> hello_func = lib.get<void()>("hello");
+auto hello_func = lib.get<void()>("hello");
 // Call the function
 hello_func();
 
@@ -368,7 +529,7 @@ hello_func();
 # Name Mangling 
 
 🔹 **C++ compilers modify function names**   
-🔹 **Compiler specifc** 
+🔹 **Compiler specific** 
 🔹 **C does NOT mangle names**
 ```cpp
 void foo();   // Regular function
@@ -418,60 +579,6 @@ extern "C" {
 - **Dynamic libraries that must be callable from C**
 - **Avoiding cross-compiler mangling issues**
 
-
-
----
-
-# Function Visibility 
-
-✅ **Windows (DLLs)** → Uses `__declspec(dllexport)` & `__declspec(dllimport)`.  
-✅ **Linux (SOs)** → Uses `__attribute__((visibility("default")))`.  
-
-Notes :
-* `__declspec(dllimport)` is optional, for functions.
-* Linux - default is visible, Windows - default is invisible.
-* Which functions are exported: `nm -D` , `objdump` / `dependencies`
----
-
-# 🔹 Function Visibility in Windows
-
-```cpp
-#ifdef BUILD_DLL
-#define API_EXPORT __declspec(dllexport)
-#else
-#define API_EXPORT __declspec(dllimport)
-#endif
-
-API_EXPORT void myFunction(); // Exported function
-```
-✅ **Importing (from EXE or another DLL)** → Use `__declspec(dllimport)`
-
----
-
-# 🔹 Function Visibility in Linux
-
-✅ **Explicit export using `visibility("default")`**
-```cpp
-__attribute__((visibility("default"))) void myFunction();
-```
-
-
----
-# Version Script (Linux)
-
-### `mylib.map`
-```plaintext
-MYLIB {
-    global:
-        my_*; // Exported
-    local:
-        *;  // Hide everything else
-};
-```
-
-```bash
-g++ -shared -o libmylib.so mylib.o -Wl,--version-script=mylib.map
-```
 ---
 
 # DLL Hell (Windows)
@@ -487,17 +594,46 @@ g++ -shared -o libmylib.so mylib.o -Wl,--version-script=mylib.map
 ---
 
 
-# Why Shared Objects?
+### **📌 SO Versioning in Linux**  
 
-✅ **Memory savings** 
-✅ **Easier updates** 
-✅ **Plugins & modular design** 
-
-⚠ **Risks:**  
-❌ Version mismatches  
-❌ Dependency hell  
+🔹 **Structure:**  
+```
+libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
+```
+- **1** = Major (Breaking changes 🚨)  
+- **2** = Minor (New features 🛠️)  
+- **3** = Patch (Bug fixes 🐞)  
 
 ---
+
+### **📌 SO Version in CMake**  
+
+```cmake
+add_library(mylib SHARED mylib.cpp)
+
+set_target_properties(mylib PROPERTIES
+    VERSION 1.2.3      # Full version
+    SOVERSION 1        # Major version
+)
+```
+🔹 **Creates:**  
+```
+libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
+```
+
+---
+
+# 🏗️ `LD_PRELOAD`
+
+🔹 **Inject shared libraries** 📌  
+🔹 **Override functions without rebuilding** 🔄  
+
+```bash
+LD_PRELOAD=/path/to/mylib.so ./my_program
+```
+
+---
+
 
 ## **Common linker problems**, its **cause**, how to **debug**, and **solutions**.
 
@@ -527,6 +663,23 @@ value '0' doesn't match value '2'
 
 ### **Solution**
 ✅ Ensure **consistent build types**
+
+<!---
+Add here the dumpbin /?? command
+
+-->
+
+---
+
+## ❌ `MDd_DynamicDebug` Mismatch (MSVC)
+
+
+### **Problem**
+```text
+ error LNK2038: mismatch detected for 'RuntimeLibrary': 
+ value 'MTd_StaticDebug' doesn't match value 'MDd_DynamicDebug' in program.obj
+     C:\Data\ip_core.lib(ip_core.obj)    
+```
 
 ---
 
@@ -579,158 +732,7 @@ LINK : fatal error LNK1104: cannot open file 'Debug\add.lib'
 * Windows : Debug -> Windows -> Modules
 * Linux : gdb -> `info shared`
 
----
 
-# Tool
-
-<img src="../images/multitool.png" width="300" />
-
-
-
-
---- 
-
-# Dependency walker
-
-* https://www.dependencywalker.com/
-* https://github.com/lucasg/Dependencies
-
-<!-- 
-Some more tools :
-
-procmon - windows error message will tell you the dll problem and not the dependency
-
--->
-
----
-
-# 🔍 Linker Debugging Tools
-
-
-✅ **Linux:** `LD_DEBUG`, `LD_PRELOAD`
-✅ **Windows:** `gflags`
-
----
-
-# 🛠️ `LD_DEBUG`
-
-🔹 Debug **dynamic linker activity** 🏗️  
-🔹 Show **symbol resolution, library loading** 🕵️‍♂️  
-
-```bash
-LD_DEBUG=all ./my_program  # Show everything 👀
-LD_DEBUG=libs ./my_program  # Library loading 🔍
-LD_DEBUG=symbols ./my_program  # Symbol lookup 🔡
-```
-
----
-
-# 🏗️ `LD_PRELOAD`
-
-🔹 **Inject shared libraries** 📌  
-🔹 **Override functions without rebuilding** 🔄  
-
-```bash
-LD_PRELOAD=/path/to/mylib.so ./my_program
-```
-
----
-
-
-![bg](images/dont.webp)
-
-<!-- 
-Bad practice
--->
-
----
-
-
-# ⚠️ Exporting All Symbols
-
-🔹 By default, all symbols may be exported 📤  
-🔹 **Problem:** Exposing unnecessary functions may cause **symbol conflicts** 🛑  
-🔹 **Example:** Exporting 3rd-party libraries like **Boost, IPP, OpenCV**
-
----
-
-# 🚨 What Can Go Wrong?
-
-❌ **Symbol Conflicts** – Runtime crashes, wrong ABI ⚡  
-❌ **Linking Issues** – Different version might be used across libraries 📌  
-❌ **Unintended ABI Exposure** – Internal functions can accidentally be used 🛠️  
-
----
-
-# 🔒 How to Prevent
-
-✅ **Use Default Visibility Hidden:**
-```cmake
-target_compile_options(my_lib PRIVATE -fvisibility=hidden)
-```
-
----
-
-
-✅ **Use `version scripts` in Linux (`.map` files):**
-```bash
-myLib.so {
-    global:
-        myPublicFunction;
-    local:
-        *;
-};
-```
-```bash
-gcc -Wl,--version-script=myLib.map -shared -o myLib.so myLib.o
-```
-```cmake
-target_link_options(my_lib PRIVATE
-    "LINKER:-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/myLib.map"
-)
-```
-
----
-
-# 🔍 How to Verify Symbol Exports
-
-✅ **Linux: Use `nm` or `objdump`**
-```bash
-nm -D myLib.so  # Lists exported symbols
-objdump -T myLib.so  # Shows dynamic symbols
-```
-
-🔹 **Check exports before releasing shared libraries!** 🚀
-
----
-
-
-### **📌 SO Versioning in Linux**  
-
-🔹 **Structure:**  
-```
-libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
-```
-- **1** = Major (Breaking changes 🚨)  
-- **2** = Minor (New features 🛠️)  
-- **3** = Patch (Bug fixes 🐞)  
-
----
-
-### **📌 SO Version in CMake**  
-
-```cmake
-add_library(mylib SHARED mylib.cpp)
-
-set_target_properties(mylib PROPERTIES
-    VERSION 1.2.3      # Full version
-    SOVERSION 1        # Major version
-)
-```
-🔹 **Creates:**  
-```
-libmylib.so → libmylib.so.1 → libmylib.so.1.2.3
-```
 
 ---
 
