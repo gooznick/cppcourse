@@ -1,113 +1,147 @@
 ---
 title: abi
 author: eranbu
-date: 12/2024
+date: 3.2025
 marp: true
 theme: gaia
 
 ---
 
-## ABI
-- **Understanding ABI:** Bridging C/C++ and Python, Communication and More.
+![bg left width:500px](images/01.jpeg)
 
-<img src="images/abi.png" width="400" style="display: flex;" />
+
+# 🔗 ABI & 🧱 DLLs
+
+- ABI ➜ Alignment, Padding & Compatibility  
+- DLL ➜ Exceptions, Memory, and Ownership
+
+---
+
+## 🧠 What is ABI?
+
+- ABI = **Application Binary Interface**
+- Defines how binaries interact at runtime
+- Must be consistent for:
+  - 🔌 Communication
+  - 📦 Serialization
+  - 🧩 Shared libraries (`.dll`, `.so`)
 
 
 ---
 
-## **What is ABI?**
-- **Definition**: ABI defines the binary interface between two program modules.
 
-- **Key Components**:
-  - Data types and alignment
-  - Object layout 
-  - Function calling conventions
-  - Name mangling in C++
+## 🔍 ABI Topics
 
----
-
-## **Key Topics Covered**
-1. Alignment and Padding
-2. Calling Conventions
-3. Data Types and Compatibility
-4. Endianness
-5. Reflection in C++
+1. 📐 Data layout & alignment  
+2. 🛠️ Calling conventions  
+3. 🔄 Type compatibility  
+4. 🧭 Endianness  
+5. 🔍 Reflection in C++
 
 ---
 
-## Simple types
+## 🧩 DLL Topics
 
+1. 🧠 Memory allocation rules  
+2. 🚨 Exception handling across boundaries  
+3. ✅ Create/Destroy 
 
-| **Type**       | **Size (Linux)** | **Size (Windows)** | **Notes**                                                                                     |
-|-----------------|-----------------------|--------------------------|------------------------------------------------------------------------------------------------|
-| `char`          | 1 byte               | 1 byte                  | Always 1 byte (8 bits) per the C++ standard.                                                 |
-| `bool`          | 1 byte               | 1 byte                  | Represents `true` or `false`.                                                                |
-| `short`         | 2 bytes              | 2 bytes                 | Both platforms use 16 bits for `short`.                                                      |
-| `int`           | 4 bytes              | 4 bytes                 | Always 32 bits on both platforms.                                                            |
 
 ---
 
-## Simple types
+## 🧮 Primitive Types: Overview
 
-
-| **Type**       | **Linux** | **Windows** | **Notes**                                                                                     |
-|-----------------|-----------------------|--------------------------|------------------------------------------------------------------------------------------------|
-| `long`          | 8 bytes              | 4 bytes                 | **Linux**: 64 bits. **Windows**: 32 bits. This is the most significant difference.           |
-| `long long`     | 8 bytes              | 8 bytes                 | 64 bits on both platforms.                                                                   |
-| `float`         | 4 bytes              | 4 bytes                 | IEEE 754 single-precision (32 bits).                                                        |
-| `double`        | 8 bytes              | 8 bytes                 | IEEE 754 double-precision (64 bits).                                                        |
-| `long double`   | 16 bytes             | 8 bytes                 | **Linux**: Extended precision (80 or 128 bits). **Windows**: Matches `double` (64 bits).     |
-| `void*`         | 8 bytes              | 8 bytes                 | Pointer size depends on the architecture: 8 bytes on 64-bit systems.                        |
-| `size_t`        | 8 bytes              | 8 bytes                 | Equivalent to `unsigned long` on Linux, `unsigned long long` on Windows.                    |
-| `wchar_t`       | 4 bytes              | 2 bytes                 | **Linux**: 4 bytes (UTF-32). **Windows**: 2 bytes (UTF-16).                                   |
+- C++ only defines **minimum** sizes
+- Actual sizes vary across platforms
+- Most compilers use consistent defaults
 
 ---
 
-## Practical Usage
+## 📏 Integer Types
+
+| Type     | Linux | Windows | Notes                |
+|----------|-------|---------|----------------------|
+| `char`   | 1 B   | 1 B     | Always 1 byte        |
+| `bool`   | 1 B   | 1 B     | True / false         |
+| `short`  | 2 B   | 2 B     | 16-bit integer       |
+| `int`    | 4 B   | 4 B     | 32-bit integer       |                                                          |
+
+---
+
+## 📐 Platform Differences
+
+| Type          | Linux   | Windows | Notes                                   |
+|---------------|---------|---------|-----------------------------------------|
+| `long`        | 8 B     | 4 B     | Major difference!                       |
+| `long long`   | 8 B     | 8 B     | Same on both                            |
+| `float`       | 4 B     | 4 B     | IEEE 754                                |
+| `double`      | 8 B     | 8 B     | IEEE 754                                |
+| `long double` | 16 B    | 8 B     | Extra precision on Linux                |
+| `void*`       | 8 B     | 8 B     | Pointer = 64-bit                        |
+| `size_t`      | 8 B     | 8 B     | Based on architecture                   |
+| `wchar_t`     | 4 B     | 2 B     | UTF-32 vs UTF-16                        |
+
+---
+
+# 📌 Pointers in ABI & APIs
+
+- ❌ **Not portable across processes**
+  - Valid only within same address space
+  - Size may vary (`32` vs `64` bit)
+
+- 🧩 **OK in DLL APIs** (same process)
+  - But: define who owns / frees it!
+
+- ❌ **Not valid for:**
+  - 🛰️ Serialization
+  - 🌐 Network communication
+
+
+---
+
+## 🧪 Practical Code Check
 
 ```cpp
-#include <stdint.h>
 #include <climits>
 
-uint16_t t1;
-double d;
-
 static_assert(CHAR_BIT == 8, "Expected 8-bit bytes");
+static_assert(sizeof(long) == 8, "Expected 8-bytes long");
+
 ```
 
 ---
 
-## **Alignment and Padding**
-- **Why Important**: Ensures memory alignment for efficient CPU access.
-- **C/C++ Specifics**:
-  - Structures may include padding to align data.
-  - Use `#pragma pack` for custom control.
+# 📏 Alignment & Padding
+
+- ⚡ Ensures fast, aligned memory access
+- 🧱 Structs may include hidden padding
+- 🛠 Control with `#pragma pack`
 
 ---
 
-## **Example**
+# 📦 Unaligned Struct
 
 ```cpp
 struct MyStruct {
     char a;    // 1 byte
-    int b;     // 4 bytes
+    int  b;    // 4 bytes
     short c;   // 2 bytes
 };
 ```
 
 ---
 
-## **Example**
+# 🧱 With Padding (implicitly)
 
 ```cpp
 struct MyStruct {
-    char a;    // 1 byte
-    char pad1[3];
-    int b;     // 4 bytes
-    short c;   // 2 bytes
-    char pad2[2];
-
+    char a;        // 1 byte
+    char pad1[3];  // alignment for int
+    int  b;        // 4 bytes
+    short c;       // 2 bytes
+    char pad2[2];  // total = 12 bytes
 };
+
 ```
 
 ---
@@ -116,19 +150,12 @@ struct MyStruct {
 
 ```cpp
 int main() {
-    std::cout<<"Size of struct:" << sizeof( MyStruct) << std::endl;
-    std::cout<<"Offset of a   :" << offsetof( MyStruct, a) << std::endl;
-    std::cout<<"Offset of b   :" << offsetof( MyStruct, b) << std::endl;
-    std::cout<<"Offset of c   :" << offsetof( MyStruct, c) << std::endl;
+    std::cout << sizeof(MyStruct) << "\n";  // 12
+    std::cout << offsetof(MyStruct, a) << "\n";  // 0
+    std::cout << offsetof(MyStruct, b) << "\n";  // 4
+    std::cout << offsetof(MyStruct, c) << "\n";  // 8
     return 0;
 }
-```
-
-```
-Size of struct:12
-Offset of a   :0
-Offset of b   :4
-Offset of c   :8
 ```
 
 ---
@@ -174,54 +201,72 @@ class MyStruct
 
 ---
 
-## Disable padding
-
+# 🚫 Disable Padding
 
 ```cpp
-
 #pragma pack(push, 1) 
-
 struct MyStruct {
     char a;    // 1 byte
     int b;     // 4 bytes
     short c;   // 2 bytes
 };
-
 #pragma pack(pop) 
-
 ```
 
----
+⚠️ Use with care 
+ - May impact performance
+ - May cause misalignment
 
-## **Calling Conventions**
-- **Definition**: Rules for function arguments and return values.
-- **Examples**:
-  - **Cdecl**: Default in C/C++, caller cleans up.
-  - **Stdcall**: Used in Windows APIs, callee cleans up.
-  - **Fastcall**: Arguments passed via registers for speed.
-
----
-
-## POD - Plain Old Data
-
-
-### Definition:
-A **POD** (Plain Old Data) type in C++ is a type that is compatible with C-style data structures.
-POD types allow direct memory manipulation and guarantee a predictable memory layout without added complexities like constructors, destructors, or virtual functions.
 
 
 ---
 
-## Non POD (structure only !)
 
-- Virtual functions
-- Inheritance
+# 📦 POD: Plain Old Data
+
+- C++ types compatible with C layout
+- ✅ No constructors, destructors, inheritance, or virtual functions
+- 🔧 Easy to copy, serialize, or share across binaries
+
 
 ---
 
-## Non POD example
+# Example 
 
-How will you implement `std::string` ?
+```cpp
+struct A1
+{
+    void foo();
+};
+```
+
+```cpp
+struct A2
+{
+    virtual void foo();
+};
+```
+
+What is `sizeof(A1)` and `sizeof(A2)` ?
+
+<!-- 
+A1 - 1 (minimal)
+A2 - 8 (pointer)
+-->
+
+
+---
+
+# ❓ What if You Export This?
+
+```cpp
+DLL_API void trk_Create(const std::string& ini_file);
+DLL_API void trk_Destroy();
+DLL_API void trk_Track();
+```
+
+⚠️ Is std::string layout the same across compilers?
+🧩 ABI mismatch risk!
 
 
 ---
@@ -273,35 +318,43 @@ struct std::string {
         char _SSO[24];      // Inline buffer for small string optimization.
     };
 };
-
-
-
 ```
 
 ---
 
-##  **Endianness**
+
+# 📞 Calling Conventions
+
+- 🧾 Define how args/return values move between functions
+
+### Common Types:
+- `cdecl`: Caller cleans up
+- `stdcall`: Callee cleans up (Windows APIs)
+- `fastcall`: Args passed via registers
+
+
+---
+
+# 🔄 Endianness
 
 <img src="images/endianness.webp" width="700" style="display: flex;" />
 
 ---
-##  **Endianness**
 
-Endianness refers to the order in which bytes are stored in memory for multi-byte data types (e.g., int, float, etc.).
+# 🔍 What Is Endianness?
 
-* Little-Endian:
-The least significant byte (LSB) is stored at the lowest memory address.
-Used by CPUs like x86, x86-64, ARM (in little-endian mode).
-* Big-Endian:
-The most significant byte (MSB) is stored at the lowest memory address.
-Used by older mainframes, **network protocols**, and PowerPC.
+- 📦 Byte order in multi-byte types (e.g., `int`, `float`)
+
+### 🧠 Two types:
+- **Little-Endian** → LSB first (x86, ARM)
+- **Big-Endian** → MSB first (network, PowerPC)
 
 ---
 
-## Code !
+# 🧪 Detect Endianness 
 
 ```cpp
-void PrintEndianess() {
+void PrintEndianness() {
     unsigned int x = 0x12345678;
     unsigned char *byte = (unsigned char *)&x;
 
@@ -315,7 +368,7 @@ void PrintEndianess() {
 ```
 ---
 
-## Code ! [c++20]
+# 🧪 Detect Endianness (C++20)
 
 ```cpp
 #include <bit>
@@ -335,42 +388,83 @@ int main() {
 ---
 
 
-## Endianess
+# 🌍 Endianness in Practice
 
+- Most modern CPUs are **little-endian**
+- Many (like ARM, RISC-V) can switch endianness
+- 🧪 Always check network/packed binary formats!
 
-Most modern CPUs are little-endian but often support configurable endianness (e.g., ARM, RISC-V).
-
-Check data sent over networks to ensure portability.
 
 ---
 
 
-## Bitfields
+# 🔢 Bitfields in C++
 
-- **Definition**: Bitfields are a way to pack multiple variables into a smaller memory footprint, typically used in structures.
-
-- **Syntax**:
+- Define fields smaller than a full byte or word
 ```cpp
-  struct Flags {
-      unsigned int a : 1;  // 1-bit wide
-      unsigned int b : 3;  // 3-bit wide
-      unsigned int c : 4;  // 4-bit wide
-  };
+struct Flags {
+    unsigned int a : 1;
+    unsigned int b : 3;
+    unsigned int c : 4;
+};
 ```
 
----
-
-## **ABI and DLL**
-
-* Never use non POD
-* Never throw an exception (== Always catch all exceptions)
-* Memory:
-  * One may pass pointer
-  * Same dll should allocate and deallocate
+✅ Saves space  
+❌ Layout is compiler- and platform-dependent
 
 ---
 
-## **Memory in DLL**
+# ⚠️ Bitfields and ABI
+
+- ❌ No standard layout or packing rules
+- ⚠️ Affected by:
+  - Endianness
+  - Alignment
+  - Compiler version/settings
+
+
+🧩 Prefer `uint8_t` + masks for portable layouts
+
+---
+
+
+![bg](images/dont.webp)
+
+<!-- 
+Bad practice
+-->
+
+---
+
+# ✅ ABI Compatibility: Do's
+
+- Use only **POD** types (Plain Old Data)  
+- Use fixed-size types from `<cstdint>` (e.g. `uint32_t`)  
+- Enforce structure layout with `#pragma pack(1)`  
+- Ensure **same endianness** across systems  
+- Keep layout predictable & stable
+
+---
+
+# ⚠️ ABI Compatibility: Don'ts
+
+- ❌ Don't use `std::string`, `std::vector`, virtual functions
+- ❌ Don't assume compiler will pad the same way
+- ❌ Try avoiding bitfields in public interfaces  
+
+---
+
+# ⚠️ DLL Issues
+
+- ❌ Never throw exceptions across DLL boundaries  
+- ✅ Always catch exceptions before they escape
+- 🔁 Memory Ownership:
+  - Passing pointers between modules is dangerous
+  - DLL should both **allocate** and **deallocate** its own memory
+
+---
+
+# 💾 Memory in DLLs
 
 * Returning error message:
    * `const char* GetErrorMessage()`
@@ -378,6 +472,165 @@ Check data sent over networks to ensure portability.
 
 * Who allocates? 
 * Who deallocates? When ?
+
+---
+
+# 🚨 DLL Exception Rules
+
+- Never let a `throw` escape across a DLL boundary
+- Exception ABI may vary between:
+  - Compilers
+  - Runtime versions
+  - Debug vs. Release
+- Behavior is **undefined or crash-prone**
+
+---
+
+# 🧪 Exception Handling Demo
+
+```cpp
+// In DLL
+extern "C" void do_work() {
+    try {
+        throw std::runtime_error("Fail");
+    } catch (const std::exception& e) {
+        log_error(e.what());
+    }
+}
+```
+
+✅ Catch everything inside  
+✅ Expose only error codes or strings
+
+
+---
+
+# 🧱 Create / Destroy Pattern
+
+- Common for DLLs and C APIs
+- Keeps ABI stable using an **opaque pointer**
+
+```cpp
+struct MyObject;
+
+MyObject* MyDll_Create(const char* inifile);
+void MyDll_Destroy(MyObject& obj);
+
+// functions
+void MyDll_DoSomething(MyObject* obj);
+```
+
+---
+
+# 🧼 Opaque Handle Benefits
+
+- 🛡️ Hides internal structure
+- 🔗 Avoids C++ classes dependency
+- ♻️ Clean lifecycle: `Create()` + `Destroy()`
+
+---
+
+
+# 🔄 C++ RAII Wrapper
+
+```cpp
+class MyDllWrapper {
+
+public:
+    MyDllWrapper() {
+        obj = MyDll_Create();
+    }
+
+    ~MyDllWrapper() {
+        MyDll_Destroy(obj);
+    }
+
+    void DoSomething() {
+        MyDll_DoSomething(obj);
+    }
+private:
+    MyObject* m_obj;
+};
+```
+
+
+--- 
+
+## Example : curl
+
+```cpp
+CURL_EXTERN CURL *curl_easy_init(void);
+CURL_EXTERN CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);
+CURL_EXTERN CURLcode curl_easy_perform(CURL *curl);
+CURL_EXTERN void curl_easy_cleanup(CURL *curl);
+
+CURL_EXTERN const char *curl_easy_strerror(CURLcode);
+
+```
+--- 
+
+## Example : clang
+
+```cpp
+CINDEX_LINKAGE const char * 	clang_getCString (CXString string) 
+
+// Retrieve the character data associated with the given string.
+
+// The returned data is a reference and not owned by the user. 
+// This data is only valid while the CXString is valid. 
+// This function is similar to std::string::c_str().
+
+CINDEX_LINKAGE void 	        clang_disposeString (CXString string)
+// Free the given string set.
+
+
+```
+---
+
+## Example : zlib
+
+```cpp
+ZEXTERN const char * ZEXPORT gzerror OF((gzFile file, int *errnum));
+/*
+     Return the error message for the last error which occurred on file.
+   errnum is set to zlib error number.  If an error occurred in the file system
+   and not in the compression library, errnum is set to Z_ERRNO and the
+   application may consult errno to get the exact error code.
+
+     The application must not modify the returned string.  Future calls to
+   this function may invalidate the previously returned string.  If file is
+   closed, then the string previously returned by gzerror will no longer be
+   available.
+
+     gzerror() should be used to distinguish errors from end-of-file for those
+   functions above that do not distinguish those cases in their return values.
+*/
+
+```
+---
+
+# 📚 DLL API Documentation Checklist
+
+- 🔄 **Synchronous or Asynchronous?**  
+  Does the function return immediately or run in the background?
+
+- 🧠 **Memory Model**  
+  - Who allocates/free memory?  
+  - Can I hold a pointer? For how long?
+
+- 🧭 **Call Order**  
+  - Must I call `Init()` before `DoWork()`?  
+  - Do I need to `Destroy()` or `Release()`?
+
+---
+
+- 🚨 **Error Reporting**  
+  - How do I detect errors?  
+  - `GetLastError()`, return codes, or `GetLastErrorMessage()`?
+
+- 📦 **Thread Safety**  
+  - Can I call it from multiple threads?
+
 
 ---
 
@@ -410,15 +663,6 @@ int main() {
 }
 
 ```
----
-
-## **How to Ensure ABI Compatibility**
-✅ **Use Standard C Types** (`int32_t`, `size_t`).  
-✅ **Use single byte packing**.  
-✅ **Never remove or reorder struct fields**.  
-✅ **Add functions that returns structs sizes**.  
-✅ **When using extern c - Never change function API**.  
-
 
 ---
 
