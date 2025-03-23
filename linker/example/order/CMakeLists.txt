@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(MyProject LANGUAGES CXX)
 
+
 add_library(mul STATIC mul.cpp)
 add_library(add STATIC add.cpp)
 add_library(pow STATIC pow.cpp)

@@ -1,7 +1,7 @@
 ---
 title: The Linker
-author: Your Name
-date: 2024
+author: eranbu
+date: 3.2025
 theme: gaia
 marp: true
 ---
@@ -12,7 +12,10 @@ linux cmake 3.24
 
 -->
 
-<img src="images/errors.webp" width="400" style="display: flex;" />
+![bg left width:500px](images/errors.webp)
+
+# The Linker
+
 
 ---
 
@@ -22,6 +25,86 @@ linux cmake 3.24
 * Resolves **symbols** from different sources  
 * Fixes **addresses** for functions & variables  
 * Produces **executables, DLLs (Windows), SOs (Linux)**  
+
+---
+
+
+![bg left width:500px](images/demo.jpeg)
+
+# Static Libraries
+
+* `+`
+* `*`
+* `^`
+
+---
+
+# 🔗 Full Source Compilation
+### 🧮 `add → mul → pow → main`
+<br/>
+
+```bash
+g++ add.cpp mul.cpp pow.cpp main.cpp
+```
+
+- 🛠️ All `.cpp` files compiled and linked in one step
+- ✅ No dependency order needed
+
+---
+
+# 🧱 Object File Linking
+### 📦 Build objects first, then link
+<br/>
+
+```bash
+g++ add.cpp -c
+...
+g++ add.o mul.o pow.o main.cpp
+```
+
+- ⚙️ Compile each source separately
+- ✅ Still no link order issues
+
+---
+
+# 📚 Static Library Linking
+### 🗂️ Libraries need correct order!
+<br/>
+
+```bash
+g++ add.cpp -c
+ar rcs libadd.a add.o
+...
+
+g++ main.cpp libpow.a libmul.a libadd.a
+```
+
+- ⚠️ Linker reads **left to right**
+- ❗ Put libraries **after** the code that needs them
+
+---
+
+
+# 📚 Inspecting with `nm`
+<br/>
+
+```bash
+nm libmul.a -C
+```
+
+```
+mul.o:
+                 U _GLOBAL_OFFSET_TABLE_
+                 U add(int, int)
+0000000000000000 T mul(int, int)
+```
+
+<!--
+T is Text (code)
+U is undefined
+
+`-C` is demangle 
+-->
 
 ---
 
@@ -48,34 +131,18 @@ g++ main.o -lfoo -o app  # ❌ Undefined reference
 g++ -lfoo main.o -o app  # ✅ Correct order
 ```
 
-
 ---
 
-# Common Linking Problems
+# ⚠️ **Undefined Reference**
 
-❌ **Undefined reference**  
+- 🔍 Use `nm`, `grep` to find where it's defined
+- 🧱 Check link command (`link.txt` in CMake)
+- ➕ Ensure dependency is **after** its user
+- 🛠 Fix link order or use `LINK_GROUP`
+
 ```bash
-g++ main.o -o app
-# error: undefined reference to `foo()`
+find . -type f -name '*.a' -exec nm -C {} + 2>/dev/null
 ```
-🔍 **Fix:** Link with missing library:  
-```bash
-g++ main.o -o app -lfoo
-```
-Or
-```bash
-g++ main.o -Wl,--start-group -lfoo -lbar -Wl,--end-group -o app
-```
-
----
-
-# **Undefined reference**  
-
-* Find where it's defined (`readelf`, `grep -r`)
-* Find link command (`link.txt` in cmake)
-* Make sure the missing symbol is after the user
-* Change cmake link order or add `LINK_GROUP`
-
 
 <!---
 order example
@@ -84,27 +151,190 @@ target_link_libraries(main PRIVATE "$<LINK_GROUP:RESCAN,add,mul>")
 
 -->
 
----
-
-# Windows DLLs
-
-* Requires `.lib` for linking
-* Linked at runtime (`.dll`)
-* Search order:
-  * Exe directory
-  * System PATH
 
 ---
 
-## **Linux SOs**
+| 🔍 Undefined Symbol                              | 📚 Missing Library or Flag         |
+|--------------------------------------------------|------------------------------------|
+| `pthread_create`, `pthread_join`                 | `-lpthread`                        |
+| `boost::filesystem::path`      | `-lboost_filesystem` |
+| `cv::Mat`       | `-lopencv_core`  |
+| `dlopen`, `dlsym`, `dlclose`                     | `-ldl`                             |
+| `std::thread`, `std::mutex`      | `-pthread`    |
+| `zlibVersion`, `inflate`, `deflate`              | `-lz`                              |
+| `curl_easy_init`, `curl_easy_setopt`             | `-lcurl`                           |
+| `glBegin`, `glVertex3f`, `glEnd`                 | `-lGL` (OpenGL)                    |
+| `glutInit`, `glutCreateWindow`                   | `-lglut`                           |
 
-* Shared object (`.so`)
-* Linked at runtime
-* Search order:
-  * `RPATH`
-  * `LD_LIBRARY_PATH`
-  * `/etc/ld.so.conf` (`man ldconfig`)
 
+
+---
+
+
+![bg left width:500px](images/library.jpg)
+
+# Dynamic Libraries
+
+* `+`
+* `*`
+* `^`
+
+---
+
+
+|                | 🧱 Static (`.a`, `.lib`)         | 🔗 Dynamic (`.so`, `.dll`)          |
+|----------------|----------------------------------|-------------------------------------|
+| Linked         | At **compile/link** time         | At **runtime**                      |
+| Included in    | Final executable     | External file     |
+| Size           | Larger executable                | Smaller executable                  |
+| Flexibility    | Less (update=rebuild)         | More (swap `.dll`/`.so`)            |
+| Dependencies   | None at runtime                  | `.so`/`.dll` must be present        |
+
+💡 Use **static** if you can.
+
+---
+
+# 🪟 Create a DLL (Windows)
+
+- 🛠 Change `CMakeLists.txt`:
+```cmake
+add_library(add SHARED add.cpp)
+```
+
+- 🧩 Mark functions for export:
+```cpp
+__declspec(dllexport)
+int add(int a, int b) {
+  return a + b;
+}
+```
+
+---
+
+# 📦 Portable Export Macro
+
+```cpp
+#ifdef _WIN32
+  #ifdef MYLIB_EXPORTS
+    #define MYLIB_API __declspec(dllexport)
+  #else
+    #define MYLIB_API __declspec(dllimport)
+  #endif
+#else
+  #define MYLIB_API
+#endif
+
+MYLIB_API int add(int a, int b);
+```
+
+```cmake
+target_compile_definitions(mylib PRIVATE MYLIB_EXPORTS)
+```
+---
+
+# 📚 Linking with a DLL (Windows)
+
+- 🧱 Link against `.lib` (import library)
+- 🔗 Loads `.dll` at runtime
+
+### 🔍 DLL Search Order:
+1. Executable directory  
+2. Current directory  
+3. System `PATH`  
+
+<!---
+No lib will be created if there are no __dllexport functions !
+-->
+---
+
+
+# 🐧 Create a `.so` (Linux)
+
+- 🛠 Change `CMakeLists.txt`:
+```cmake
+add_library(add SHARED add.cpp)
+```
+
+- 🧩 No need for `__declspec(dllexport)`
+```cpp
+int add(int a, int b) {
+  return a + b;
+}
+```
+
+---
+
+# 📦 Optional Export Control (GCC visibility)
+
+```cpp
+#define MYLIB_API __attribute__((visibility("default")))
+
+MYLIB_API int add(int a, int b);
+```
+
+```cmake
+target_compile_options(mylib PRIVATE -fvisibility=hidden)
+```
+
+- ✅ Hides symbols by default
+- ✅ Exports only tagged symbols (like `MYLIB_API`)
+
+
+---
+
+# 🧾 Export Control with Version Script
+
+- 🛠 Create a version script (`exports.map`):
+```text
+{
+  global:
+    add;
+  local:
+    *;
+};
+```
+
+- 📦 Use it in CMake:
+```cmake
+set_target_properties(add PROPERTIES
+  LINK_FLAGS "-Wl,--version-script=${CMAKE_SOURCE_DIR}/exports.map"
+)
+```
+
+✅ Only `add` is visible — all other symbols stay hidden.
+
+---
+
+# 📚 Linking with a `.so` (Linux)
+
+- 🧱 Link with `-ladd`, provide `.so` at runtime
+
+### 🔍 `.so` Search Order:
+1. `DT_RPATH` (Deprecated)
+1. `LD_LIBRARY_PATH`  
+1. `DT_RUNPATH` 
+2. `/etc/ld.so.cache`  
+
+💡 Use `ldd ./app` to check `.so` dependencies
+
+---
+
+## CMake
+
+By default :
+* CMake **adds** run path to the executable
+* CMake **removes** the run path when installing
+
+Recommended :
+
+```cmake
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+
+set_target_properties(main PROPERTIES
+  INSTALL_RPATH "$ORIGIN"
+  SKIP_BUILD_RPATH ON
+)
+```
 
 ---
 
