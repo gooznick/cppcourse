@@ -133,23 +133,6 @@ g++ -lfoo main.o -o app  # ✅ Correct order
 
 ---
 
-# Link Stages: Linux
-
-When linux creates an `so` file it does not link it!
-
-Missing symbols will be raised only when linking the executable.
-
-The `--no-undefined` flag changes that:
-```cmake
-add_library(pow SHARED pow.cpp)
-
-set_target_properties(pow PROPERTIES
-  LINK_FLAGS "-Wl,--no-undefined"
-)
-target_link_libraries(pow PRIVATE mul add)
-```
-
----
 
 # ⚠️ **Undefined Reference**
 
@@ -185,6 +168,42 @@ target_link_libraries(main PRIVATE "$<LINK_GROUP:RESCAN,add,mul>")
 | `glutInit`, `glutCreateWindow`                   | `-lglut`                           |
 
 
+---
+
+# 🧱 Which libraries will be linked ?
+
+---
+
+## 🐧 Linux Flags
+
+- `-L<dir>` — Add search path  
+- `-l<name>` — Link `lib<name>.so` / `.a`  
+- `-l:filename.a` — Exact archive
+
+<!---
+```sh
+g++ -L. -lmylib
+g++ -L. -l:libmylib.a
+```
+-->
+
+---
+
+## 🪟 Windows (MSVC)
+
+- Linker -> Input -> Additional Dependencies
+- `#pragma comment(lib, "mylib.lib")` in code
+
+---
+
+## 📦 CMake: Finding Libraries
+
+```cmake
+add_library(mylib STATIC file.cpp)
+target_link_libraries(app PRIVATE mylib)
+```
+
+- `target_link_libraries()` connects targets
 
 ---
 
@@ -279,6 +298,25 @@ int add(int a, int b) {
   return a + b;
 }
 ```
+
+---
+
+# Link Stages: Linux
+
+When linux creates an `so` file it does not link it!
+
+Missing symbols will be raised only when linking the executable.
+
+The `--no-undefined` flag changes that:
+```cmake
+add_library(pow SHARED pow.cpp)
+
+set_target_properties(pow PROPERTIES
+  LINK_FLAGS "-Wl,--no-undefined"
+)
+target_link_libraries(pow PRIVATE mul add)
+```
+
 
 ---
 
