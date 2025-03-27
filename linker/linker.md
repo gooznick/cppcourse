@@ -125,10 +125,10 @@ U is undefined
 3. Produces `executable`
 
 ⚠ **Order matters in Linux!**  
-Symbols must be **defined before use** in command:  
+
 ```bash
-g++ main.o -lfoo -o app  # ❌ Undefined reference
-g++ -lfoo main.o -o app  # ✅ Correct order
+g++ main.o -ladd -lmul -lpow   # ❌ Undefined reference
+g++ main.o -lpow -lmul -ladd   # ✅ Correct order
 ```
 
 ---
@@ -185,6 +185,9 @@ target_link_libraries(main PRIVATE "$<LINK_GROUP:RESCAN,add,mul>")
 g++ -L. -lmylib
 g++ -L. -l:libmylib.a
 ```
+By default will search dynamic.
+to change :
+g++ main.cpp -Wl,-Bstatic -lmylib -Wl,-Bdynamic
 -->
 
 ---
@@ -194,16 +197,22 @@ g++ -L. -l:libmylib.a
 - Linker -> Input -> Additional Dependencies
 - `#pragma comment(lib, "mylib.lib")` in code
 
+<!---
+dumpbin /DIRECTIVES 
+-->
+
 ---
 
-## 📦 CMake: Finding Libraries
+## 📦 CMake: Adding Libraries
+
+- `target_link_libraries()` connects targets
+
 
 ```cmake
 add_library(mylib STATIC file.cpp)
 target_link_libraries(app PRIVATE mylib)
 ```
 
-- `target_link_libraries()` connects targets
 
 ---
 
@@ -299,24 +308,6 @@ int add(int a, int b) {
 }
 ```
 
----
-
-# Link Stages: Linux
-
-When linux creates an `so` file it does not link it!
-
-Missing symbols will be raised only when linking the executable.
-
-The `--no-undefined` flag changes that:
-```cmake
-add_library(pow SHARED pow.cpp)
-
-set_target_properties(pow PROPERTIES
-  LINK_FLAGS "-Wl,--no-undefined"
-)
-target_link_libraries(pow PRIVATE mul add)
-```
-
 
 ---
 
@@ -331,6 +322,22 @@ target_link_libraries(pow PRIVATE mul add)
 1. `DT_RUNPATH` 
 2. `/etc/ld.so.cache`  
 
+---
+
+# Link Stages: Linux
+
+✅ `.so` files can have **undefined symbols**  
+⚠️ They're checked **only when linking the final executable**
+
+The `--no-undefined` flag changes that:
+```cmake
+add_library(pow SHARED pow.cpp)
+
+set_target_properties(pow PROPERTIES
+  LINK_FLAGS "-Wl,--no-undefined"
+)
+target_link_libraries(pow PRIVATE mul add)
+```
 
 ---
 
@@ -350,6 +357,7 @@ set_target_properties(main PROPERTIES
   SKIP_BUILD_RPATH ON
 )
 ```
+
 ---
 
 # 🔧 CMake **Global** vs **Project**
@@ -366,6 +374,22 @@ set_target_properties(main
   SKIP_BUILD_RPATH TRUE
 )
 ```
+
+---
+
+
+
+# 🪟🔁🐧 Shared Library Differences
+
+| Feature           | Linux (`.so`)        | Windows (`.dll`)        |
+|------------------|----------------------|--------------------------|
+| Link at `.so` build | ❌ (lazy)         | ✅ (must resolve)       |
+| Search order     | `LD_LIBRARY_PATH`, `rpath`, `ld.so.cache` | Current dir, PATH, system dirs |
+| Default visibility | Public              | Hidden (needs `__declspec(dllexport)`) |
+| Extension        | `.so`                | `.dll` + `.lib` (import) |
+
+
+
 
 ---
 
@@ -691,6 +715,19 @@ can not be used when making a shared object; recompile with -fPIC
 
 ---
 
+
+# 🛠️ MSVC `#pragma detect_mismatch`
+
+| Key                   | Used For                     | Example Value             |
+|------------------------|------------------------------|---------------------------|
+| `_MSC_VER`            | Compiler version              | `"1934"`                  |
+| `RuntimeLibrary`      | Static vs. dynamic CRT        | `"MD_DynamicDebug"`       |
+| `_ITERATOR_DEBUG_LEVEL` | STL iterator checks level  | `"0"` / `"2"`             |
+
+⚠️ Mismatch = link error (LNK2038)
+
+---
+
 ## ❌ `_ITERATOR_DEBUG_LEVEL` Mismatch (MSVC)
 
 ### **Problem**
@@ -771,87 +808,144 @@ LINK : fatal error LNK1104: cannot open file 'Debug\add.lib'
 * Linux : gdb -> `info shared`
 
 
-
 ---
 
 
-# ❓ Q: What happens if a function exported by a DLL is missing in the `.lib` file?
+<img src="images/quiz.png" width="1100" />
 
-- `①` The function cannot be used at all.  
-- `②` The function can still be loaded using `LoadLibrary()` and `GetProcAddress()`.  
-- `③` The application crashes at startup.  
-- `④` The linker automatically resolves the missing function at runtime.  
-<!---
-✅ **Answer:** **The function can still be loaded using `LoadLibrary()` and `GetProcAddress()`.**  
-🔍 **Explanation:** The `.lib` file is only needed for static linking. Dynamic loading (`LoadLibrary`) bypasses it.
--->
 
 ---
 
-# ❓ Q: Which command shows if a program is missing an `.so` file in Linux?
+## ❓ Q1: What does the linker do?
+1. Runs your code
+2. Edits the source files
+3. Resolves symbols and produces an executable
+4. Downloads libraries
+<!--- Correct: 3 -->
 
-- `①` `ls -l /usr/lib/ | grep mylib.so`  
-- `②` `nm -D mybinary`  
-- `③` `ldd mybinary`  
-- `④` `objdump -d mybinary | grep mylib.so`  
-
-<!---
-✅ **Answer:** **`ldd mybinary`**  
-🔍 **Explanation:** `ldd` prints all dynamically linked libraries and highlights missing `.so` files.
--->
 ---
 
-# ❓ Q: What happens if a Windows DLL is compiled with `/MDd` and linked to a `/MD` executable?
+## ❓ Q2: What happens if you link a static library in the wrong order?
+1. Nothing, order doesn’t matter
+2. The build will be faster
+3. You get undefined reference errors
+4. All functions get linked anyway
+<!--- Correct: 3 -->
 
-- `①` The program runs fine with a performance hit.  
-- `②` The program crashes due to runtime mismatch.  
-- `③` The linker issues a warning but allows execution.  
-- `④` The DLL is ignored, and the executable uses static linkage instead.  
-
-<!---
-✅ **Answer:** **The program crashes due to runtime mismatch.**  
-🔍 **Explanation:** **Debug (`/MDd`) and Release (`/MD`) runtime libraries are incompatible** due to different heap implementations.
--->
 ---
 
+## ❓ Q3: What does `-lfoo` link against?
+1. foo.c
+2. libfoo.so or libfoo.a
+3. foo.cpp
+4. foo.o
+<!--- Correct: 2 -->
 
-# ❓ Q: What does the `-Wl,-rpath=/custom/path` flag do in GCC linking?
-
-- `①` Sets the default path for `dlopen()`.  
-- `②` Hardcodes `/custom/path` as the runtime search path for `.so` files.  
-- `③` Makes the linker ignore all default system libraries.  
-- `④` Embeds the `.so` directly into the executable.  
-
-<!---
-✅ **Answer:** **Hardcodes `/custom/path` as the runtime search path for `.so` files.**  
-🔍 **Explanation:** This ensures that when the program runs, it **prefers** shared objects from `/custom/path` **without needing `LD_LIBRARY_PATH`**.
--->
 ---
 
+## ❓ Q4: What does `-L` do?
+1. Links a library
+2. Specifies a source directory
+3. Adds a library search path
+4. Loads a DLL
+<!--- Correct: 3 -->
 
-# ❓ Q: What does `ldconfig` do in Linux?
-
-- `①` Loads shared libraries into memory.  
-- `②` Updates the dynamic linker’s cache of `.so` locations.  
-- `③` Compiles `.so` files into `.o` files.  
-- `④` Forces all running programs to reload their `.so` dependencies.  
-
-<!---
-✅ **Answer:** **Updates the dynamic linker’s cache of `.so` locations.**  
-🔍 **Explanation:** Run `ldconfig -p | grep mylib.so` to see if a library is registered.
--->
 ---
 
-# ❓ Q: How can you check if a Windows DLL is loaded into a process?
+## ❓ Q5: Which tool shows exported symbols in a Linux `.so`?
+1. nm -D
+2. make
+3. grep
+4. g++
+<!--- Correct: 1 -->
 
-- `①` `tasklist /m mylib.dll`  
-- `②` `Get-Process | Where-Object { $_.Modules.ModuleName -match "mylib.dll" }`  
-- `③` Use the "Modules" window in Visual Studio Debugger.  
-- `④` All of the above.  
-
-<!---
-✅ **Answer:** **All of the above.**  
-🔍 **Explanation:** Each method works, but **Process Explorer (Sysinternals) is the best** visual tool for checking loaded DLLs.
--->
 ---
+
+## ❓ Q6: What pragma is used in MSVC to catch mismatched settings?
+1. `#pragma mismatch`
+2. `#pragma error`
+3. `#pragma detect_mismatch`
+4. `#pragma validate`
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q7: Which visibility is default on Windows for DLLs?
+1. Visible
+2. Hidden
+3. Public
+4. External
+<!--- Correct: 2 -->
+
+---
+
+## ❓ Q8: What is the purpose of `__declspec(dllimport)`?
+1. Export symbols
+2. Load a DLL
+3. Import symbols from DLL
+4. Hide internal functions
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q9: What happens when `LD_PRELOAD` is used?
+1. Loads libraries after program starts
+2. Overrides linked symbols
+3. Speeds up linking
+4. Changes runtime paths
+<!--- Correct: 2 -->
+
+---
+
+## ❓ Q10: Which variable controls runtime search path for `.so`?
+1. `PATH`
+2. `LD_RUN_PATH`
+3. `LD_LIBRARY_PATH`
+4. `LD_BIN`
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q11: What does `target_link_libraries()` do in CMake?
+1. Adds include path
+2. Creates shared library
+3. Links targets to dependencies
+4. Starts the build process
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q12: What does `--no-undefined` flag do?
+1. Skips symbols
+2. Allows missing functions
+3. Requires all symbols to be resolved
+4. Only works in debug
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q13: What does `add_library(foo SHARED foo.cpp)` do?
+1. Creates a static library
+2. Creates a header file
+3. Creates a shared object (.so/.dll)
+4. Runs `foo.cpp`
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q14: How to hide symbols by default in Linux?
+1. Use `-fPIC`
+2. Use `-O3`
+3. Use `-fvisibility=hidden`
+4. Use `strip`
+<!--- Correct: 3 -->
+
+---
+
+## ❓ Q15: Which tool can inspect `.lib` or `.obj` files on Windows?
+1. ldd
+2. dumpbin
+3. objdump
+4. strings
+<!--- Correct: 2 -->
 
