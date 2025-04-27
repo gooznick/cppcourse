@@ -72,7 +72,7 @@ struct Rectangle {
 # Is it a POD?
 
 ```cpp
-    tmpl_handle tmpl_Create(const std::string& ini_filename);
+    tmpl_Handle tmpl_Create(const std::string& ini_filename);
 ```
 
 ---
@@ -542,8 +542,8 @@ target_compile_definitions(mylibrary PRIVATE BUILDING_DLL)
   #endif
 #endif
 
-EXPORT tmpl_handle tmpl_Create(const char* ini_filename);
-EXPORT void tmpl_Destroy(tmpl_handle&);
+EXPORT tmpl_Handle tmpl_Create(const char* ini_filename);
+EXPORT void tmpl_Destroy(tmpl_Handle&);
 
 ```
 ---
