@@ -4,7 +4,7 @@ author: eranbu
 date: 3.2025
 marp: true
 theme: gaia
-
+paginate: true
 ---
 
 ![bg left width:500px](images/01.jpeg)
@@ -12,10 +12,7 @@ theme: gaia
 
 # 🔗 ABI & 🧱 DLLs
 
-- ABI ➜ Alignment, Padding & Compatibility  
-- DLL ➜ Exceptions, Memory, and Ownership
-
-Our dll's should be "c compatible dll".
+How to create **"C Compatible Shared Object"**.
 
 <!---
 No mangling
@@ -69,7 +66,7 @@ struct Rectangle {
 
 ---
 
-# Is it a POD?
+# Can I use this function in my API?
 
 ```cpp
     tmpl_Handle tmpl_Create(const std::string& ini_filename);
@@ -143,7 +140,9 @@ struct std::string {
 #include <iostream>
 
 int main() {
-    std::cout << sizeof(long) << " " << sizeof(int) << std::endl;
+    std::cout << sizeof(long) << " " 
+              << sizeof(int)  
+              << std::endl;
 }
 ```
 ---
@@ -266,6 +265,12 @@ struct MyStruct {
 ## In code
 
 ```cpp
+struct MyStruct {
+    char a;    // 1 byte
+    int  b;    // 4 bytes
+    short c;   // 2 bytes
+};
+
 int main() {
     std::cout << sizeof(MyStruct) << "\n";  // 12
     std::cout << offsetof(MyStruct, a) << "\n";  // 0
@@ -277,7 +282,7 @@ int main() {
 
 ---
 
-## pahole (linux)
+## pahole (linux/godbolt)
 
 ```bash
 sudo apt install dwarves
@@ -334,6 +339,14 @@ struct MyStruct {
  - May impact performance
  - May cause misalignment
 
+---
+
+# 🧱 Is It Portable?
+
+> **If I use POD and packing, is my struct portable everywhere?**
+
+![bg left width:350px](images/meme.png)
+
 
 ---
 
@@ -343,9 +356,9 @@ struct MyStruct {
 #include <iostream>
 
 struct Flags {
-    unsigned int a : 1;
-    unsigned int b : 2;
-    unsigned int c : 5;
+    unsigned char a : 1;
+    unsigned char b : 2;
+    unsigned char c : 5;
 };
 
 int main() {
@@ -358,7 +371,6 @@ What is the output?
 
 <!---
 8 bits (=1 byte)
-+ additional = 4 bytes
 -->
 ---
 
@@ -369,19 +381,61 @@ What is the output?
 ✅ `c` needs 5 bits  
 ➡ Total = 8 bits = 1 byte
 
-BUT most compilers align bitfields to **full int (4 bytes)** for speed!
+| Compiler | Size     |
+|:---------|:---------:|
+| Windows (MSVC) | 1 byte |
+| Linux (GCC)    | 1 byte |
+
+
+---
+
+
+## ❓ Bitfield Question (2)
+
+```cpp
+#include <iostream>
+
+struct Flags {
+    unsigned int a : 1;
+    unsigned int b : 2;
+    unsigned int c : 5;
+};
+
+int main() {
+    std::cout << sizeof(f) << std::endl;
+}
+```
+
+What is the output?
+
+<!---
+4 bytes
+-->
+
+---
+
+
+## ❓ Bitfield Question (2)
+
+```cpp
+struct Flags {
+    unsigned int a : 1;
+    unsigned int b : 2;
+    unsigned int c : 5;
+};
+
+```
+
+Most compilers align bitfields to **full int (4 bytes)** for speed!
 
 | Compiler | Size     |
 |:---------|:---------:|
 | Windows (MSVC) | 4 bytes |
 | Linux (GCC)    | 4 bytes |
 
-Answer: **C) 4**
-
 ---
 
-
-## ❓ Bitfield Question (2)
+# ❓ Bitfield packing (3)
 
 ```cpp
 #include <iostream>
@@ -395,18 +449,17 @@ struct Flags {
 #pragma pack(pop)
 
 int main() {
-    Flags f = {1, 2, 5};
     std::cout << sizeof(f) << std::endl;
 }
 ```
 
+What is the output?
+
 ---
 
-# Bitfield packing 
+# ❓ Bitfield packing (3)
 
 ```cpp
-#include <iostream>
-
 #pragma pack(push, 1)
 struct Flags {
     unsigned int a : 1;
@@ -421,28 +474,9 @@ struct Flags {
 | Windows (MSVC) | 4 bytes |
 | Linux (GCC)    | 1 bytes |
 
----
-# Bitfield packing 
-
-```cpp
-#include <iostream>
-
-#pragma pack(push, 1)
-struct Flags {
-    unsigned char a : 1;
-    unsigned char b : 2;
-    unsigned char c : 5;
-};
-#pragma pack(pop)
-```
-
-| Compiler | Size     |
-|:---------|:---------:|
-| Windows (MSVC) | 1 byte |
-| Linux (GCC)    | 1 byte |
-
 
 ---
+
 
 ## ❓ Union Question
 
@@ -518,8 +552,13 @@ static_assert(sizeof(Telemetry) == 4);
 # CMake file for shared library export
 
 ```cmake
+# make default visibility hidden (gcc)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
+# add the library
 add_library(mylibrary SHARED mylibrary.cpp)
+
+# set preprocessor definition
 target_compile_definitions(mylibrary PRIVATE BUILDING_DLL)
 ```
 
@@ -530,20 +569,20 @@ target_compile_definitions(mylibrary PRIVATE BUILDING_DLL)
 ```cpp
 #if defined(_WIN32) 
   #ifdef BUILDING_DLL
-    #define EXPORT __declspec(dllexport)
+    #define TMPL_EXPORT __declspec(dllexport)
   #else
-    #define EXPORT __declspec(dllimport)
+    #define TMPL_EXPORT __declspec(dllimport)
   #endif
 #else
   #ifdef BUILDING_DLL
-    #define EXPORT __attribute__((visibility("default")))
+    #define TMPL_EXPORT __attribute__((visibility("default")))
   #else
-    #define EXPORT
+    #define TMPL_EXPORT
   #endif
 #endif
 
-EXPORT tmpl_Handle tmpl_Create(const char* ini_filename);
-EXPORT void tmpl_Destroy(tmpl_Handle&);
+TMPL_EXPORT tmpl_Handle tmpl_Create(const char* ini_filename);
+TMPL_EXPORT void tmpl_Destroy(tmpl_Handle&);
 
 ```
 ---
@@ -562,7 +601,7 @@ EXPORT void tmpl_Destroy(tmpl_Handle&);
 
 ✅ Special syntax in C++ to tell the compiler:
 
-> "Use **C** function naming (no mangling)!"
+> Use **C** function naming (no mangling)!
 
 **Syntax:**
 
@@ -660,18 +699,23 @@ Global variables cause:
 ## ⚡ Example Pattern
 
 ```cpp
-typedef struct Tmpl_Handle Tmpl_Handle;
+struct Tmpl_Handle 
+{
+    void* handle; // opaque pointer
+};
 
-Tmpl_Handle* tmpl_Create(const char* ini_filename);
-void tmpl_Process(Tmpl_Handle* handle, int param1, int param2...);
+// Create instance
+Tmpl_Handle tmpl_Create(const char* ini_filename);
+
+// Destroy instance
 void tmpl_Destroy(Tmpl_Handle* handle);
+
+// API functions...
+void tmpl_Process(Tmpl_Handle handle, int param1, int param2...);
+
 ```
 
-✅ `tmpl_Create` allocates  
-✅ `tmpl_Destroy` releases
-
 <!--
-Speaker Notes:
 - Tmpl_Handle is an opaque type — users only know the pointer.
 - `tmpl_Create()`  initializes
 - `tmpl_Destroy()` ensures proper free
@@ -688,7 +732,7 @@ Speaker Notes:
 ---
 
 
-## 🛡️ Two-Step Pattern
+## 🛡️ 1.Two-Step Pattern
 
 1. Ask for size:
 ```cpp
@@ -729,7 +773,7 @@ TMPL_API int tmpl_GetTelemetry(Tmpl_Handle* h, uint8_t* buffer, size_t buffer_si
 
 ---
 
-## 📜 Static Internal Pointer
+## 📜 2. Static Internal Pointer
 
 ```cpp
 const char* err = tmpl_GetLastError(handle);
@@ -762,11 +806,11 @@ TMPL_API const char* tmpl_GetLastError(Tmpl_Handle* h);
 - Document clearly: when the pointer remains valid.
 - If needed, user should copy the string immediately.
 -->
-```
+
 
 ---
 
-## 🛡️ API Allocates Memory
+## 🛡️ 3. API Allocates Memory
 
 ```cpp
 uint8_t* buf = nullptr;
@@ -803,6 +847,20 @@ TMPL_API void tmpl_FreeBlob(void* ptr);
 -->
 
 ---
+
+# 📋 Memory Management Patterns
+
+- 🛡️ **Two-Step (GetSize + GetData)**  
+  ➔ When data size is dynamic but known beforehand
+
+- 📜 **Static Internal Pointer**  
+  ➔ For short strings (errors, status), no free needed
+
+- 🛡️ **API Allocates Memory**  
+  ➔ When size is unknown, or big/variable
+
+---
+
 
 ![bg left width:500px](images/rules.png)
 
@@ -894,7 +952,7 @@ tmpl_SetErrorCallback(Tmpl_handle, tmpl_error_callback_t);
 
 # **Rule #9**
 
-# Versioning: Major.Minor.Patch
+# Versioning
 
 ---
 
@@ -1053,7 +1111,7 @@ set_target_properties(tmpl_shared PROPERTIES
 6. Create/Destroy handles (✅ no globals)
 7. Clear memory ownership (✅ who allocates/frees)
 8. Return error codes (✅ `0 = OK`)
-9. Version API (✅ `tmpl_get_version()`)
+9. Version API (✅ `tmpl_GetVersion()`)
 10. Prefix names and document (✅ `TMPL_`, memory, threads)
 
 ---
@@ -1133,4 +1191,4 @@ CURL_EXTERN void curl_easy_cleanup(CURL *curl);
 CURL_EXTERN const char *curl_easy_strerror(CURLcode);
 
 ```
---- 
+
