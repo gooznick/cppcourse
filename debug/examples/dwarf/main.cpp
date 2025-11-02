@@ -1,7 +1,9 @@
-// g++ main.cpp -g -omain_g
-// g++ main.cpp -O3 -g -omain_O3_g
-// g++ main.cpp -O3 -omain_O3
-// g++ main.cpp -omain
+/*
+g++ main.cpp -g -omain_g
+g++ main.cpp -O3 -g -omain_O3_g
+g++ main.cpp -O3 -omain_O3
+g++ main.cpp -omain
+*/
 #include <iostream>
 
 void hello() {

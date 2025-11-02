@@ -34,18 +34,42 @@ Some info and technics
 
 ---
 
+## What Can I do without debug info ?
+
+| # | Question | Result |
+|---:|----------|:------:|
+| 1 | Can I still get call stack ? | ✅❌  | <!-- yes; they just will not have symbol names -->
+| 2 | Can I watch the disassembly? | ✅❌ | <!-- yes; you can disassemble and match addresses manually -->
+| 3 | Can I still set breakpoints ? | ✅❌ |<!-- yes; But not with names-->
+| 4 | Can I debug an `so` that has debug info ? | ✅❌ |<!-- yes; -->
+
+<!-- demo - simple; -->
+---
+
+
+## What Can I do without debug info ?
+
+| # | Question | Result |
+|---:|----------|:-------|
+| 1 | Can I still get call stack ? | ✅ But no function names | 
+| 2 | Can I watch the disassembly? | ✅ Sure | 
+| 3 | Can I still set breakpoints ? | ✅ But no function names |
+| 4 | Can I debug an `so` that has debug info ? | ✅ Just break on the function |
+
+---
+
 ## 🛠️ How Is It Stored?
 
 - Formats:
   - Linux DWARF (Inside binary)
+    - Can be stripped out after build
   - Windows PDB (Separate file)
-- Can be stripped out after build
+    - Must be built in the same build process as the dll/exe
 
 
 <!--
-- Debug info is stored in non-executable sections (.debug_info, .pdb).
-- Separate debug files are common on Linux (split DWARF).
 - You can remove debug info to shrink size, but then you lose easy debugging.
+add-symbol-file libgm5.so.unstripped 0x00007ffff7fc3040
 -->
 
 ---
@@ -72,29 +96,24 @@ Some info and technics
 
 ---
 
-## 🔥 What Happens Without Debug Info?
+# x64 calling conventions 
 
-- No function names
-- No source file names
-- No variable names
-- Only addresses and assembly
-
-
-<!--
-- You can still run the program — but debugging becomes extremely hard.
-- GDB or Visual Studio will show unknown symbols or just raw addresses.
-- Setting breakpoints by name will not work.
--->
+| topic | Linux x64 (SysV) | Windows x64 |
+|---|:---|:---|
+| Integers | RDI, RSI, RDX, RCX, R8, R9 | RCX, RDX, R8, R9 |
+| `this` | RDI | RCX |
+| Floating | XMM0..7 | XMM0..3 |
+| Additional | stack (right→left) | stack (right→left) |
+| Return | RAX (int), XMM0 (float) | RAX (int), XMM0 (float) |
 
 ---
 
 ## ✨ Demo
 
 ```bash
-g++ main.cpp -g -omain_g
-readelf --debug-dump=info main_g
-strip main_g
-readelf --debug-dump=info main_g
+readelf --debug-dump=info libgm5.so
+strip libgm5.so
+readelf --debug-dump=info libgm5.so
 ```
 
 ---
@@ -110,21 +129,6 @@ readelf --debug-dump=info main_g
 
 
 > **PDB must match executable by name, GUID, and Age — or symbols won't load!**
-
----
-
-# 📋 Debugging without PDB
-
-* Demo :
-  * Windows simple program
-  * Compile twice
-  * Make debugger run with wrong pdb
-  * Try debugging without pdb
-    * No variables
-    * Can fetch arguments
-    * Breakpoints in API functions
-    * Breakpoints in Win32/3rd party functions
-    * Callstack
 
 ---
 
@@ -185,11 +189,9 @@ readelf --debug-dump=info main_g
   watch var_name
   ```
 - MSVC:  
-  ➔ Right-click variable → "Break when value changes"
+  ➔ Breakpoints → "Add data breakpoint"
 
 ✅ Read/write possible (`watch`, `rwatch`, `awatch`)
-
-TODO: new MSVC can make read breakpoint ?
 
 <!--
 - Watchpoints track memory locations, not just instructions.
@@ -206,10 +208,10 @@ TODO: new MSVC can make read breakpoint ?
 
 | Library    | Useful Breakpoints        |
 |:-----------|:---------------------------|
-| Windows    | `CreateFile`, `HeapAlloc`, `VirtualAlloc` |
-| glibc/Linux| `malloc`, `free`, `open`, `pthread_create` |
+| Windows    | `CreateFile`, `HeapAlloc`, `VirtualAlloc`, `KERNELBASE!WriteFile`|
+| glibc/Linux| `malloc`, `free`, `open`, `pthread_create`  `__GI___libc_write` `catch syscall write`|
 
-✅ Find crashes, allocations, syscalls faster.
+✅ Find crashes, allocations, syscalls, prints.
 
 
 <!--
@@ -248,7 +250,7 @@ TODO: new MSVC can make read breakpoint ?
   rwatch var
   ```
 - MSVC:  
-  ➔ Memory breakpoint (set in Memory Window or Watch Window)
+  ➔ Memory breakpoint (set in Watch Window Right click->Break when value changes)
 
 ✅ Detect reads of uninitialized memory or sensitive data!
 
@@ -257,7 +259,7 @@ TODO: new MSVC can make read breakpoint ?
 - Normally we break on writes, but sometimes reads are also critical.
 - Example: reading stale, invalid, or uninitialized memory.
 - GDB's `rwatch` lets you do that easily.
-- MSVC allows memory access breakpoints too.
+- Windbg allows memory access breakpoints too.
 -->
 
 ---
@@ -399,6 +401,46 @@ Useful for crash handlers or bug reporting systems.
 
 ---
 
+```cpp
+#include <windows.h>
+#include <dbghelp.h>
+
+#pragma comment(lib, "Dbghelp.lib")
+
+int main()
+{
+    HANDLE hFile = CreateFileA("crash.dmp",
+        GENERIC_WRITE,
+        FILE_SHARE_READ,
+        nullptr,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+        return 3;
+
+    MINIDUMP_EXCEPTION_INFORMATION mdei;
+    mdei.ThreadId = GetCurrentThreadId();
+    //mdei.ExceptionPointers = pep;
+    mdei.ClientPointers = FALSE;
+
+    MiniDumpWriteDump(
+        GetCurrentProcess(),
+        GetCurrentProcessId(),
+        hFile,
+        MiniDumpNormal, 
+        &mdei,
+        nullptr,
+        nullptr);
+
+    CloseHandle(hFile);
+
+	  return 3;
+}
+```
+---
+
 # 📚 Post-Mortem Debugging: What You Can Do
 
 ✅ View call stack  
@@ -418,7 +460,6 @@ Registers like EIP, ESP can show crash cause.
 
 ❌ Cannot continue running  
 ❌ Cannot change memory  
-❌ May miss some dynamic states
 
 <!--
 A dump is frozen in time.
@@ -435,11 +476,9 @@ If debug info missing, some variables will be invisible.
 | Linux    | GDB, LLDB         |
 | Windows  | Visual Studio, WinDbg, procdump |
 
-✅ Load dumps, inspect crash
+✅ `procdump` can create dump if {high mem/high cpu/dll load}
 
 <!--
-All these tools can load core dumps.
-They let you backtrace, inspect memory, variables.
 Symbols (debug info) are critical for readable debugging.
 -->
 
@@ -457,7 +496,6 @@ Core dumps are vital in production systems.
 Always compile with debug info, even in Release if you want meaningful crash dumps.
 -->
 
----
 ---
 
 # 🛠️ Remote Debugging with gdbserver
@@ -533,6 +571,7 @@ Then you can set breakpoints, step, inspect memory.
 
 | File                | Target (device) | Host (your PC) |
 |:--------------------|:----------------|:--------------|
+| gdb      | ✅     | ❌ (gdbserver only) |✅|
 | Stripped binary      | ✅              | ✅ (debug copy) |
 | Full symbols         | ❌              | ✅             |
 | Source code          | ❌              | ✅             |
@@ -637,6 +676,7 @@ Only gdbserver + minimal binary are needed.
 ## Debug child processes
 ## Disassembly (ABI, registers)
 ## MS pdbs
+## Python + cpp
 
 
 
@@ -788,7 +828,37 @@ Essential for post-crash analysis, performance tuning, or malware analysis.
 - Download Microsoft's PDB
 
 
+"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\symchk.exe" /r "C:\windows\System32\kernel32.dll" /s SRV*C:\symbols*https://msdl.microsoft.com/download/symbols
+
+c:\symbols\kernel32.pdb\F193989D78E17120B3BC156240BD021E1
+
+wget https://msdl.microsoft.com/download/symbols/kernel32.pdb/F193989D78E17120B3BC156240BD021E1/kernel32.pdb -okernel32.pdb
+
 <!--
 
 -->
+---
 
+# **Do not omit frame pointers**
+  - GCC/Clang: `-fno-omit-frame-pointer`
+  - MSVC: `/Oy-`
+  - Why: preserves a consistent frame chain for profilers and debuggers; better call stacks under optimization.
+
+---
+
+
+# CMake: one file — force **no optimization** (with `if`)
+
+```cmake
+set(src bad.cpp)
+
+if (MSVC)
+  set_source_files_properties(
+    ${src} PROPERTIES COMPILE_OPTIONS "/Od"
+  )
+else() # GCC/Clang
+  set_source_files_properties(
+    ${src} PROPERTIES COMPILE_OPTIONS "-O0"
+  )
+endif()
+```
