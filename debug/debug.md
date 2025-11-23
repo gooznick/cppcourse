@@ -16,6 +16,35 @@ Some info and technics
 
 ---
 
+## Agenda 📜
+
+1. Build & Debug Info 🏗️  
+2. Debugging Techniques 🛠️  
+   - Breakpoints
+   - Stepping  
+   - Backtraces  
+   - Memory inspection  
+3. Coredump Debugging 💥  
+4. Remote Debugging 🌐  
+5. Debugging Without Debug Info 🔍  
+
+---
+
+## What Is Debugging? 🧭
+
+- Understanding program state  
+- Finding where and why behavior diverges  
+- **Iterative workflow: reproduce → isolate → understand → fix**
+- Tools: 
+  - `gdb`, `lldb`  
+  - Visual Studio / VSCode / WinDbg.exe
+  - Helper tools (perf, valgrind)
+
+---
+
+![ width:800px](images/binary.jpg)
+
+---
 
 ## 🎯 What Is Debug Info?
 
@@ -86,6 +115,7 @@ add-symbol-file libgm5.so.unstripped 0x00007ffff7fc3040
   ```
 
 ✅ Adds debug symbols to build
+✅ Always use `Debug`/`RelWithDebInfo` in cmake projects!
 
 
 <!--
@@ -96,24 +126,32 @@ add-symbol-file libgm5.so.unstripped 0x00007ffff7fc3040
 
 ---
 
-# x64 calling conventions 
 
-| topic | Linux x64 (SysV) | Windows x64 |
-|---|:---|:---|
-| Integers | RDI, RSI, RDX, RCX, R8, R9 | RCX, RDX, R8, R9 |
-| `this` | RDI | RCX |
-| Floating | XMM0..7 | XMM0..3 |
-| Additional | stack (right→left) | stack (right→left) |
-| Return | RAX (int), XMM0 (float) | RAX (int), XMM0 (float) |
+# Release vs RelWithDebInfo
+
+| Build Type        | Optimization | Debug Symbols | Binary Size | 
+|-------------------|--------------|----------------|-------------|
+| **Release** ⚡     | High (`-O3`) | ❌ None        | 📦 Medium   | 
+| **Release+strip** ✂️ | High (`-O3`) | ❌ Removed     | 🪶 Smallest | 
+| **RelWithDebInfo** 🔍 | High (`-O2`) | ✅ Present (`-g`) | 📚 Large    | 
+
+* Note: In windows, the pdb name is embedded on `RelWithDebInfo` builds
 
 ---
+
 
 ## ✨ Demo
 
 ```bash
-readelf --debug-dump=info libgm5.so
-strip libgm5.so
-readelf --debug-dump=info libgm5.so
+g++ -g -O3 hello.cpp -oRelWithDebInfo
+g++ -g -O0 hello.cpp -oDebug
+g++ -O3 hello.cpp -oRelease
+cp RelWithDebInfo  "RelWithDebInfo+strip"
+strip "RelWithDebInfo+strip"
+ls -la
+
+readelf --debug-dump=info Debug
+readelf --debug-dump=info Release
 ```
 
 ---
@@ -130,8 +168,42 @@ readelf --debug-dump=info libgm5.so
 
 > **PDB must match executable by name, GUID, and Age — or symbols won't load!**
 
+<!--
+pdbmatch of debuginfo.com
+-->
+
 ---
 
+# Inspect debug info / gdb
+
+```
+info functions main
+info functions ^main()
+info line main
+
+info source
+info sharedLibrary
+
+add-symbol-file /path/to/libfoo.so.debug 0xADDRESS
+```
+---
+
+# Inspect debug info / windows
+
+![ width:800px](images/modules.png)
+![ width:200px](images/load_symbols.png)
+
+
+Windbg : `x Project1!*main*`
+
+---
+
+# Breakpoints 
+
+![ center width:600px](images/break.jpg)
+
+
+---
 
 # 🎯 Breakpoints
 
@@ -144,63 +216,18 @@ readelf --debug-dump=info libgm5.so
 
 ---
 
-# 🛠️ Breakpoint on Function
+ 🛠️ Breakpoints in GDB
 
-- GDB:  
-  ```bash
-  break my_function
-  ```
-- MSVC:  
-  ➔ Right-click function name → "Breakpoint → Insert Breakpoint"
-
-
-<!--
-- Function breakpoints let you pause as soon as a specific function is called.
-- template - make many breakpoints
--->
-
----
-
-# 🛠️ Breakpoint on Line
-
-- GDB:  
-  ```bash
-  break myfile.cpp:42
-  ```
-- MSVC:  
-  ➔ Click left margin next to code line
-
----
-
-<!--
-- Line breakpoints are the most common.
-- In GDB you specify file and line explicitly.
-- In Visual Studio just click left gutter or press F9.
--->
-
----
-
-# 🛠️ Data Breakpoint (Watchpoint)
-
-✅ Pause when memory changes!
-
-- GDB:
-  ```bash
-  watch var_name
-  ```
-- MSVC:  
-  ➔ Breakpoints → "Add data breakpoint"
-
-✅ Read/write possible (`watch`, `rwatch`, `awatch`)
-
-<!--
-- Watchpoints track memory locations, not just instructions.
-- In GDB:
-  - `watch var` ➔ Break on write
-  - `rwatch var` ➔ Break on read
-  - `awatch var` ➔ Break on read or write
-- MSVC makes it easy via context menu.
--->
+| Type | Command | Meaning |
+|------|---------|----------|
+| 🎯 **Function** | `break my_function` | Stop when enter | 
+| 📍 **Line** | `break file.cpp:42` | Stop at a line | 
+| 🔎 **Regex** | `rbreak /regex/` | Stop at regex |
+| ⚙️ **Condition** | `break f.cpp:2 if x==2` | Stop only when |
+| ➗ **Nth-hit** | `ignore 1 6` | Stop 7th hit | 
+| 👀 **Watchpoint** | `watch var` | Stop *change* |
+| 📖 **Read** | `[r/a]watch var` | Stop is *read*/*access* |
+| 🚨 **Exception** | `catch throw` | Stop when exception |
 
 ---
 
@@ -214,6 +241,9 @@ readelf --debug-dump=info libgm5.so
 ✅ Find crashes, allocations, syscalls, prints.
 
 
+* gdb : `command <breakpoint>`
+
+
 <!--
 - You can break when the OS API is called.
 - E.g., break on `malloc` to catch who is allocating memory.
@@ -221,76 +251,155 @@ readelf --debug-dump=info libgm5.so
 - Helpful for deep bugs or performance profiling.
 -->
 
----
-
-# 🛡️ Break on Exceptions
-
-- **GDB**:
-  ```bash
-  catch throw
-  ```
-- **MSVC**:  
-  ➔ Debug ➔ Windows ➔ Exception Settings ➔ Enable C++ exceptions
-
-✅ Stops when exception is thrown, even before catch.
-
-
-<!--
-- In GDB, `catch throw` pauses at the point an exception is thrown (C++ exceptions).
-- Visual Studio has a GUI for enabling break-on-throw.
-- Super useful to catch bugs before they are swallowed by catch blocks.
--->
 
 ---
 
-# 🛠️ Data Read Breakpoint (Advanced)
+# No MSVC symbols
 
-- GDB:
-  ```bash
-  rwatch var
-  ```
-- MSVC:  
-  ➔ Memory breakpoint (set in Watch Window Right click->Break when value changes)
-
-✅ Detect reads of uninitialized memory or sensitive data!
-
-
-<!--
-- Normally we break on writes, but sometimes reads are also critical.
-- Example: reading stale, invalid, or uninitialized memory.
-- GDB's `rwatch` lets you do that easily.
-- Windbg allows memory access breakpoints too.
--->
+![ center width:800px](images/no_msvc_symbols.png)
 
 ---
 
-# 🎯 Extra Tips
+# With MSVC symbols
 
-- **Conditional breakpoints**  
-  ➔ Only break if condition is true
-  ```bash
-  break my_function if x == 42
-  ```
-- **Ignore count**  
-  ➔ Skip N hits before stopping
-  ```bash
-  ignore 1 5
-  ```
-
-✅ Powerful for loops or sporadic bugs.
-
-
-<!--
-- Conditional breakpoints and ignore counts save a lot of time.
-- Instead of breaking 1000 times inside a loop, break only when x == 42.
-- Use `ignore` to skip the first N hits (e.g., the 1000th allocation).
--->
+![ center width:800px](images/msvc_with_symbols.png)
 
 ---
 
+# Stepping 
+
+![ center width:400px](images/stepping.webp)
+
+---
+# 👣 Stepping I (GDB / MSVC)
+
+| Action | GDB Command | MSVC Key | Meaning |
+|--------|-------------|----------|---------|
+| **Step Into** | `step` / `s` | **F11** | Exec next, enter function|
+| **Step Over** | `next` / `n` | **F10** | Exec next, skip function |
+| **Step Out** | `finish` | **Shift+F11** | Run until the current function returns |
+| **Continue** | `continue` / `c` | **F5** | Resume program until next breakpoint |
+
+
+---
+
+
+# 👣 Stepping II (GDB / MSVC)
+
+| Action | GDB Command | MSVC Key | Meaning |
+|--------|-------------|----------|---------|
+| **Until Line** | `until <line>` | **Ctrl+F10** | Run until reaching a specific source line |
+| **Step Instruction (Into)** | `stepi` / `si` | **Ctrl + Alt + D** **F11**| Execute a single **assembly instruction**, diving into calls |
+| **Next Instruction (Over)** | `nexti` / `ni` | **Ctrl + Alt + D** **F10** | Execute next **assembly instruction**, skip call bodies |
+
+---
+
+![ center width:300px](images/callstack.png)
+
+---
+
+# 🔍 Backtrace 
+
+| Name | GDB Command | MSVC | Meaning |
+|------|-------------|--------------------------|---------|
+| **Backtrace** | `bt` / `bt full` | Callstack | Show call stack |
+| **Select frame** | `frame <n>` | Click in Call Stack | Switch to a specific frame |
+| **List threads** | `info threads` | Thread window | Show all threads |
+| **Switch thread** | `thread <n>` | Click thread | Change active thread |
+
+---
+
+# Memory Inspection 
+
+![ center width:500px](images/memory.webp)
+
+---
+
+
+# 🧠 Memory Inspection I 
+
+| Task | GDB Command | MSVC | Meaning |
+|------|-------------|-----------------------|---------|
+| **Inspect variables** | `print x` / `p x` | Watch / Autos / Locals windows | Show values of variables |
+| **Inspect registers** | `info all-registers` | Registers window | View CPU registers |
+| **Examine raw memory** | `x/<count><format> <addr>` | Memory window | View arbitrary memory |
+
+---
+
+# 🧠 Memory Inspection II
+
+| Task | GDB Command  | Meaning |
+|------|-------------|---------|
+| **Show int** | `x/d <addr>` |  Interpret as integer |
+| **Show float** | `x/f <addr>` |Interpret as float |
+| **Show double** | `x/gf <addr>` |Interpret as double |
+| **Show hex** | `x/x <addr>` |  Hex memory view |
+| **Search memory** | `find <start>,<end>,<pattern>` | Search for bytes |
+| **Dump structure** | `ptype var`  | Show structure layout |
+
+---
+
+# Static variable 
+
+```cpp
+int foo()
+{
+    static int a = 5;
+    a += 10;
+    return a;
+}
+```
+
+* gdb : `p 'foo::a'`
+* MSVC : Take the address of `a`
+
+---
+
+# Dll function
+
+
+```cpp
+int foo(); // defined in so
+```
+
+![ left width:1000px](images/foo.png)
+
+---
+
+# XMM registers
+
+```cpp
+    __m128 vec;                
+    vec = _mm_set_ps(1.0f,2.0f,3.0f,4.0f);
+```
+
+* gdb: `p $xmm0.v4_float`
+* MSVC : `XMM0.m128_f32`
+
+---
+
+# Dump memory to file
+
+```cpp
+std::vector<uint8_t> v(800,1);
+```
+
+- gdb : `dump memory dump.bin &v[0] &v[100]`
+- MSVC : `DumpMemory("a.bin", &v[0],100)`
+```cpp
+void DumpMemory(const char* f, void* address, size_t size) {
+    std::ofstream file(f, std::ios::out | std::ios::binary);
+    file.write(static_cast<const char*>(address), size);
+    file.close();
+}
+
+```
+
+---
 
 # 🧠 Core Dumps: Crash Afterlife
 
+![ center width:400px](images/post_mortem.jpg)
 <!--
 Core dumps are memory snapshots when programs crash.
 They capture memory, registers, call stack at the crash moment.
@@ -467,20 +576,6 @@ Cannot resume program execution.
 If debug info missing, some variables will be invisible.
 -->
 
----
-
-# 🛠️ Core Dump Tools
-
-| Platform | Tool             |
-|:---------|:-----------------|
-| Linux    | GDB, LLDB         |
-| Windows  | Visual Studio, WinDbg, procdump |
-
-✅ `procdump` can create dump if {high mem/high cpu/dll load}
-
-<!--
-Symbols (debug info) are critical for readable debugging.
--->
 
 ---
 
@@ -497,6 +592,13 @@ Always compile with debug info, even in Release if you want meaningful crash dum
 -->
 
 ---
+
+# Remote debugging
+
+![ center width:600px](images/remote.jpg)
+
+---
+
 
 # 🛠️ Remote Debugging with gdbserver
 
@@ -664,25 +766,26 @@ You don't need heavy setup on the target.
 Only gdbserver + minimal binary are needed.
 -->
 
----
-
-# Some more points
-
-## Windbg
-## GDB tui
-## GDB + Visual studio
-## vscode debugging
-## rr - Time travel
-## Debug child processes
-## Disassembly (ABI, registers)
-## MS pdbs
-## Python + cpp
-
-
 
 ---
 
 # 🚀 Advanced Debugging Topics
+
+![ center width:700px](images/binary_matrix.jpg)
+
+---
+
+# 🚀 Advanced Debugging Topics
+
+* Windbg
+* GDB tui
+* GDB + Visual studio
+* VScode debugging
+* Debug child processes
+* MSVC symbols import
+* ABI 
+
+
 
 ---
 
@@ -708,7 +811,11 @@ Symbol servers supported automatically.
 
 ```bash
 gdb -tui
-Ctrl+X Ctrl+A
+
+Ctrl+X Ctrl+a
+Ctrl+X Ctrl+o
+layout src/asm/split/regs
+help 
 ```
 
 ✅ Source + disassembly side by side
@@ -753,30 +860,6 @@ Very good for embedded and IoT targets.
 
 ---
 
-# 🕰️ rr — Time Travel Debugging
-
-- Record program execution:
-
-```bash
-rr record ./app
-```
-
-- Replay with:
-
-```bash
-rr replay
-```
-
-✅ Step **backwards** in time
-
-<!--
-rr records every memory access and system call.
-During replay, you can reverse-step and inspect bugs happening before a crash.
-Only works on Linux x86-64 for now.
-Revolutionary for heisenbugs and race conditions.
--->
-
----
 
 # 🧠 Debugging Child Processes
 
@@ -789,7 +872,7 @@ set follow-fork-mode child
 - Attach to new PID manually
 
 ✅ Control forked processes
-✅ MSVC has addon
+✅ MSVC has addon : `Microsoft Child Process Debugging Power Tool`
 
 <!--
 By default, GDB follows parent after fork.
@@ -799,40 +882,22 @@ Useful for server processes spawning workers.
 
 ---
 
-# 🔍 Disassembly + ABI Inspection
 
-- Disassemble:
-
-```bash
-disassemble
-```
-
-- Show registers:
-
-```bash
-info registers
-```
-
-✅ See low-level CPU state
-
-<!--
-Sometimes source is missing or wrong — disassembly lets you debug anyway.
-Registers like RIP, RSP show where the program is.
-Essential for post-crash analysis, performance tuning, or malware analysis.
--->
-
----
-
-# 🛠️ Debugging MS PDBs
+# 🛠️ Importing MSVC symbols
 
 - Download Microsoft's PDB
 
+```powershell
+"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\symchk.exe" C:\windows\System32 /om manifest.txt"
+```
 
-"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\symchk.exe" /r "C:\windows\System32\kernel32.dll" /s SRV*C:\symbols*https://msdl.microsoft.com/download/symbols
+```
+kernel32.pdb,F193989D78E17120B3BC156240BD021E1,1
+```
 
-c:\symbols\kernel32.pdb\F193989D78E17120B3BC156240BD021E1
-
+```bash
 wget https://msdl.microsoft.com/download/symbols/kernel32.pdb/F193989D78E17120B3BC156240BD021E1/kernel32.pdb -okernel32.pdb
+```
 
 <!--
 
@@ -843,6 +908,12 @@ wget https://msdl.microsoft.com/download/symbols/kernel32.pdb/F193989D78E17120B3
   - GCC/Clang: `-fno-omit-frame-pointer`
   - MSVC: `/Oy-`
   - Why: preserves a consistent frame chain for profilers and debuggers; better call stacks under optimization.
+
+---
+
+![bg left width:500px](images/2404a.png)
+![bg left width:500px](images/2404b.png)
+
 
 ---
 
@@ -862,3 +933,22 @@ else() # GCC/Clang
   )
 endif()
 ```
+
+<!--
+Both O3 and O0, but last one takes...
+-->
+
+--- 
+![bg left width:500px](images/sshtunnel1.png)
+
+# x64 calling conventions 
+
+| topic | Linux x64 (SysV) | Windows x64 |
+|---|:---|:---|
+| Integers | RDI, RSI, RDX, RCX, R8, R9 | RCX, RDX, R8, R9 |
+| `this` | RDI | RCX |
+| Floating | XMM0..7 | XMM0..3 |
+| Additional | stack (right→left) | stack (right→left) |
+| Return | RAX (int), XMM0 (float) | RAX (int), XMM0 (float) |
+
+---
