@@ -18,7 +18,7 @@ Some info and technics
 
 ## Agenda 📜
 
-1. Build & Debug Info 🏗️  
+1. Debug Info 🏗️  
 2. Debugging Techniques 🛠️  
    - Breakpoints
    - Stepping  
@@ -26,7 +26,7 @@ Some info and technics
    - Memory inspection  
 3. Coredump Debugging 💥  
 4. Remote Debugging 🌐  
-5. Debugging Without Debug Info 🔍  
+5. Advanced Debugging Topics 🚀 
 
 ---
 
@@ -37,7 +37,7 @@ Some info and technics
 - **Iterative workflow: reproduce → isolate → understand → fix**
 - Tools: 
   - `gdb`, `lldb`  
-  - Visual Studio / VSCode / WinDbg.exe
+  - Visual Studio (**Version!**) / VSCode / WinDbg.exe
   - Helper tools (perf, valgrind)
 
 ---
@@ -196,6 +196,19 @@ add-symbol-file /path/to/libfoo.so.debug 0xADDRESS
 
 Windbg : `x Project1!*main*`
 
+
+---
+
+# No MSVC symbols
+
+![ center width:800px](images/no_msvc_symbols.png)
+
+---
+
+# With MSVC symbols
+
+![ center width:800px](images/msvc_with_symbols.png)
+
 ---
 
 # Breakpoints 
@@ -251,18 +264,6 @@ Windbg : `x Project1!*main*`
 - Helpful for deep bugs or performance profiling.
 -->
 
-
----
-
-# No MSVC symbols
-
-![ center width:800px](images/no_msvc_symbols.png)
-
----
-
-# With MSVC symbols
-
-![ center width:800px](images/msvc_with_symbols.png)
 
 ---
 
@@ -336,6 +337,22 @@ Windbg : `x Project1!*main*`
 | **Show hex** | `x/x <addr>` |  Hex memory view |
 | **Search memory** | `find <start>,<end>,<pattern>` | Search for bytes |
 | **Dump structure** | `ptype var`  | Show structure layout |
+
+---
+
+
+# Pretty Printing / Natvis
+
+* gdb :
+  - `Pretty Printers` can print stl
+    - `info pretty-printer`
+    - `disable pretty-printer`
+  - Can write python code for custom types (e.g: eigen)
+* MSVC :
+  - Builtin stl
+  - `ImageWatch` addon
+  - `.natvis` for custom
+
 
 ---
 
@@ -631,14 +648,14 @@ gdb runs on your host machine to give you a full UI, source code, etc.
 - Start program under `gdbserver`:
 
 ```bash
-gdbserver :1234 ./myapp
+gdbserver :2000 ./myapp
 ```
 
 ✅ Waits for host connection
 
 <!--
 gdbserver runs the program and pauses it until a debugger attaches.
-The port (e.g., 1234) must be open and reachable.
+The port (e.g., 2000) must be open and reachable.
 The binary must match the one on the host.
 -->
 
@@ -656,7 +673,7 @@ gdb ./myapp_with_symbols
 - Connect:
 
 ```bash
-target remote target_ip:1234
+target remote target_ip:2000
 ```
 
 ✅ Now you control remote program!
@@ -748,6 +765,9 @@ info files: Confirm which symbols are loaded.
 info source: Check if GDB knows where sources are.
 info proc mappings: Needed to find load addresses for SOs.
 -->
+
+--- 
+![bg left width:500px](images/sshtunnel1.png)
 
 ---
 
@@ -911,8 +931,8 @@ wget https://msdl.microsoft.com/download/symbols/kernel32.pdb/F193989D78E17120B3
 
 ---
 
-![bg left width:500px](images/2404a.png)
-![bg left width:500px](images/2404b.png)
+![center width:500px](images/2404a.png)
+![center width:500px](images/2404b.png)
 
 
 ---
@@ -938,9 +958,8 @@ endif()
 Both O3 and O0, but last one takes...
 -->
 
---- 
-![bg left width:500px](images/sshtunnel1.png)
 
+---
 # x64 calling conventions 
 
 | topic | Linux x64 (SysV) | Windows x64 |
