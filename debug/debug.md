@@ -265,6 +265,23 @@ Windbg : `x Project1!*main*`
 -->
 
 
+
+
+---
+
+## Agenda 📜 - Part II
+
+1. Debug Info 🏗️           ✅ **Done**  
+2. Debugging Techniques 🛠️ ✅ **Done**  
+   - Breakpoints           ✅ **Done**  
+   - Stepping  
+   - Backtraces  
+   - Memory inspection  
+3. Coredump Debugging 💥
+4. Remote Debugging 🌐 
+5. Advanced Debugging Topics 🚀
+
+
 ---
 
 # Stepping 
@@ -272,26 +289,24 @@ Windbg : `x Project1!*main*`
 ![ center width:400px](images/stepping.webp)
 
 ---
-# 👣 Stepping I (GDB / MSVC)
+# 👣 Stepping I (GDB / MSVC / CLion)
 
-| Action | GDB Command | MSVC Key | Meaning |
-|--------|-------------|----------|---------|
-| **Step Into** | `step` / `s` | **F11** | Exec next, enter function|
-| **Step Over** | `next` / `n` | **F10** | Exec next, skip function |
-| **Step Out** | `finish` | **Shift+F11** | Run until the current function returns |
-| **Continue** | `continue` / `c` | **F5** | Resume program until next breakpoint |
-
-
+| Action | GDB | MSVC | CLion | Meaning |
+|------|-----|------|-------|--------|
+| **Step Into** | `step` | F11 | F7 | Enter function |
+| **Step Over** | `next` | F10 | F8 | Skip function |
+| **Step Out** | `finish` | Shift+F11 | Shift+F8 | Run until return |
+| **Continue** | `continue` | F5 | F9 | Resume execution |
 ---
 
+# 👣 Stepping II (GDB / MSVC / CLion)
 
-# 👣 Stepping II (GDB / MSVC)
+| Action | GDB | MSVC | CLion | Meaning |
+|------|-----|------|-------|--------|
+| **Run to Line** | `until <line>` | Ctrl+F10 |  Ctrl+Alt+9  | Run to cursor |
+| **Instr Step Into** | `stepi` | Ctrl+Alt+D F11 | Alt+Shift+F7 | One asm instr, enter call |
+| **Instr Step Over** | `nexti` | Ctrl+Alt+D F10 | Alt+Shift+F8 | One asm instr, skip call |
 
-| Action | GDB Command | MSVC Key | Meaning |
-|--------|-------------|----------|---------|
-| **Until Line** | `until <line>` | **Ctrl+F10** | Run until reaching a specific source line |
-| **Step Instruction (Into)** | `stepi` / `si` | **Ctrl + Alt + D** **F11**| Execute a single **assembly instruction**, diving into calls |
-| **Next Instruction (Over)** | `nexti` / `ni` | **Ctrl + Alt + D** **F10** | Execute next **assembly instruction**, skip call bodies |
 
 ---
 
@@ -745,6 +760,16 @@ add-symbol-file adds additional symbols without replacing everything.
 For shared libraries (SO files), you must specify the load address.
 Use info proc mappings to find it.
 -->
+
+---
+
+## Debug in docker
+
+* `docker run -it --rm -p 2000:2000 --cap-add=SYS_PTRACE ...`
+
+## Ssh tunneling 
+
+* `ssh -L ...`
 
 ---
 
