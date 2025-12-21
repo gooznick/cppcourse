@@ -1,15 +1,156 @@
 ---
-title: C++ Memory Model and Management
+title: debug
 author: eranbu
-date: 2025-02-02
-theme: default
+date: 12.2025
+marp: true
+theme: gaia
+paginate: true
+
 ---
 
-# Introduction
+# Memory in C++ 🧠
 
-- Understanding memory management is crucial for writing efficient C++ code.
-- Covers different types of memory, memory leaks, and prevention techniques.
-- Explores smart pointers, thread safety, shared memory, and memory debugging.
+### Three Fundamental Memory Regions
+
+🧱 **Stack**  
+Fast, automatic, scope-bound
+
+📦 **Heap**  
+Dynamic, flexible, explicitly managed
+
+🏛️ **Static / Global**  
+Program-lifetime, shared state
+
+---
+
+# Stack Memory 🧱
+
+### What lives on the stack?
+
+```cpp
+void foo(int a, int b) 
+{
+    int x = 42;
+    int y = a * x * 2;
+    bar(x);
+};
+```
+
+<!-- a,b ? x64 are registers
+     x, y may be registers
+    calling bar - putting stack pointer on the stack, and return address.
+-->
+
+---
+
+# Stack Memory 🧱
+
+### Key properties
+
+⚡ **Very fast** - Allocation = pointer movement
+⏱️ **Deterministic** 
+📏 **Limited size** - Per thread
+🧨 **Unsafe when misused** - Stack overflow, dangling references
+🧩 **Compiler-managed** - Layout, alignment, calling convention
+
+---
+
+# Stack - fast 
+
+### When does allocation happen?
+
+```cpp
+void f()
+{
+    int a[100];   // stack array
+    use(a);
+}
+```
+
+![bg right width:600px](images/asm1.png)
+
+
+<!-- Allocation happen when entring the function. The compiler "knows" that 100*4 bytes are reserved.
+     They won't be cleaned before/after usage
+-->
+
+---
+
+# Stack management registers 🧠
+
+
+* rsp → moving top of the stack
+
+* rbp → fixed anchor for the function
+
+<!--
+-fno-omit-frame-pointer → “Keep the anchor, even if it costs a little”
+-->
+
+---
+
+# How much stack does function call takes ?
+
+```cpp
+void measure_stack(int depth, uint8_t* prev_addr)
+{
+    volatile std::uint8_t marker = 0;
+    std::ptrdiff_t bytes = prev_addr - &marker;
+    std::cout << bytes << " bytes" << std::endl;
+
+    if (depth == 0) return;
+
+    measure_stack(depth - 1, (uint8_t*)&marker);
+}
+```
+
+<!--
+-140729952818439 bytes
+64 bytes
+64 bytes
+64 bytes
+64 bytes
+64 bytes
+-->
+
+---
+ 
+## Adding arguments
+
+```cpp
+#include <iostream>
+#include <stdint.h>
+
+
+void measure_stack(int depth, uint8_t* prev_addr,int a,int b, int c, int d, int e,int f,int g)
+{
+    volatile std::uint8_t marker = 0;
+    std::ptrdiff_t bytes = prev_addr - &marker;
+    std::cout << bytes << " bytes" << std::endl;
+
+    if (depth == 0) return;
+
+    measure_stack(depth - 1, (uint8_t*)&marker,a,b,c,d,e,f,g);
+}
+
+int main()
+{
+    measure_stack(5, nullptr,0,0,0,0,0,0,0);
+    return 0;
+}
+```
+
+<!--
+-140729952818439 bytes
+128 bytes
+128 bytes
+128 bytes
+128 bytes
+128 bytes
+
+Try -O0 and -O3, you may be surprised.
+(-O3 stack is bigger, because it stores more registers and calls directo iostream functions)
+-->
 
 ---
 
