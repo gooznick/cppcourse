@@ -154,15 +154,420 @@ Try -O0 and -O3, you may be surprised.
 
 ---
 
-# Types of Memory in C++
 
-C++ uses different types of memory storage:
+# Linux Stack Size 🐧🧱
 
-1. **Static Memory** (Global and static variables)
-2. **Stack Memory** (Local variables, function calls)
-3. **Heap Memory** (Dynamic allocation via `new`/`malloc`)
-4. **Shared Memory** (Interprocess Communication)
-5. **Text Segment** (Code and constants storage)
+- **Process (main thread) limit**: `ulimit -s` (KiB)  
+
+
+* **Per-thread stack** (pthread / Boost.Thread)
+
+    ```cpp
+    pthread_attr_setstacksize(&attr, 2*1024*1024); // 2 MiB
+    ```
+
+    ```cpp
+    boost::thread::attributes attrs;
+    attrs.set_stack_size(4096*10);
+    ```
+
+* **See current mapped stack in GDB**
+
+  ```
+  (gdb) info proc mappings 
+  ```
+
+---
+
+
+# Windows Stack Size 🪟🧱
+
+- **Process (main thread) stack**: linker default (`/STACK`)  
+
+
+* **Per-thread stack** (Win32 / Boost.Thread)
+
+    ```cpp
+    CreateThread(nullptr, 2*1024*1024, thread_fn, nullptr, 0, nullptr);
+    ```
+
+    ```cpp
+    boost::thread::attributes attrs;
+    attrs.set_stack_size(4096*10);
+    ```
+* **See current stack in MSVC**
+
+    ```
+    ((NT_TIB*)@tib)->StackBase
+    ((NT_TIB*)@tib)->StackLimit
+    ```
+
+---
+
+# Stack bugs - I
+
+```cpp
+#include <cstdint>
+
+std::uint64_t f(std::uint64_t n) {
+    return (n == 0) ? 0 : 1 + f(n - 1);
+}
+
+int main() {
+    return (int)f(100000000ULL);
+}
+```
+
+---
+
+
+# Stack bugs - II
+
+```cpp
+
+void g() {
+    int big[10'000'000];
+    big[0] = 1;
+}
+
+int main() {
+    g();
+}
+
+```
+
+---
+
+
+# Stack bugs - III
+
+```cpp
+
+int& get_ref() {
+    int x = 42;
+    return x;  
+}
+
+int main() {
+    int& r = get_ref();
+    return r;           
+}
+
+
+```
+
+---
+
+
+
+# Stack bugs - IV
+
+```cpp
+
+#include <cstring>
+
+void spai(const char* s) {
+    char buf[8];
+    std::strcpy(buf, s); 
+}
+
+int main() {
+    spai("Lorem ipsum dolor sit amet, consectetur adipiscing elit");
+}
+
+```
+
+---
+
+
+# Heap Memory 📦
+
+- **Dynamic allocation**  
+  `new / delete`, `malloc / free`
+
+- **Flexible lifetime**  
+  Objects live **beyond scope**, until explicitly released
+
+- **Larger but slower than stack**  
+  Allocation involves allocator, bookkeeping, possible locks
+
+---
+
+
+# Linux `malloc` — Key Ideas I 📦
+
+- **Optimistic allocation (overcommit)**  
+  `malloc()` may succeed even if RAM is not available → OOM killer later
+
+- **Two allocation paths**  
+  - Small / medium → heap (`brk` / `sbrk`)
+  - Large (≈ ≥128 KB) → `mmap`
+
+---
+
+
+# Linux `malloc` — Key Ideas II 📦
+
+- **Multithreaded scalability**  
+  Multiple **arenas** reduce lock contention  
+  (trade-off: more memory usage)
+
+- **Debug & tuning**  
+  `mallopt()` / `MALLOC_*` env vars  
+  (`ARENA_MAX`, `CHECK`, `PERTURB`, `MMAP_THRESHOLD`)
+
+---
+
+# Linux `brk` vs `mmap`
+
+```
+start: sbrk(0) = 0x555555559000
+small malloc(1024) = 0x5555555596b0
+after small: sbrk(0) = 0x55555557a000
+ptr 0x5555555596b0 is in mapping: 555555559000-55555557a000 rw-p 00000000 00:00 0                          [heap]
+
+big   malloc(4194304) = 0x7ffff77ff010
+after big: sbrk(0) = 0x55555557a000
+ptr 0x7ffff77ff010 is in mapping: 7ffff77ff000-7ffff7c00000 rw-p 00000000 00:00 0 
+```
+
+
+---
+
+# Tuning Heap Allocation on Linux 🛠️📦
+
+- **Arenas (multithreaded)**   `MALLOC_ARENA_MAX` 
+
+- **`mmap` vs heap (`brk`)**   `MALLOC_MMAP_THRESHOLD_`  
+
+- **Returning memory to OS**   `MALLOC_TRIM_THRESHOLD_`, `MALLOC_TOP_PAD_`  
+
+- **Debug & safety (dev only)**    `MALLOC_CHECK_=3`, `MALLOC_PERTURB_≠0`
+
+- **When tuning fails**  `jemalloc` / `tcmalloc` / pools
+
+---
+
+# Debugging Heap Problems on Windows 🪟🧠
+
+- **Debug Heap (MSVC)**  
+  Enable in Debug builds:  
+  CRT: `_CrtDumpMemoryLeaks()`, `_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)`
+  Address Sanitizer (Clang-cl)
+  WinDbg: `!heap`, `!analyze -v`, `RtlAllocateHeap` breakpoints
+
+- **Page Heap (Application Verifier)**  
+  Detects overruns, use-after-free, double free  
+  → `gflags /p /enable app.exe /full`
+
+---
+
+# Heap related bugs - I
+
+```cpp
+void lead() {
+    int* p = new int[100];
+
+    if (!OpenFileControl())
+        return;
+
+    std::cout<< "Finished leading" << std::endl;
+
+    delete[] p;
+}
+
+```
+
+---
+
+# Heap related bugs - II
+
+```cpp
+void leaf() {
+    int* p = new int[100];
+
+    delete[] p;
+    delete[] p;
+}
+
+```
+
+---
+
+# Heap related bugs - III
+
+```cpp
+void lean() {
+    int* p = new int[100];
+
+    delete p;
+}
+
+```
+
+---
+
+# Heap related bugs - IV
+
+```cpp
+void lean() {
+    int* p = new int[100];
+
+    delete[] p;
+    p[42] = 5;
+}
+
+```
+
+
+---
+
+# Heap related bugs - V
+
+```cpp
+#include <vector>
+
+int main() {
+    std::vector<int> v;
+    v.push_back(1);
+
+    int* p = &v[0];   // pointer into vector storage
+
+    v.push_back(2);   // may reallocate
+    *p = 99;          // ❌ dangling pointer
+}
+
+```
+
+---
+
+# Heap related bugs - VI
+
+```cpp
+#include <cstring>
+
+int main() {
+    char* buf = new char[8];
+    std::strcpy(buf, "this is too long");
+    delete[] buf;
+}
+
+```
+
+---
+
+
+# Heap Allocation in Modern C++ 📦✨
+
+- **Avoid raw `new` / `delete`**  
+  Prefer **RAII** — lifetime bound to objects, not code paths
+
+- **Smart pointers**  
+  - `std::unique_ptr` → sole ownership (default choice)  
+  - `std::shared_ptr` → shared ownership (use sparingly)
+
+- **Containers manage memory**  
+  `std::vector`, `std::string`, `std::map` allocate on the heap safely  
+  Use `reserve()` to avoid reallocations
+
+---
+# Global/Static memory
+
+```cpp
+// 1) static global
+static int g_counter = 0;
+
+// 2) static class member
+struct Stats {
+    static int instances;
+    Stats() { ++instances; }
+};
+int Stats::instances = 0;
+
+// 3) static local variable
+int& next_id() {
+    static int id = 0;   // initialized once, first call
+    return ++id;
+}
+```
+
+---
+
+```cpp
+struct Foo {
+    int x;         
+    Foo() {}      
+};
+Foo g_foo;
+
+int main() {
+    Foo s_foo;              
+    Foo* h_foo = new Foo;  
+
+    std::cout << "global g_foo.x = " << g_foo.x << "\n";
+    std::cout << "stack  s_foo.x = " << s_foo.x << "\n";
+    std::cout << "heap   h_foo->x = " << h_foo->x << "\n";
+
+    delete h_foo;
+}
+```
+
+<!--
+- global must be 0
+- stack - ?
+- heap -?  , MALLOC_PERTURB_=165 - garbage
+-->
+
+---
+
+| Kind | Zero-initialized? | Constructor called | Destructor called | Typical storage |
+|-----|-------------------|--------------------|-------------------|-----------------|
+| **Global variable** | ✔️ always (first phase) | Before `main()` | After `main()` (program exit) | `.bss` (if no init)<br>`.data` (if init)<br>`.rodata` (if `const`) |
+| **`static` global** | ✔️ always | Before `main()` | After `main()` | `.bss` / `.data` / `.rodata` |
+| **Static class member** | ✔️ always | Before `main()` | After `main()` | `.bss` / `.data` / `.rodata` |
+| **Static local variable** | ✔️ always | **On first execution** of declaration | At program exit | `.bss` / `.data` / `.rodata` |
+
+---
+
+# Initialization & Layout ⚙️
+
+- **Zero-initialized by default**  
+  (`.bss` segment)
+
+- **Explicitly initialized data**  
+  Stored in `.data` segment
+
+- **Const data**  
+  Stored in `.rodata` segment
+
+- **Initialization order**  
+  - Same translation unit → top to bottom  
+  - Across translation units → **unspecified order**
+
+
+---
+
+# Static Locals (Modern Pattern) 🔒
+
+```cpp
+int& counter() {
+    static int value = 0;  // initialized once
+    return value;
+}
+```
+
+---
+
+# Note : Once pattern
+
+```cpp
+void  my_function() {
+    for (auto& frame : frame){
+        Process();
+        static bool once = [](){log_i("Processed first frame !");}();
+    }
+}
+```
 
 ---
 
@@ -188,42 +593,6 @@ int main() {
     increment();
     return 0;
 }
-```
-
----
-
-# **Stack Memory**
-
-- Stores local variables and function calls.
-- Fast allocation and deallocation.
-- Limited size; stack overflow if exceeded.
-
-**Example:**
-```cpp
-void recursive(int n) {
-    int arr[1000];  // Consumes stack memory
-    if (n > 0) recursive(n - 1);
-}
-
-int main() {
-    recursive(10000);  // May cause stack overflow
-    return 0;
-}
-```
-
----
-
-# **Heap Memory**
-
-- Used for dynamic memory allocation (`new`, `malloc`).
-- Requires manual deallocation (`delete`, `free`).
-- Slower than stack but flexible.
-
-**Example:**
-```cpp
-int* ptr = new int(10);  // Allocates on heap
-std::cout << *ptr << std::endl;
-delete ptr;  // Must free memory to prevent leaks
 ```
 
 ---
@@ -312,72 +681,3 @@ int main() {
 }
 ```
 ---
-
-# **Memory Leaks and Prevention**
-
-- A memory leak occurs when allocated memory is never freed.
-- Leads to increasing memory usage over time.
-
-**Example of Memory Leak:**
-```cpp
-void leak() {
-    int* ptr = new int(100);  // Never deleted!
-}
-```
-
-**How to Prevent Leaks:**
-✅ Use smart pointers (`std::unique_ptr`, `std::shared_ptr`).
-✅ Always match `new` with `delete` and `malloc` with `free`.
-✅ Use tools like Valgrind or AddressSanitizer.
-
----
-
-# **Smart Pointers**
-
-## **`std::auto_ptr` (Deprecated)**
-- Transfers ownership but has unsafe copy semantics.
-- Replaced by `std::unique_ptr`.
-
-```cpp
-#include <memory>
-std::auto_ptr<int> ptr(new int(10));  // Deprecated!
-```
-
----
-
-## **`std::unique_ptr` (C++11)**
-- Owns memory exclusively.
-- Automatically deleted when going out of scope.
-
-```cpp
-#include <memory>
-std::unique_ptr<int> ptr = std::make_unique<int>(20);
-```
-
-✅ **Thread Safety:** Safe as long as it’s not shared.
-
----
-
-## **`std::shared_ptr` (C++11)**
-- Allows multiple shared ownerships.
-- Uses reference counting.
-
-```cpp
-#include <memory>
-std::shared_ptr<int> ptr1 = std::make_shared<int>(30);
-std::shared_ptr<int> ptr2 = ptr1;  // Shared ownership
-```
-
-✅ **Thread Safety:** Read access is thread-safe; modifying shared_ptr from multiple threads requires external synchronization.
-
----
-
-# **Conclusion**
-
-- Proper memory management prevents crashes and improves performance.
-- Use **stack** for short-lived local variables.
-- Use **heap** for dynamically allocated objects with controlled lifetime.
-- Avoid **memory leaks** using **smart pointers** and debugging tools.
-- Shared memory is useful for **fast inter-process communication**.
-
-🚀 **Mastering memory management leads to efficient and robust C++ applications!**
