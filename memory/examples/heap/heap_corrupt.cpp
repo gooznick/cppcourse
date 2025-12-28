@@ -17,7 +17,7 @@ int main()
 
     // this will probably fail
     // ... but this may be very far away from the `new` command, and maybe in destructor
-    delete[] a;
+    //delete[] a;
 
     return 0;
 }

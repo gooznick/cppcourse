@@ -124,9 +124,9 @@ int main()
 # Heap debugging linux - electric fence
 
 ```bash
-sudo apt install electric-fence
+sudo apt install duma
 g++ ./heap_corrupt.cpp 
-LD_PRELOAD=/usr/lib/libefence.so gdb ./a.out
+LD_PRELOAD=/usr/lib/libduma.so gdb ./a.out
 ```
 
 ---

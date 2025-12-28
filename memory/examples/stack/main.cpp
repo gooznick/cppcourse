@@ -9,11 +9,11 @@ void measure_stack(int depth, uint8_t* prev_addr)
 
     //if (depth == 0) return;
 
-    measure_stack(depth - 1, (uint8_t*)&marker);
+    measure_stack(depth + 1, (uint8_t*)&marker);
 }
 
 int main()
 {
-    measure_stack(5, nullptr);
+    measure_stack(0, nullptr);
     return 0;
 }
