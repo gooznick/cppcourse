@@ -38,7 +38,7 @@ paginate: true
 
 * 🪟 Windows + Linux always checked
 * 🧪 Stress & edge cases
-* ➕ Add features safely
+* ➕ Add features/Refactor safely
 * 📘 Usage examples
 * 🧩 Forces better design
 
@@ -69,7 +69,7 @@ Adding some feature - does the class does what it should ?
 # 🔬 Unit Tests
 ## “If this breaks, it’s *your* fault”
 
-![Image align:center width:600px](images/not_always.jpg)
+![Image bg right width:400px](images/not_always.jpg)
 
 
 ---
@@ -79,6 +79,8 @@ Adding some feature - does the class does what it should ?
 * 🔴 Write a failing test
 * 🟢 Make it pass
 * 🔵 Refactor safely
+
+![Image bg right width:400px](images/tdd.jpg)
 
 <!--
 -->
@@ -131,11 +133,34 @@ BOOST_AUTO_TEST_CASE(InvalidImageNaN)         {}
 
 * 🎯 One class / function
 * ⚡ Fast (milliseconds)
+* Don't expect anyone to write your tests !
+
 
 <!--
 Rule of thumb:
 If it needs sleep() → not a unit test.
 -->
+
+---
+
+
+## 🧠 Some importatnt points
+
+- 🧪 Determinism (fixed seeds)
+- 🔁 Exactness (floating point!)
+- 🧯 Failure-path testing
+- 📊 Stress tests
+
+
+<!--
+-  Bad tests are worse than no tests
+-->
+
+---
+
+## Boost test
+
+![Image align:center width:1000px](images/msvc_test.png)
 
 
 ---
@@ -146,7 +171,7 @@ If it needs sleep() → not a unit test.
 |---|---|---|---|
 | Single header | ⚠️ | ❌ | ✅ |
 | Auto registration | ✅ | ✅ | ✅ |
-| IDE integration | ⚠️ | ✅ | ⚠️ |
+| IDE integration | ✅ | ✅ | ⚠️ |
 | Parameterized tests | ⚠️ | ✅ | ⚠️ |
 | Mocks ecosystem | ❌ | ✅ | ⚠️ |
 
@@ -158,6 +183,12 @@ Legend:
 
 - GTest dominates industry
 
+For boost single header :
+    one translation unit should define BOOST_TEST_MODULE and include <boost/test/included/unit_test.hpp>
+    all the other translation units should include <boost/test/unit_test.hpp>
+
+In Visual Studio 2017 and later, boost.test is supprted
+
 -->
 
 ---
@@ -168,7 +199,8 @@ Legend:
 * 🏗️ Build
 * 🧪 Test
 * 📦 Package
-* ❌ Fail fast
+
+* ✅ Fail fast
 
 <!--
 CI is the contract.
@@ -186,7 +218,7 @@ If tests are slow → CI will be bypassed.
 # 🧩 Component Tests
 ## “Does the algorithm actually work?”
 
-![Image align:center width:600px](images/horse.jpg)
+![Image bg right width:400px](images/horse.jpg)
 
 
 ---
@@ -213,6 +245,7 @@ system tests are only as good as their data.
 - ⏱️ Timing, timing, timing
 
 <!--
+
 -->
 
 ---
@@ -220,7 +253,7 @@ system tests are only as good as their data.
 # 🌍 System Tests
 ## “Welcome to reality”
 
-![Image align:center width:600px](images/multi-threading.jpg)
+![Image align:center width:500px](images/multi-threading.jpg)
 
 
 ---
@@ -247,11 +280,11 @@ system tests are only as good as their data.
 
 ---
 
-## More tips
+## Testing Base Libraries
 
 ---
 
-## 🧱 Testing Base Libraries (Shared Code)
+## 🧱 Testing Base Libraries
 
 ### Option A — Minimal at base 📦
 - ✅ API + invariants
