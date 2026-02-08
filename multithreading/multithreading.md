@@ -9,6 +9,34 @@ paginate: true
 
 ---
 
+
+## GTest / GMock
+
+```cpp
+TEST(MyServiceTest, SuccessPath) {
+    MockDatabase mock_db;
+    MyService service(&mock_db);
+
+    // script the expected behavior:
+    // "Expect Login called with 'admin' and 8080 exactly once. Return true."
+    EXPECT_CALL(mock_db, Login("admin", 8080))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    // "Expect Query called with ANY string. Return 21."
+    EXPECT_CALL(mock_db, Query(_))
+        .WillOnce(Return(2m1));
+
+    // ACT
+    int result = service.ProcessData("admin");
+
+    // ASSERT
+    EXPECT_EQ(result, 42); // 21 * 2 = 42
+}
+```
+
+---
+
 ![bg left width:500px](images/dummies.png)
 
 
@@ -28,7 +56,22 @@ Some info and technics
 6. **Priority Inversion:** The Silent Killer 🔕
 7. **OS Nuances:** Windows 🪟 / Linux 🐧 / VxWorks 🤖
 
+
 ---
+
+![bg blur:3px brightness:0.5](images/basics.avif?q=80&w=1920&auto=format&fit=crop)
+
+<style scoped>
+h1 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px #000000;
+}
+</style>
+
+# Basics 🧱🛠️📚💡
+
+---
+
 
 # What is a Thread? 🧵
 ## 📜 Evolution
@@ -103,6 +146,21 @@ int main() {
 }
 
 ```
+
+---
+
+![bg blur:3px brightness:0.5](images/classes.avif?q=80&w=1920&auto=format&fit=crop)
+
+<style scoped>
+h1 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px #000000;
+}
+</style>
+
+# Multithreading & C++ 🏗️🏭
+
+
 
 ---
 
@@ -296,6 +354,23 @@ Bad practice
 
 ---
 
+
+
+![bg blur:3px brightness:0.5](images/internals.avif?q=80&w=1920&auto=format&fit=crop)
+
+<style scoped>
+h1 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px #000000;
+}
+</style>
+
+# C++ Threads Internals 🧩🔬⚙️
+
+
+---
+
+
 # Thread vs Task 🏋️‍♂️ 
 
 **Thread:** An OS resource (Heavy 🐘).
@@ -409,6 +484,23 @@ public:
     // Returns: The latest message. Always valid memory
     T* GetLatest();
 };
+```
+
+---
+
+
+
+![bg blur:3px brightness:0.5](images/enhanced.avif?q=80&w=1920&auto=format&fit=crop)
+
+<style scoped>
+h1 {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px #000000;
+}
+</style>
+
+# Enhanced Topics 🚀🧠🔮
+
 ---
 
 # Priority Inversion ⏫⏬
@@ -451,9 +543,12 @@ struct {
 
 ---
 
-# More Topics 📚
+# API Contracts: Blocking & Reentrancy 📜
 
-* **API :** 
-  * Blocking ?
-  * Reentrant ?
+**1. Blocking 🛑 (Synchronous)**
+* **Definition:** The function does not return until the task is complete.
+
+**2. Reentrant 🔄 (Thread Safe)**
+* **Definition:** Can be safely called again before the first call finishes.
+* **Key Rule:** **NO** `static` or global state. 
 
