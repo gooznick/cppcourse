@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEEE 754 Float Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #61dafb;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #333;
+            color: #fff;
+            font-size: 1.1em;
+            width: 200px;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #333;
+            color: #fff;
+            font-size: 1.1em;
+        }
+
+        .bits-container {
+            display: flex;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .bit-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2px;
+        }
+
+        .bit {
+            width: 20px;
+            height: 25px;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #333;
+        }
+
+        .bit.sign {
+            background: #ff6b6b;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .bit.exp {
+            background: #4ecdc4;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .bit.mantissa {
+            background: #ffe66d;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .label {
+            font-size: 0.7em;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 15px;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #a8dadc;
+            margin-top: 10px;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+
+        .denormal {
+            color: #ff9f43;
+        }
+
+        .normal {
+            color: #2ecc71;
+        }
+
+        .special {
+            color: #ff6b6b;
+        }
+
+        .hidden-bit-box {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>IEEE 754 Visualizer</h1>
+
+        <div class="input-group">
+            <label>Type:</label>
+            <select id="typeSelect" onchange="updateFromInput()">
+                <option value="float">Float (32-bit)</option>
+                <option value="double">Double (64-bit)</option>
+            </select>
+            <label>Value:</label>
+            <input type="text" id="inputVal" value="1.0" oninput="updateFromInput()" placeholder="Enter number">
+        </div>
+
+        <div id="bitsDisplay" class="bits-container"></div>
+
+        <div class="result-box">
+            <h3>Analysis</h3>
+            <div id="status" class="status"></div>
+            <div id="formula" class="formula"></div>
+            <div id="breakdown"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global state to hold the bits
+        let currentBuffer = new ArrayBuffer(8);
+        let currentView = new DataView(currentBuffer);
+
+        function updateFromInput() {
+            const type = document.getElementById('typeSelect').value;
+            const valStr = document.getElementById('inputVal').value;
+            let val = parseFloat(valStr);
+
+            // Handle special inputs
+            if (valStr.trim().toLowerCase() === 'nan') val = NaN;
+            if (valStr.trim().toLowerCase() === 'inf') val = Infinity;
+            if (valStr.trim().toLowerCase() === '-inf') val = -Infinity;
+
+            const isFloat = type === 'float';
+
+            // Clear buffer
+            currentView.setFloat64(0, 0);
+
+            if (isFloat) {
+                currentView.setFloat32(0, val);
+            } else {
+                currentView.setFloat64(0, val);
+            }
+
+            renderAndSync(isFloat, false); // false = don't update input text from bits (loop)
+        }
+
+        function toggleBit(bitIndex, isFloat) {
+            // bitIndex is 0..31 or 0..63 (from left/MSB)
+            const totalBits = isFloat ? 32 : 64;
+
+            // Map visual index (0=MSB) to byte/bit index
+            // Buffer is Big Endian-ish in DataView set/get interaction, but let's be precise.
+            // We want to flip the bit at 'bitIndex' from the start of the buffer.
+            // Example: bitIndex 0 is Byte 0, Bit 7 (0x80)
+
+            const byteIdx = Math.floor(bitIndex / 8);
+            const bitInByte = 7 - (bitIndex % 8);
+
+            const currentByte = currentView.getUint8(byteIdx);
+            const newByte = currentByte ^ (1 << bitInByte);
+            currentView.setUint8(byteIdx, newByte);
+
+            renderAndSync(isFloat, true); // true = update input text
+        }
+
+        function renderAndSync(isFloat, updateInput) {
+            // Read value back
+            let val;
+            if (isFloat) val = currentView.getFloat32(0);
+            else val = currentView.getFloat64(0);
+
+            if (updateInput) {
+                document.getElementById('inputVal').value = val;
+            }
+
+            // Get bits string
+            let bits = '';
+            const len = isFloat ? 4 : 8; // bytes
+            for (let i = 0; i < len; i++) {
+                let b = currentView.getUint8(i);
+                for (let j = 7; j >= 0; j--) {
+                    bits += ((b >> j) & 1) ? '1' : '0';
+                }
+            }
+
+            renderBits(bits, isFloat);
+        }
+
+        function renderBits(bits, isFloat) {
+            const container = document.getElementById('bitsDisplay');
+            container.innerHTML = '';
+
+            const expLen = isFloat ? 8 : 11;
+            const bias = isFloat ? 127 : 1023;
+            // Total bits logic is implicitly handled by the loop
+
+            // Sign
+            addBitBox(container, bits[0], 'S', 'sign', 0, isFloat);
+
+            // Exponent
+            for (let i = 0; i < expLen; i++) {
+                addBitBox(container, bits[1 + i], 'E', 'exp', 1 + i, isFloat);
+            }
+
+            // Mantissa
+            const mStart = 1 + expLen;
+            const mBits = bits.substring(mStart);
+            for (let i = 0; i < mBits.length; i++) {
+                addBitBox(container, mBits[i], 'M', 'mantissa', mStart + i, isFloat);
+            }
+
+            // Analysis
+            const eBits = bits.substring(1, 1 + expLen);
+            const expVal = parseInt(eBits, 2);
+
+            const statusEl = document.getElementById('status');
+            const formulaEl = document.getElementById('formula');
+            let status = '';
+            let formula = '';
+            let formulaClass = '';
+
+            const sBit = bits[0];
+
+            // Check for All Ones Exponent
+            if (isAllOnes(eBits)) {
+                if (mBits.indexOf('1') !== -1) {
+                    status = "NaN (Not a Number)";
+                    formulaClass = "special";
+                    if (mBits[0] === '1') status += " [Quiet]";
+                    else status += " [Signaling]";
+                } else {
+                    status = (sBit === '1' ? "-" : "+") + "Infinity";
+                    formulaClass = "special";
+                }
+            } else if (isAllZeros(eBits)) {
+                if (mBits.indexOf('1') === -1) {
+                    status = "Zero";
+                    formulaClass = "special";
+                    formula = (sBit === '1' ? "-" : "+") + "0.0";
+                } else {
+                    status = "Denormal (Subnormal)";
+                    formulaClass = "denormal";
+                    const trueExp = 1 - bias;
+                    const manLen = mBits.length;
+                    // JS Precision might be tricky for denormal formula display, straightforward string parsing?
+                    formula = `(-1)^${sBit} × 0.${mBits.substring(0, 8)}... × 2^(${trueExp})`;
+                    formula += `<br>Implicit Bit: 0`;
+                }
+            } else {
+                status = "Normalized";
+                formulaClass = "normal";
+                const trueExp = expVal - bias;
+                formula = `(-1)^${sBit} × 1.${mBits.substring(0, 8)}... × 2^(${expVal} - ${bias} = ${trueExp})`;
+                formula += `<br>Implicit Bit: 1`;
+            }
+
+            statusEl.className = "status " + formulaClass;
+            statusEl.innerHTML = status;
+            formulaEl.innerHTML = formula;
+        }
+
+        function isAllOnes(str) { return str.indexOf('0') === -1; }
+        function isAllZeros(str) { return str.indexOf('1') === -1; }
+
+        function addBitBox(container, val, label, type, index, isFloat) {
+            const div = document.createElement('div');
+            div.className = 'bit-box';
+            // Add onclick handler
+            div.onclick = function () { toggleBit(index, isFloat); };
+            div.style.cursor = 'pointer';
+            div.innerHTML = `<div class="bit ${type}">${val}</div><div class="label">${index}</div>`; // Showing index might be too much, label is better
+            // Revert label to S/E/M for cleanliness, or maybe small index?
+            // Let's keep the original label logic but add hover effect
+            div.innerHTML = `<div class="bit ${type}">${val}</div><div class="label">${label}</div>`;
+            div.title = `Click to toggle bit ${index}`;
+            container.appendChild(div);
+        }
+
+        // Init
+        updateFromInput();
+    </script>
+
+</body>
+
+</html>

@@ -377,15 +377,6 @@ int main() {
 ---
 
 
-
-# 📝 Summary
-
-* 💻 Hardware details matter for high performance.
-
-<!-- Hardware details. -->
-
----
-
 <!-- _class: lead -->
 
 # 🛑 Don't
@@ -399,12 +390,17 @@ int main() {
 
 <!-- _class: lead -->
 
-# 🛠️ Tool
+# 🛠️ Tool: Float Explorer
 
-**Godbolt** (Compiler Explorer)
-🔬 Check how your floating point code compiles with different flags (`-O3`, `-ffast-math`).
+**Local Tool**: `numbers/tools/float_visualizer/index.html`
 
-<!-- Godbolt demo. -->
+* 🔬 **Features**:
+    * See binary representation (S E M).
+    * Detect **Denormals** (implicit bit 0).
+    * Handle `NaN` / `Inf`.
+* 🖥️ **Usage**: Open the HTML file in any browser.
+
+<!-- Custom JS visualizer. -->
 
 ---
 
