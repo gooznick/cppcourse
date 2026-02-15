@@ -42,7 +42,7 @@
             background: #333;
             color: #fff;
             font-size: 1.1em;
-            width: 200px;
+            width: 400px;
         }
 
         select {
@@ -141,6 +141,22 @@
             font-size: 0.9em;
             color: #888;
         }
+
+        button {
+            padding: 8px 12px;
+            margin: 0 4px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #555;
+        }
     </style>
 </head>
 
@@ -159,6 +175,17 @@
             <input type="text" id="inputVal" value="1.0" oninput="updateFromInput()" placeholder="Enter number">
         </div>
 
+        <div class="input-group">
+            <button onclick="setPreset('p0')">+0.0</button>
+            <button onclick="setPreset('n0')">-0.0</button>
+            <button onclick="setPreset('pinf')">+Inf</button>
+            <button onclick="setPreset('ninf')">-Inf</button>
+            <button onclick="setPreset('qnan')">qNaN</button>
+            <button onclick="setPreset('snan')">sNaN</button>
+            <button onclick="setPreset('denorm')">Min Denorm</button>
+            <button onclick="setPreset('max')">Max</button>
+        </div>
+
         <div id="bitsDisplay" class="bits-container"></div>
 
         <div class="result-box">
@@ -173,6 +200,59 @@
         // Global state to hold the bits
         let currentBuffer = new ArrayBuffer(8);
         let currentView = new DataView(currentBuffer);
+
+        function setPreset(preset) {
+            const type = document.getElementById('typeSelect').value;
+            const isFloat = type === 'float';
+            // Clear logic handled by specific presets mostly
+
+            // Helper to set bits
+            // For Double: 1 Sign, 11 Exp, 52 Mantissa
+            // For Float:  1 Sign, 8 Exp, 23 Mantissa
+
+            currentView.setFloat64(0, 0); // Clear to +0.0
+
+            if (preset === 'p0') {
+                // Already 0
+            } else if (preset === 'n0') {
+                // Set sign bit
+                if (isFloat) currentView.setUint8(0, 0x80);
+                else currentView.setUint8(0, 0x80);
+            } else if (preset === 'pinf') {
+                if (isFloat) currentView.setFloat32(0, Infinity);
+                else currentView.setFloat64(0, Infinity);
+            } else if (preset === 'ninf') {
+                if (isFloat) currentView.setFloat32(0, -Infinity);
+                else currentView.setFloat64(0, -Infinity);
+            } else if (preset === 'qnan') {
+                // Quiet NaN: Exp=11..1, Mantissa=100..0 (MSB of mantissa is 1)
+                // Float: 0 11111111 1000..0
+                if (isFloat) currentView.setUint32(0, 0x7FC00000);
+                else {
+                    currentView.setUint32(0, 0x7FF80000); // 7FF + 8 (top bit of mantissa set)
+                    // lo is 0
+                }
+            } else if (preset === 'snan') {
+                // Signaling NaN: Exp=11..1, Mantissa=01...0 (MSB 0, but at least one other bit 1)
+                // Let's set the LAST bit to 1, rest 0.
+                // Float: 0 11111111 00000000000000000000001
+                if (isFloat) currentView.setUint32(0, 0x7F800001);
+                else {
+                    currentView.setUint32(0, 0x7FF00000);
+                    currentView.setUint32(4, 0x00000001); // Last bit
+                }
+            } else if (preset === 'denorm') {
+                // Smallest non-zero denormal (only last bit set)
+                if (isFloat) currentView.setUint32(0, 1);
+                else currentView.setUint32(4, 1);
+            } else if (preset === 'max') {
+                // Max finite
+                if (isFloat) currentView.setFloat32(0, 3.40282347e38); // FLT_MAX
+                else currentView.setFloat64(0, Number.MAX_VALUE);
+            }
+
+            renderAndSync(isFloat, true);
+        }
 
         function updateFromInput() {
             const type = document.getElementById('typeSelect').value;
