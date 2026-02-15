@@ -170,6 +170,7 @@
             <select id="typeSelect" onchange="updateFromInput()">
                 <option value="float">Float (32-bit)</option>
                 <option value="double">Double (64-bit)</option>
+                <option value="bfloat">BFloat16 (16-bit)</option>
             </select>
             <label>Value:</label>
             <input type="text" id="inputVal" value="1.0" oninput="updateFromInput()" placeholder="Enter number">
@@ -204,54 +205,59 @@
         function setPreset(preset) {
             const type = document.getElementById('typeSelect').value;
             const isFloat = type === 'float';
-            // Clear logic handled by specific presets mostly
+            const isDouble = type === 'double';
+            // bfloat handled if not float/double
 
-            // Helper to set bits
-            // For Double: 1 Sign, 11 Exp, 52 Mantissa
-            // For Float:  1 Sign, 8 Exp, 23 Mantissa
+            currentView.setFloat64(0, 0); // Clear
 
-            currentView.setFloat64(0, 0); // Clear to +0.0
+            // Helper to determine active bits location
+            // Float: 0..31
+            // Double: 0..63
+            // BFloat: 0..15 (Using first 2 bytes of buffer)
 
             if (preset === 'p0') {
-                // Already 0
+                // 0
             } else if (preset === 'n0') {
-                // Set sign bit
-                if (isFloat) currentView.setUint8(0, 0x80);
-                else currentView.setUint8(0, 0x80);
+                currentView.setUint8(0, 0x80);
             } else if (preset === 'pinf') {
                 if (isFloat) currentView.setFloat32(0, Infinity);
-                else currentView.setFloat64(0, Infinity);
+                else if (isDouble) currentView.setFloat64(0, Infinity);
+                else currentView.setUint16(0, 0x7F80); // BFloat Inf (same as float top 16)
             } else if (preset === 'ninf') {
                 if (isFloat) currentView.setFloat32(0, -Infinity);
-                else currentView.setFloat64(0, -Infinity);
+                else if (isDouble) currentView.setFloat64(0, -Infinity);
+                else currentView.setUint16(0, 0xFF80);
             } else if (preset === 'qnan') {
-                // Quiet NaN: Exp=11..1, Mantissa=100..0 (MSB of mantissa is 1)
-                // Float: 0 11111111 1000..0
+                // Quiet NaN: Exp=Ones, MSB Mantissa=1
                 if (isFloat) currentView.setUint32(0, 0x7FC00000);
-                else {
-                    currentView.setUint32(0, 0x7FF80000); // 7FF + 8 (top bit of mantissa set)
-                    // lo is 0
+                else if (isDouble) {
+                    currentView.setUint32(0, 0x7FF80000);
+                } else {
+                    currentView.setUint16(0, 0x7FC0); // BFloat qNaN
                 }
             } else if (preset === 'snan') {
-                // Signaling NaN: Exp=11..1, Mantissa=01...0 (MSB 0, but at least one other bit 1)
-                // Let's set the LAST bit to 1, rest 0.
-                // Float: 0 11111111 00000000000000000000001
+                // Signaling NaN: Exp=Ones, MSB=0, but some bit is 1.
+                // BFloat (7 mantissa bits): 0 11111111 0000001
                 if (isFloat) currentView.setUint32(0, 0x7F800001);
-                else {
+                else if (isDouble) {
                     currentView.setUint32(0, 0x7FF00000);
-                    currentView.setUint32(4, 0x00000001); // Last bit
+                    currentView.setUint32(4, 0x00000001);
+                } else {
+                    currentView.setUint16(0, 0x7F81); // BFloat sNaN
                 }
             } else if (preset === 'denorm') {
-                // Smallest non-zero denormal (only last bit set)
+                // Min denormal
                 if (isFloat) currentView.setUint32(0, 1);
-                else currentView.setUint32(4, 1);
+                else if (isDouble) currentView.setUint32(4, 1);
+                else currentView.setUint16(0, 1);
             } else if (preset === 'max') {
                 // Max finite
-                if (isFloat) currentView.setFloat32(0, 3.40282347e38); // FLT_MAX
-                else currentView.setFloat64(0, Number.MAX_VALUE);
+                if (isFloat) currentView.setFloat32(0, 3.40282347e38);
+                else if (isDouble) currentView.setFloat64(0, Number.MAX_VALUE);
+                else currentView.setUint16(0, 0x7F7F); // Max BFloat (~3.38e38)
             }
 
-            renderAndSync(isFloat, true);
+            renderAndSync(type, true);
         }
 
         function updateFromInput() {
@@ -259,33 +265,44 @@
             const valStr = document.getElementById('inputVal').value;
             let val = parseFloat(valStr);
 
-            // Handle special inputs
             if (valStr.trim().toLowerCase() === 'nan') val = NaN;
             if (valStr.trim().toLowerCase() === 'inf') val = Infinity;
             if (valStr.trim().toLowerCase() === '-inf') val = -Infinity;
 
-            const isFloat = type === 'float';
-
             // Clear buffer
             currentView.setFloat64(0, 0);
 
-            if (isFloat) {
+            if (type === 'float') {
                 currentView.setFloat32(0, val);
-            } else {
+            } else if (type === 'double') {
                 currentView.setFloat64(0, val);
+            } else {
+                // BFloat16: Convert Float32 -> BFloat16
+                // Simple truncation: Top 16 bits of Float32
+                // Rounding: Add 0x8000 to lower 16 bits before truncate, but beware overflow to exp
+                // Let's implement Round-to-Nearest-Even (RTNE) simulation via simple truncation for now
+                // or just set as float32 and take top 16 bits
+
+                // Write as float32 to temp buffer
+                let tmpBuf = new ArrayBuffer(4);
+                let tmpView = new DataView(tmpBuf);
+                tmpView.setFloat32(0, val);
+                let u32 = tmpView.getUint32(0);
+
+                // BFloat16 creation (Truncation for simplicity in visualizer to match "Casting")
+                // Or usually: (u32 + 0x00008000) >> 16;
+                // Let's use truncation as it's the strict "just the top bits" definition often used for quick explanation
+                let bf16 = (u32 >>> 16) & 0xFFFF;
+
+                // Check if wrapping affects exponent (rounding) - skipping for simplicity
+                currentView.setUint16(0, bf16);
             }
 
-            renderAndSync(isFloat, false); // false = don't update input text from bits (loop)
+            renderAndSync(type, false);
         }
 
-        function toggleBit(bitIndex, isFloat) {
-            // bitIndex is 0..31 or 0..63 (from left/MSB)
-            const totalBits = isFloat ? 32 : 64;
-
-            // Map visual index (0=MSB) to byte/bit index
-            // Buffer is Big Endian-ish in DataView set/get interaction, but let's be precise.
-            // We want to flip the bit at 'bitIndex' from the start of the buffer.
-            // Example: bitIndex 0 is Byte 0, Bit 7 (0x80)
+        function toggleBit(bitIndex, type) {
+            // bitIndex is visual index 0..N
 
             const byteIdx = Math.floor(bitIndex / 8);
             const bitInByte = 7 - (bitIndex % 8);
@@ -294,14 +311,26 @@
             const newByte = currentByte ^ (1 << bitInByte);
             currentView.setUint8(byteIdx, newByte);
 
-            renderAndSync(isFloat, true); // true = update input text
+            renderAndSync(type, true); // true = update input text
         }
 
-        function renderAndSync(isFloat, updateInput) {
+        function renderAndSync(type, updateInput) {
+            const isFloat = type === 'float';
+            const isDouble = type === 'double';
+            const isBFloat = type === 'bfloat';
+
             // Read value back
             let val;
             if (isFloat) val = currentView.getFloat32(0);
-            else val = currentView.getFloat64(0);
+            else if (isDouble) val = currentView.getFloat64(0);
+            else {
+                // BFloat -> Float32
+                let u16 = currentView.getUint16(0);
+                let u32 = u16 << 16;
+                let tmpBuf = new ArrayBuffer(4);
+                new DataView(tmpBuf).setUint32(0, u32);
+                val = new DataView(tmpBuf).getFloat32(0);
+            }
 
             if (updateInput) {
                 document.getElementById('inputVal').value = val;
@@ -309,7 +338,7 @@
 
             // Get bits string
             let bits = '';
-            const len = isFloat ? 4 : 8; // bytes
+            const len = isDouble ? 8 : (isFloat ? 4 : 2);
             for (let i = 0; i < len; i++) {
                 let b = currentView.getUint8(i);
                 for (let j = 7; j >= 0; j--) {
@@ -317,30 +346,41 @@
                 }
             }
 
-            renderBits(bits, isFloat);
+            renderBits(bits, type);
         }
 
-        function renderBits(bits, isFloat) {
+        function renderBits(bits, type) {
             const container = document.getElementById('bitsDisplay');
             container.innerHTML = '';
 
-            const expLen = isFloat ? 8 : 11;
-            const bias = isFloat ? 127 : 1023;
-            // Total bits logic is implicitly handled by the loop
+            const isDouble = type === 'double';
+            const isFloat = type === 'float';
+            const isBFloat = type === 'bfloat';
+
+            let expLen, bias;
+            if (isDouble) {
+                expLen = 11;
+                bias = 1023;
+            } else if (isFloat || isBFloat) { // BFloat16 has same exponent as Float32
+                expLen = 8;
+                bias = 127;
+            }
+
+            // BFloat: 1 S, 8 E, 7 M
 
             // Sign
-            addBitBox(container, bits[0], 'S', 'sign', 0, isFloat);
+            addBitBox(container, bits[0], 'S', 'sign', 0, type);
 
             // Exponent
             for (let i = 0; i < expLen; i++) {
-                addBitBox(container, bits[1 + i], 'E', 'exp', 1 + i, isFloat);
+                addBitBox(container, bits[1 + i], 'E', 'exp', 1 + i, type);
             }
 
             // Mantissa
             const mStart = 1 + expLen;
             const mBits = bits.substring(mStart);
             for (let i = 0; i < mBits.length; i++) {
-                addBitBox(container, mBits[i], 'M', 'mantissa', mStart + i, isFloat);
+                addBitBox(container, mBits[i], 'M', 'mantissa', mStart + i, type);
             }
 
             // Analysis
@@ -375,16 +415,18 @@
                     status = "Denormal (Subnormal)";
                     formulaClass = "denormal";
                     const trueExp = 1 - bias;
+                    // For BFloat, Mantissa is 7 bits
                     const manLen = mBits.length;
-                    // JS Precision might be tricky for denormal formula display, straightforward string parsing?
-                    formula = `(-1)^${sBit} × 0.${mBits.substring(0, 8)}... × 2^(${trueExp})`;
+                    // formula = `(-1)^${sBit} × 0.${mBits} × 2^(${trueExp})`;
+                    formula = `(-1)^${sBit} × 0.${mBits.substring(0, Math.min(manLen, 8))}... × 2^(${trueExp})`;
                     formula += `<br>Implicit Bit: 0`;
                 }
             } else {
                 status = "Normalized";
                 formulaClass = "normal";
                 const trueExp = expVal - bias;
-                formula = `(-1)^${sBit} × 1.${mBits.substring(0, 8)}... × 2^(${expVal} - ${bias} = ${trueExp})`;
+                const manLen = mBits.length;
+                formula = `(-1)^${sBit} × 1.${mBits.substring(0, Math.min(manLen, 8))}... × 2^(${expVal} - ${bias} = ${trueExp})`;
                 formula += `<br>Implicit Bit: 1`;
             }
 
@@ -396,15 +438,12 @@
         function isAllOnes(str) { return str.indexOf('0') === -1; }
         function isAllZeros(str) { return str.indexOf('1') === -1; }
 
-        function addBitBox(container, val, label, type, index, isFloat) {
+        function addBitBox(container, val, label, type, index, typeMode) {
             const div = document.createElement('div');
             div.className = 'bit-box';
             // Add onclick handler
-            div.onclick = function () { toggleBit(index, isFloat); };
+            div.onclick = function () { toggleBit(index, typeMode); };
             div.style.cursor = 'pointer';
-            div.innerHTML = `<div class="bit ${type}">${val}</div><div class="label">${index}</div>`; // Showing index might be too much, label is better
-            // Revert label to S/E/M for cleanliness, or maybe small index?
-            // Let's keep the original label logic but add hover effect
             div.innerHTML = `<div class="bit ${type}">${val}</div><div class="label">${label}</div>`;
             div.title = `Click to toggle bit ${index}`;
             container.appendChild(div);
