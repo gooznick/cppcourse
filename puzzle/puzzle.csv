@@ -1,0 +1,192 @@
+"Blooket
+Import Template",,,,,,,
+Question #,Question Text,Answer 1,Answer 2,"Answer 3
+(Optional)","Answer 4
+(Optional)","Time Limit (sec)
+(Max: 300 seconds)","Correct Answer(s)
+(Only include Answer #)"
+1,🐙 What does 'git stash' do?,"💾 Saves uncommitted changes,
+cleans working directory",📦 Commits all staged changes,🗑️ Deletes untracked files,⏪ Resets to last commit,20,1
+2,"🔄 What is the state of myfile.cpp
+after these two commands?","📝 Modified, unstaged","📬 Staged, ready to commit",❌ Deleted from repo,🌿 Committed to branch,25,1
+3,"⚙️ What does 'my_rules.csv binary'
+in .gitattributes do?",🚫 git won't try to merge it,🪟 Forces CRLF on checkout,👻 Ignores the file in commits,🗜️ Compresses the file,30,1
+4,Git lecture summary,good,yes,true,1,30,"1,2,3,4"
+5,"🔧 What is the correct order
+of these 4 steps?","Preprocess → Compile
+→ Assemble → Link","Compile → Preprocess
+→ Assemble → Link","Assemble → Compile
+→ Preprocess → Link","Preprocess → Assemble
+→ Compile → Link",20,1
+6,🔍 What does 'ldd simple' show?,"📚 Shared libraries the binary
+depends on","🏷️ All symbols defined
+in the binary","🖥️ System calls used
+at runtime","🗃️ Static libraries
+linked into the binary",25,1
+7,"🌍 What does CMAKE_SYSTEM_NAME
+set in a CMake toolchain file?","🎯 The target OS for
+cross-compilation","🏠 The host machine's
+OS name","🏭 The compiler
+vendor name","⚙️ The build
+system generator",30,1
+8,Components lecture summary,good,yes,true,1,30,"1,2,3,4"
+9,"🛡️ What does '#pragma once'
+do in a header file?","📌 Prevents the file from being
+included more than once","🏷️ Marks the file as
+system header","🔇 Disables all warnings
+in the file","🚀 Forces the file to compile
+before all others",20,1
+10,"💥 This code fails to compile on Windows.
+What is the cause?","🪟 Windows.h defines min/max
+as macros","🚫 algorithm is not
+available on Windows","📐 std::min needs
+two identical types","📂 Missing #include
+for < windows.h>",25,1
+11,"🤯 #define SQR(x) x*x
+What is the output of SQR(4+1)?",9,25,21,1,25,1
+12,Preprocessor lecture summary,good,yes,true,1,30,"1,2,3,4"
+13,"🚀 What does g++ -O3 return
+for this function?","🧮 A single constant
+(constant folding)","🔁 The loop runs
+1024 times at runtime","💥 A compiler error:
+loop is infinite","0️⃣ Zero, loop body
+is optimized away",30,1
+14,"💀 What is the behavior of
+'max++' when max == INT_MAX?","💣 Undefined behavior
+(signed overflow)","🔄 Wraps to INT_MIN
+(guaranteed)","🛑 Compiler error:
+overflow detected",0️⃣ Result is 0,25,1
+15,"🩺 What do sanitizer flags like
+-fsanitize=address do?","🔎 Add runtime checks that
+detect memory errors","⚡ Speed up execution
+by removing bounds checks","🔕 Disable compiler
+optimizations","✂️ Strip debug symbols
+from the binary",25,1
+16,Compiler lecture summary,good,yes,true,1,30,"1,2,3,4"
+17,"🔗 Which link command is correct
+on Linux?",g++ main.o -lpow -lmul -ladd,g++ main.o -ladd -lmul -lpow,"🤷 Order does not matter
+on Linux","🛠️ Use --start-group
+for all cases",20,1
+18,"🔍 In nm output, what does 'T'
+mean next to a symbol?","💡 Defined in the text
+(code) section","❓ Undefined, must be linked",📊 In a data section,📋 Template function,25,1
+19,"🪟 A Windows DLL is built but no
+.lib file is created. Why?","🚫 No __declspec(dllexport)
+symbols in the code","⚙️ CMake forgot to set
+SHARED keyword","🏗️ Missing /MD
+compiler flag","🔑 Wrong architecture
+(x86 vs x64)",30,1
+20,Linker lecture summary,good,yes,true,1,30,"1,2,3,4"
+21,"📏 sizeof(long) on 64-bit Linux vs
+64-bit Windows?","Linux: 8, Windows: 4","🪟 Linux: 4, Windows: 8",Both: 8,Both: 4,20,1
+22,"🤔 char c = 200 — what is the output
+on x86 GCC vs ARM GCC?","🔀 Different — char signedness
+is implementation-defined",➖ Both print Negative,➕ Both print Positive,"💀 Undefined behavior
+on both platforms",25,1
+23,"📦 What is sizeof(S) after
+#pragma pack(push,1)?",7,12,8,4,30,1
+24,ABI lecture summary,good,yes,true,1,30,"1,2,3,4"
+25,"✂️ What does 'strip app' do
+to the binary?","📉 Removes debug symbols,
+shrinks binary size","🔄 Removes optimizations,
+adds debug info","🔒 Encrypts the binary
+for distribution","🗑️ Deletes the binary
+from disk",20,1
+26,"👀 What does 'watch var' do
+in gdb?","⏸️ Stops execution when
+var is written","📖 Stops execution when
+var is read","🖨️ Prints var value
+every step","0️⃣ Sets var to
+zero and continues",25,1
+27,"💥 What do these two commands
+enable on Linux?","💾 Core dump creation
+when a process crashes","📝 Full memory logging
+to /tmp","🔍 Debug symbol loading
+from /proc","🌐 Remote gdbserver
+on port 2000",30,1
+28,Debug lecture summary,good,yes,true,1,30,"1,2,3,4"
+29,"🧱 What memory region holds
+local variables like 'int x'?",📚 Stack,📦 Heap,🏛️ Global/Static,💾 ROM,20,1
+30,"💀 What is wrong with
+this get_ref() function?","🔥 Returns a dangling reference
+to a local variable",📦 x is allocated on the heap,🔕 Missing return type,🔁 Infinite recursion,25,1
+31,"🪣 What bug does this
+leak() function contain?","💧 Memory leak when
+OpenFile() returns false",🔥 Double free of p,📏 Buffer overflow,👻 Use-after-free,25,1
+32,"💥 What is wrong with
+deleting p twice?",💀 Double free: undefined behavior,✂️ Extra memory is freed safely,📦 p becomes nullptr automatically,🔕 Compiler catches it at build time,25,1
+33,"🔄 What happens when you
+dereference 'p' after push_back?","👻 Use-after-free: push_back
+may reallocate the vector",📝 p still points to v[0],🛑 Compile error: p is const,📏 Buffer overflow on the stack,30,1
+34,"🏛️ What is g_foo.x vs s_foo.x
+before any assignment?","g_foo.x is 0,
+s_foo.x is undefined","Both are 0
+(always zero-init)",Both are undefined,"g_foo.x is undefined,
+s_foo.x is 0",30,1
+35,Memory lecture summary,good,yes,true,1,30,"1,2,3,4"
+36,"🔴 Boost.Test: what does
+--catch_system_errors=yes do?","Catches segfaults/signals
+and reports them as test failures","Lets segfaults produce
+a core dump","Disables all
+error checking","Only catches
+C++ exceptions",30,1
+37,"🧪 How do you make a new feature
+easy to unit test?","Implement it as a
+standalone class","Add it directly
+inside main()","Use global variables
+for shared state","Write the tests after
+the full feature is done",25,1
+38,"🎭 Which C++ test framework has
+the strongest mocks ecosystem?",GoogleTest (gMock),Boost.Test,Catch2,All are equal,20,1
+39,Testing lecture summary,good,yes,true,1,30,"1,2,3,4"
+40,"🏎️ Two threads call run().
+What is the output of counter?","Unpredictable (data race,
+could be anything)","Exactly 200000
+(always)","0 (both threads cancel
+each other out)",A compile error,20,1
+41,"👻 What is the bug in this
+condition_variable usage?","Missing predicate: susceptible
+to spurious wakeups","cv.wait() needs a
+timeout argument","process() must be
+called before wait()","mtx must be
+a recursive_mutex",30,1
+42,"🧵 Is writing *ptr from two
+threads simultaneously safe?","No: data race on the
+managed object","Yes: shared_ptr is
+fully thread-safe","Yes: atomic ref-count
+protects the value",Only unsafe on ARM,25,1
+43,Multithreading lecture summary,good,yes,true,1,30,"1,2,3,4"
+44,🔢 What does this code print?,"Not Equal (0.1+0.2
+has rounding error)","Equal (IEEE 754
+is exact)","Compile error: ==
+invalid for doubles",Undefined behavior,20,1
+45,"♾️ What does
+'double x = 1.0/0.0' print?",+inf,Crash: divide by zero,0,NaN,20,1
+46,"🤯 What does this
+NaN comparison print?","not equal (NaN != NaN
+is always true)",equal (NaN is unique),Undefined behavior,Compile error,25,1
+47,"⚡ What does -ffast-math
+do to floating-point code?","Allows non-IEEE optimizations,
+may change results","Only speeds up integers,
+floats unchanged","Forces strict IEEE 754
+compliance","Disables SIMD
+instructions",30,1
+48,Numbers lecture summary,good,yes,true,1,30,"1,2,3,4"
+49,"17️⃣ What C++17 feature does
+'auto [id, name] = ...' use?","Structured bindings:
+unpack tuple/struct",Template parameter pack,"std::pair destructuring
+(C++11 feature)","Move semantics
+on return value",20,1
+50,"🔍 After the closing brace,
+is 'it' accessible?","No: 'it' is scoped
+to the if block","Yes: 'it' is a
+regular local variable","Only in the else
+branch","Only if the if
+condition was true",25,1
+51,"⚙️ Why does info(42) compile even
+though 'val.size()' is in the code?","constexpr if discards the else branch
+at compile time for int","The compiler ignores
+unreachable code paths","int has a .size()
+method in C++17","Template instantiation
+defers all checks",30,1
+52,C++17 lecture summary,good,yes,true,1,30,"1,2,3,4"

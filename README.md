@@ -3,15 +3,21 @@ Cpp and some more presentations and demonstrations
 
 ## Content
 
-| Lecture  | Subjects|  Presentation                                    | Comments   | 
+| Lecture  | Subjects|  Presentation                                    | Comments   |
 |----|---------------|--------------------------------------------------|------------|
-|  1 | Preface       |                                                  |            |  
-|    | Git           |  [git.md](git/git.md)                            |            |  
-|    | Components    |  [components.md](components/components.md)       |            |  
-|  2 | Preprocessor  |  [preprocessor.md](preprocessor/preprocessor.md) |            |  
-|    | Compiler      |  [compiler.md](compiler/compiler.md)             |            |  
-|  3 | Linker        |  [linker.md](linker/linker.md)                   |  +dll/so   |  
-|  4 | ABI           |  [abi.md](abi/abi.md)                            |            |  
+|  1 | Preface       |                                                  |            |
+|    | Git           |  [git.md](git/git.md)                            |            |
+|    | Components    |  [components.md](components/components.md)       |            |
+|  2 | Preprocessor  |  [preprocessor.md](preprocessor/preprocessor.md) |            |
+|    | Compiler      |  [compiler.md](compiler/compiler.md)             |            |
+|  3 | Linker        |  [linker.md](linker/linker.md)                   |  +dll/so   |
+|  4 | ABI           |  [abi.md](ABI/abi.md)                            |            |
+|  5 | Debug         |  [debug.md](debug/debug.md)                      |            |
+|  6 | Memory        |  [memory.md](memory/memory.md)                   |            |
+|  7 | Testing       |  [testing.md](testing/testing.md)                |            |
+|  8 | Multithreading|  [multithreading.md](multithreading/multithreading.md) |       |
+|  9 | Numbers       |  [floating.md](floating/floating.md)             |            |
+| 10 | Error Handling|  [error.md](error/error.md)                      |            |
  
 ## Urgent Todos :
 
@@ -89,7 +95,7 @@ Cpp and some more presentations and demonstrations
    - Understanding threads and task-based concurrency
    - Debugging multithreaded applications  
 
-11. **Numerical Computation in C++**  
+11. **Numbers in C++**  
    - Fixed-point and floating-point representation in C++  
    - Precision considerations and floating-point standards  
 
